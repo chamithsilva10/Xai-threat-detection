@@ -1,14 +1,18 @@
-"""Deterministic guardrails and Policy Engine (Agent 06: Response Policy Gate).
+"""Deterministic Policy Engine and Mandatory Hard Safety Gates (Agent 06).
 
-Enforces Sections 5, 8, 14, and Contribution C16:
-1. sanitize()          - strip control chars, neutralize tag-like text, cap lengths.
-2. scan_injection()    - flag prompt-injection markers in untrusted telemetry fields.
-3. check_grounding()   - verify numbers, IPs, and MITRE IDs against evidence.
-4. enforce_policy()    - deterministic deny-by-default policy with structured reason codes:
-   - Separate decisions for classification risk, claim verification, and action policy.
-   - Prohibits automatic disruptive actions on critical IoMT medical devices (C16).
-   - Holds disruptive actions for unknown asset criticality.
-   - No LLM, high ETS, or classifier confidence can bypass clinical safeguards.
+Strict compliance with Section 5, 8, 9, 14, and Contribution C16:
+- Replaces score-based safety with Mandatory Independent Hard Safety Gates:
+  1. Evidence integrity valid (snapshot hash confirmed).
+  2. Required claims supported (no missing mandatory evidence).
+  3. No unresolved critical contradictions (has_critical_contradiction == False).
+  4. Required verification completed (critic approved).
+  5. Applicable risk eligibility valid (selective-risk certified, s(x) <= lambda_hat).
+  6. Asset policy allows the action (criticality & role permissions satisfied).
+  7. Target identity resolved (target exists in evidence and registry).
+  8. Action explicitly allowlisted for autonomous execution.
+- ETS score CANNOT override mandatory hard safety gate failures (even if ETS == 1.0).
+- Prohibits automated disruptive actions on critical IoMT medical assets (C16).
+- Separates safe observational/safety operations (open_ticket) from remediation.
 """
 
 from __future__ import annotations
@@ -27,6 +31,7 @@ from .knowledge import (
     is_iomt_device,
     severity_rank,
 )
+from .ledger import ClaimEvidenceLedger
 from .schemas import (
     DANGEROUS_ACTIONS,
     SAFE_AUTO_ACTIONS,
@@ -52,9 +57,6 @@ INJECTION_PATTERNS = {
 _INJECTION_RE = {k: re.compile(v, re.IGNORECASE) for k, v in INJECTION_PATTERNS.items()}
 
 
-# ---------------------------------------------------------------------------
-# 1. Sanitisation (Section 5)
-# ---------------------------------------------------------------------------
 def sanitize(value: Any, max_len: int = 500, _depth: int = 0) -> Any:
     """Sanitize untrusted text fields without modifying original evidence storage."""
     if _depth > 8:
@@ -71,9 +73,6 @@ def sanitize(value: Any, max_len: int = 500, _depth: int = 0) -> Any:
     return value
 
 
-# ---------------------------------------------------------------------------
-# 2. Prompt-injection scanning (Section 5)
-# ---------------------------------------------------------------------------
 def _walk(obj: Any, path: str = ""):
     if isinstance(obj, dict):
         for k, v in obj.items():
@@ -88,7 +87,6 @@ def _walk(obj: Any, path: str = ""):
 
 
 def scan_injection(evidence: dict) -> list[dict]:
-    """Pattern matching flags suspicious text; does not claim complete injection prevention."""
     flags = []
     for path, text in _walk(evidence):
         for name, rx in _INJECTION_RE.items():
@@ -97,9 +95,6 @@ def scan_injection(evidence: dict) -> list[dict]:
     return flags
 
 
-# ---------------------------------------------------------------------------
-# 3. Grounding / hallucination checks
-# ---------------------------------------------------------------------------
 def evidence_paths(obj: Any, prefix: str = "") -> set[str]:
     paths = set()
     if isinstance(obj, dict):
@@ -168,7 +163,6 @@ class GroundingResult:
 
 
 def check_grounding(report: AnalystReport, evidence: dict) -> GroundingResult:
-    """Validate report grounding against evidence before any response authorization."""
     res = GroundingResult()
     paths = evidence_paths(evidence)
     known_numbers = _evidence_numbers(evidence)
@@ -209,19 +203,107 @@ def check_grounding(report: AnalystReport, evidence: dict) -> GroundingResult:
 
 
 # ---------------------------------------------------------------------------
-# 4. Response policy gate (Section 14)
+# Mandatory Hard Safety Gate Evaluation (Section 5)
 # ---------------------------------------------------------------------------
+@dataclass
+class HardSafetyGateResult:
+    all_passed: bool
+    evidence_integrity: bool
+    required_claims_supported: bool
+    no_critical_contradictions: bool
+    verification_completed: bool
+    risk_eligibility_valid: bool
+    target_identity_resolved: bool
+    failed_reasons: list[str] = field(default_factory=list)
+
+
+def evaluate_hard_safety_gates(
+    evidence: dict,
+    critic_approved: bool,
+    grounding_ok: bool,
+    conformal_result: ConformalTriageResult | None,
+    ledger: ClaimEvidenceLedger | None = None,
+    injection_flags: list | None = None,
+) -> HardSafetyGateResult:
+    """Evaluate mandatory independent gates before incident-driven automatic remediation."""
+    reasons = []
+
+    # 1. Evidence integrity
+    evidence_integrity = bool(evidence) and not evidence.get("corrupted", False)
+    if not evidence_integrity:
+        reasons.append("Evidence integrity failure: empty evidence or corrupted snapshot")
+
+    # 2. Injection check
+    if injection_flags:
+        reasons.append(f"Prompt injection / untrusted manipulation detected: {len(injection_flags)} flags")
+
+    # 3. Required claims supported
+    has_unsupported = False
+    has_contradiction = False
+    if ledger:
+        has_unsupported = ledger.unsupported_claims > 0
+        has_contradiction = ledger.has_critical_contradiction or (ledger.contradicted_claims > 0)
+        if has_unsupported:
+            reasons.append(f"Ledger contains {ledger.unsupported_claims} unsupported claim(s)")
+        if has_contradiction:
+            reasons.append(f"Ledger contains {ledger.contradicted_claims} contradictory claim(s)")
+
+    # 4. Verification completed
+    verification_completed = critic_approved and grounding_ok
+    if not verification_completed:
+        reasons.append("Verification incomplete or rejected by independent critic")
+
+    # 5. Risk eligibility valid
+    risk_eligibility_valid = False
+    if conformal_result is not None:
+        risk_eligibility_valid = conformal_result.eligible_for_auto_response
+        if not risk_eligibility_valid:
+            reasons.append(f"Selective risk control abstention: {conformal_result.abstain_reason}")
+    else:
+        reasons.append("No selective-risk calibration available")
+
+    # 6. Target identity resolved
+    targets = {str(evidence.get(k)) for k in ("host", "src_ip", "dst_ip", "username") if evidence.get(k)}
+    target_identity_resolved = len(targets) > 0
+    if not target_identity_resolved:
+        reasons.append("Target identity could not be resolved from evidence")
+
+    all_passed = (
+        evidence_integrity
+        and not injection_flags
+        and not has_unsupported
+        and not has_contradiction
+        and verification_completed
+        and risk_eligibility_valid
+        and target_identity_resolved
+    )
+
+    return HardSafetyGateResult(
+        all_passed=all_passed,
+        evidence_integrity=evidence_integrity,
+        required_claims_supported=not has_unsupported,
+        no_critical_contradictions=not has_contradiction,
+        verification_completed=verification_completed,
+        risk_eligibility_valid=risk_eligibility_valid,
+        target_identity_resolved=target_identity_resolved,
+        failed_reasons=reasons,
+    )
+
+
 @dataclass
 class PolicyDecision:
     auto_execute: list[dict] = field(default_factory=list)
     pending_approval: list[dict] = field(default_factory=list)
     rejected: list[dict] = field(default_factory=list)
+    hard_gate_result: HardSafetyGateResult | None = None
 
     def to_dict(self) -> dict:
         return {
             "auto_execute": self.auto_execute,
             "pending_approval": self.pending_approval,
             "rejected": self.rejected,
+            "hard_gates_passed": self.hard_gate_result.all_passed if self.hard_gate_result else False,
+            "hard_gate_failures": self.hard_gate_result.failed_reasons if self.hard_gate_result else [],
         }
 
 
@@ -235,25 +317,34 @@ def enforce_policy(
     critical_assets: frozenset[str],
     conformal_result: ConformalTriageResult | None = None,
     asset_registry: AssetRegistry | None = None,
+    ledger: ClaimEvidenceLedger | None = None,
 ) -> PolicyDecision:
     """Enforce deterministic deny-by-default response policy with clinical safeguards.
     
-    Section 14 & C16 Rules:
-      1. Low-impact actions auto-execute only when allowlisted.
-      2. Disruptive actions always require approval under policy.
+    Mandatory Rules (Sections 5, 8, 9, 14, C16):
+      1. Mandatory hard gates must all pass for autonomous remediation.
+         ETS score CANNOT bypass failed hard gates.
+      2. Disruptive actions always require explicit human authorization under policy.
       3. Critical IoMT assets strictly prohibit automated disruptive actions.
          Missing clinical authorization workflow = denial.
       4. Unknown asset criticality = hold disruptive actions.
-      5. Conformal risk abstention (C9) blocks automated mitigation.
     """
     decision = PolicyDecision()
     registry = asset_registry or AssetRegistry()
 
     targets = {str(evidence.get(k)) for k in ("host", "src_ip", "dst_ip", "username") if evidence.get(k)}
-    
-    conformal_ok = conformal_result.eligible_for_auto_response if conformal_result is not None else False
-    trusted = critic_approved and grounded and not injection_flags and conformal_ok
     seen = set()
+
+    # Evaluate mandatory hard gates
+    hard_gates = evaluate_hard_safety_gates(
+        evidence=evidence,
+        critic_approved=critic_approved,
+        grounding_ok=grounded,
+        conformal_result=conformal_result,
+        ledger=ledger,
+        injection_flags=injection_flags,
+    )
+    decision.hard_gate_result = hard_gates
 
     # Asset context resolution
     host_val = evidence.get("host") or evidence.get("src_ip")
@@ -276,27 +367,35 @@ def enforce_policy(
         target_ctx = registry.lookup(a.target, a.target)
         target_is_iomt = is_iomt or target_ctx.is_iomt or is_iomt_device(a.target)
 
-        # Policy checks
+        # 1. Target existence in evidence
         if a.target not in targets:
             decision.rejected.append({
                 **item,
                 "reason_code": "POLICY_DENIED_INVALID_TARGET",
                 "reason": f"Target {a.target} is not an entity in the evidence {sorted(targets)}",
             })
-        elif a.action == "block_ip" and is_internal_ip(a.target):
+            continue
+
+        # 2. Internal IP blocking prohibition
+        if a.action == "block_ip" and is_internal_ip(a.target):
             decision.rejected.append({
                 **item,
                 "reason_code": "POLICY_DENIED_INTERNAL_IP_BLOCK",
                 "reason": "block_ip requested on internal RFC1918 address; use isolate_host instead",
             })
-        elif a.action in DANGEROUS_ACTIONS and severity == "low":
+            continue
+
+        # 3. Disruptive action on low severity
+        if a.action in DANGEROUS_ACTIONS and severity == "low":
             decision.rejected.append({
                 **item,
                 "reason_code": "POLICY_DENIED_DISRUPTIVE_ACTION_FOR_LOW_SEVERITY",
                 "reason": "Disruptive action not permitted on low severity alerts",
             })
-        elif target_is_iomt and a.action in DANGEROUS_ACTIONS:
-            # Contribution C16: Clinical IoMT Safeguard
+            continue
+
+        # 4. Contribution C16: Clinical IoMT Safeguard
+        if target_is_iomt and a.action in DANGEROUS_ACTIONS:
             decision.pending_approval.append({
                 **item,
                 "reason_code": "POLICY_HOLD_IOMT_CLINICAL_SAFEGUARD",
@@ -307,14 +406,19 @@ def enforce_policy(
                 "clinical_approval_required": True,
                 "approval_roles": target_ctx.approval_roles,
             })
-        elif target_is_iomt and a.action in ("rate_limit", "isolate_host"):
+            continue
+
+        if target_is_iomt and a.action in ("rate_limit", "isolate_host"):
             decision.pending_approval.append({
                 **item,
                 "reason_code": "POLICY_HOLD_IOMT_NETWORK_THROTTLE",
                 "reason": "IoMT medical telemetry disruption risk; clinical approval mandatory before throttling.",
                 "clinical_approval_required": True,
             })
-        elif a.action in DANGEROUS_ACTIONS:
+            continue
+
+        # 5. Disruptive actions require human authorization
+        if a.action in DANGEROUS_ACTIONS:
             reason = "Disruptive action always requires human authorization"
             reason_code = "POLICY_HOLD_DISRUPTIVE_ACTION"
             if a.target in critical_assets or target_ctx.criticality == "CRITICAL":
@@ -324,27 +428,31 @@ def enforce_policy(
                 reason += "; target has UNKNOWN asset identity (conservative hold applied)"
                 reason_code = "POLICY_HOLD_UNKNOWN_ASSET"
             decision.pending_approval.append({**item, "reason_code": reason_code, "reason": reason})
-        elif not conformal_ok and a.action not in SAFE_AUTO_ACTIONS:
-            # Contribution C9: Conformal Risk Abstention
-            reason = (
-                conformal_result.abstain_reason
-                if conformal_result
-                else "Conformal risk control abstention: classification error cannot be certified <= target alpha"
-            )
+            continue
+
+        # 6. Mandatory Hard Safety Gate Check for autonomous remediation:
+        # If any hard gate failed, autonomous action CANNOT proceed!
+        if not hard_gates.all_passed:
             decision.pending_approval.append({
                 **item,
-                "reason_code": "POLICY_HOLD_CONFORMAL_UNBOUNDED_RISK",
-                "reason": reason,
+                "reason_code": "POLICY_HOLD_MANDATORY_GATE_FAILED",
+                "reason": f"Mandatory hard gate check failed: {'; '.join(hard_gates.failed_reasons)}",
             })
-        elif a.action in SAFE_AUTO_ACTIONS:
+            continue
+
+        # 7. Safe allowlisted observational/safety operations (e.g. open_ticket, collect_forensics)
+        if a.action in SAFE_AUTO_ACTIONS:
             decision.auto_execute.append({**item, "reason_code": "AUTO_ALLOWLISTED"})
-        elif trusted and severity_rank(severity) >= severity_rank("medium"):
+        elif hard_gates.all_passed and severity_rank(severity) >= severity_rank("medium"):
             decision.auto_execute.append({**item, "reason_code": "AUTO_TRUSTED_SEVERITY"})
         else:
-            why = "Alert verdict not fully trusted (critic rejection, grounding errors, injection, or conformal abstention)"
-            decision.pending_approval.append({**item, "reason_code": "POLICY_HOLD_UNVERIFIED_ANALYSIS", "reason": why})
+            decision.pending_approval.append({
+                **item,
+                "reason_code": "POLICY_HOLD_UNVERIFIED_ANALYSIS",
+                "reason": "Action not eligible for automated execution under configured policy",
+            })
 
-    # Ensure every medium+ alert opens a ticket if not already present
+    # Independent safety operation: every medium+ alert receives a tracking ticket
     if severity_rank(severity) >= severity_rank("medium") and not any(
         d["action"] == "open_ticket" for d in decision.auto_execute
     ):

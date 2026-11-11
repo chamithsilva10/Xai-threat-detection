@@ -270,28 +270,97 @@ def cmd_approve(args):
     if not lines:
         print("No pending actions awaiting approval.")
         return
+
+    from .connectors import ApprovalManager, DryRunResponseConnector
+    from .schemas import ActionProposal
+
+    mgr = ApprovalManager()
+    connector = DryRunResponseConnector(mgr)
+
+    # 1. Authenticate primary sign-off authority
+    analyst_id = getattr(args, "analyst_id", "soc_lead_chamith")
+    analyst_key = getattr(args, "analyst_key", None)
+    clinical_id = getattr(args, "clinical_id", None)
+    clinical_key = getattr(args, "clinical_key", None)
+
     remaining = []
     executed = []
-    import time
+
     for line in lines:
         item = json.loads(line)
         match = (args.alert_id == "all" or item.get("alert_id") == args.alert_id)
         if match:
-            item["status"] = "executed"
-            item["approved_by"] = getattr(args, "analyst_id", "soc_tier2_lead")
-            item["executed_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            # Check IoMT dual-authorization requirement
+            requires_clinical = item.get("clinical_approval_required", False)
+            if requires_clinical:
+                if not clinical_id:
+                    print(
+                        f"❌ Refusing execution for {item.get('action')} on {item.get('target')}: "
+                        f"Target is life-critical IoMT medical equipment. Joint clinical engineering approval is mandatory! "
+                        f"Please provide --clinical-id and --clinical-key.",
+                        file=sys.stderr,
+                    )
+                    remaining.append(line)
+                    continue
+
+                if clinical_id == analyst_id:
+                    print(
+                        f"❌ SEPARATION_OF_DUTIES_VIOLATION: Security approver ({analyst_id}) "
+                        f"and clinical approver ({clinical_id}) must be distinct identities.",
+                        file=sys.stderr,
+                    )
+                    remaining.append(line)
+                    continue
+
+            prop = ActionProposal(
+                incident_id=item.get("alert_id", "INC-ALERT"),
+                action=item.get("action", "unknown"),
+                target=item.get("target", "unknown"),
+                canonical_parameters=item.get("parameters", {}),
+                justification=item.get("justification", item.get("reason", "Approved by analyst")),
+                is_disruptive=True,
+                requires_clinical_authorization=requires_clinical,
+            )
+
+            try:
+                appr = mgr.issue_approval(
+                    proposal=prop,
+                    evidence_snapshot_hash=item.get("evidence_snapshot_hash", "manual-approval-hash"),
+                    approver_id=analyst_id,
+                    approver_key=analyst_key,
+                    clinical_approver_id=clinical_id,
+                    clinical_approver_key=clinical_key,
+                )
+                exec_res = connector.execute(
+                    prop,
+                    appr,
+                    evidence_snapshot_hash=item.get("evidence_snapshot_hash", "manual-approval-hash"),
+                )
+            except Exception as e:
+                print(f"❌ Authorization/Execution error: {e}", file=sys.stderr)
+                remaining.append(line)
+                continue
+
+            item["status"] = exec_res.state.lower()
+            item["approval_token"] = appr.approval_token
+            item["approved_by"] = analyst_id
+            item["clinical_approved_by"] = clinical_id
+            item["execution_mode"] = "DRY_RUN"
+            item["external_effect"] = False
+            item["executed_at"] = (exec_res.executed_at.isoformat() if exec_res.executed_at else utc_now().isoformat())
             executed.append(item)
             audit.append(settings.audit_log, {"event": "action_executed", **item})
         else:
             remaining.append(line)
+
     p_file.write_text("\n".join(remaining) + ("\n" if remaining else ""), encoding="utf-8")
     if executed:
-        print(f"\n✔ Successfully authorized and executed {len(executed)} remediation action(s):")
+        print(f"\n✔ Successfully authorized and executed {len(executed)} remediation action(s) (DRY_RUN):")
         for ex in executed:
-            print(f"  [{ex['action'].upper()}] -> Target: {ex['target']} | Fix: {ex['justification']}")
+            print(f"  [{ex['action'].upper()}] -> Target: {ex['target']} | Token: {ex.get('approval_token')} | Fix: {ex['justification']}")
         print(f"\nRemediation recorded in immutable audit log: {settings.audit_log}")
     else:
-        print(f"No pending actions found for alert '{args.alert_id}'.")
+        print(f"No pending actions executed for alert '{args.alert_id}'.")
 
 
 # ---------------------------------------------------------------------------
@@ -355,7 +424,10 @@ def main(argv=None):
 
     app = add("approve", cmd_approve, "authorize and execute remediation actions for an alert (or all)")
     app.add_argument("--alert-id", default="all", help="Alert ID to approve, or 'all'")
-    app.add_argument("--analyst-id", default="soc_analyst_lead", help="Sign-off authority ID")
+    app.add_argument("--analyst-id", default="soc_lead_chamith", help="Sign-off authority ID")
+    app.add_argument("--analyst-key", default=None, help="Authentication key for sign-off authority")
+    app.add_argument("--clinical-id", default=None, help="Clinical engineering approver ID (mandatory for IoMT devices)")
+    app.add_argument("--clinical-key", default=None, help="Clinical engineering secret key (mandatory for IoMT devices)")
 
     # Analyst Feedback (C4)
     fb = add("feedback", cmd_feedback, "record human analyst feedback on an alert")

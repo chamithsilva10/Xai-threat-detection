@@ -1,23 +1,25 @@
 """Headline Contribution C1: Typed Claim-Evidence Ledger.
 
-Adheres strictly to Section 10:
+Strict compliance with Sections 7, 8, and 10:
+- Uses RFC 8785 JSON Canonicalization Scheme (JCS) for deterministic hashing.
 - Uses RFC 6901 JSON Pointer syntax (/path/to/field) with unescaping (~1 -> /, ~0 -> ~).
 - Deterministic verification checking path existence, value agreement within tolerance,
-  entity identity, and attribution sign.
+  entity identity, attribution class, and attribution sign.
 - Returns explicit status: SUPPORTED, UNSUPPORTED, CONTRADICTED.
-- Canonical JSON hashing (deterministic serialization).
+- Preserves factual supported-claim ratio: factual ratio is NOT overwritten merely to encode rejection.
+- Explicit mandatory verification pass/fail gate: any critical contradiction or unsupported
+  required claim sets mandatory_verification_passed = False.
 - Handles empty claim sets explicitly: total_claims == 0 receives 0.0 grounding, never 1.0!
-- Critical contradictions immediately void grounding (cannot be diluted by trivial claims).
 """
 
 from __future__ import annotations
 
 import hashlib
-import json
 import math
 import re
 from typing import Any
 
+from .canonical_json import canonical_json_bytes, canonicalize
 from .schemas import (
     AtomicClaim,
     Claim,
@@ -32,13 +34,8 @@ _IPV4 = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
 _NUM = re.compile(r"(?<![\w.])\d+(?:\.\d+)?(?![\w])")
 
 
-def canonical_json_bytes(obj: Any) -> bytes:
-    """Deterministic JSON serialization for SHA-256 evidence snapshot hashing."""
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
-
-
 def compute_evidence_hash(evidence: dict) -> str:
-    """Compute SHA-256 digest of canonical evidence JSON."""
+    """Compute SHA-256 digest of RFC 8785 canonical evidence JSON."""
     return hashlib.sha256(canonical_json_bytes(evidence)).hexdigest()
 
 
@@ -79,7 +76,6 @@ def resolve_json_pointer(doc: Any, pointer: str) -> tuple[bool, Any]:
     if not clean.startswith("/") and "." in clean:
         clean = "/" + clean.replace(".", "/")
     elif not clean.startswith("/"):
-        # Could be an abbreviated single key or top-level key
         clean = "/" + clean
 
     # Tokenize and unescape RFC 6901 (~1 -> /, ~0 -> ~)
@@ -126,7 +122,6 @@ def resolve_json_pointer(doc: Any, pointer: str) -> tuple[bool, Any]:
     return False, None
 
 
-# Alias for backwards compatibility
 resolve_evidence_path = resolve_json_pointer
 
 
@@ -154,6 +149,8 @@ class ClaimEvidenceLedger:
         self.supported_ratio: float = 0.0
         self.unsupported_rate: float = 0.0
         self.has_contradiction: bool = False
+        self.has_critical_contradiction: bool = False
+        self.mandatory_verification_passed: bool = False
 
     @property
     def total_claims(self) -> int:
@@ -198,6 +195,8 @@ class ClaimEvidenceLedger:
             self.supported_ratio = 0.0
             self.unsupported_rate = 1.0
             self.has_contradiction = False
+            self.has_critical_contradiction = False
+            self.mandatory_verification_passed = False
             return self.to_schema()
 
         for idx, c in enumerate(claims, 1):
@@ -219,12 +218,16 @@ class ClaimEvidenceLedger:
             is_supported = True
             is_contradicted = False
 
+            if getattr(c, "contradicts", False) or getattr(c, "verification_status", None) == "CONTRADICTED":
+                is_contradicted = True
+                contradiction_reasons.append(getattr(c, "contradiction_detail", "") or "Explicit contradiction flag on claim")
+
             if missing_keys or not raw_keys:
                 is_supported = False
                 status: VerificationStatus = "UNSUPPORTED"
                 notes = f"Grounding check failed: missing evidence pointer(s) {missing_keys}"
             else:
-                # Check for numerical value contradictions
+                # 1. Semantic Numeric Check: Check whether asserted numbers match resolved values
                 stmt_nums = extract_numbers_from_text(stmt)
                 for ptr, val in resolved.items():
                     if isinstance(val, (int, float)) and stmt_nums:
@@ -233,13 +236,28 @@ class ClaimEvidenceLedger:
                             abs(sn - val_f) <= max(0.5, 0.05 * max(abs(val_f), 1.0))
                             for sn in stmt_nums
                         )
+                        # Significant divergence indicates a contradiction
                         if not matches_any and len(stmt_nums) == 1 and abs(stmt_nums[0] - val_f) > 5.0:
                             is_contradicted = True
                             contradiction_reasons.append(
                                 f"Statement asserts {stmt_nums[0]} but evidence {ptr} is {val_f}"
                             )
 
-                # Check if critic explicitly flagged claim
+                # 2. Semantic Attribution Check: Feature attribution sign and class check
+                if "attributions" in str(raw_keys).lower():
+                    # If claim asserts feature pushed toward benign but attribution was positive for attack
+                    stmt_lower = stmt.lower()
+                    if "pushed the model toward benign" in stmt_lower:
+                        for ptr, val in resolved.items():
+                            if isinstance(val, list):
+                                for item in val:
+                                    if isinstance(item, dict) and item.get("contribution", 0) > 0.05:
+                                        is_contradicted = True
+                                        contradiction_reasons.append(
+                                            f"Attribution sign contradiction: feature contributed positively to attack class, not benign."
+                                        )
+
+                # 3. Independent critic feedback
                 stmt_lower = stmt.strip().lower()
                 critic_flagged = any(
                     stmt_lower in uns or uns in stmt_lower or f"claim {idx}" in uns
@@ -279,16 +297,20 @@ class ClaimEvidenceLedger:
         self.claims = records
         total = len(records)
         self.has_contradiction = (contradicted_cnt > 0)
+        self.has_critical_contradiction = (contradicted_cnt > 0)
 
-        if total == 0:
-            self.supported_ratio = 0.0
-            self.unsupported_rate = 1.0
-        elif self.has_contradiction:
-            self.supported_ratio = 0.0
-            self.unsupported_rate = float(unsupported_cnt + contradicted_cnt) / float(total)
-        else:
-            self.supported_ratio = float(supported_cnt) / float(total)
-            self.unsupported_rate = float(unsupported_cnt) / float(total)
+        # Audit Requirement (Section 5):
+        # "Store both:
+        #  - The actual supported-claim ratio.
+        #  - The mandatory verification pass/fail decision.
+        #  Do not overwrite the factual ratio merely to encode rejection."
+        self.supported_ratio = float(supported_cnt) / float(total) if total > 0 else 0.0
+        self.unsupported_rate = float(unsupported_cnt + contradicted_cnt) / float(total) if total > 0 else 1.0
+
+        # Mandatory hard gate decision
+        self.mandatory_verification_passed = (
+            total > 0 and contradicted_cnt == 0 and unsupported_cnt == 0
+        )
 
         self.revision_history.append({
             "round": round_no,
@@ -297,6 +319,7 @@ class ClaimEvidenceLedger:
             "unsupported": unsupported_cnt,
             "contradicted": contradicted_cnt,
             "supported_ratio": round(self.supported_ratio, 4),
+            "mandatory_passed": self.mandatory_verification_passed,
         })
         return self.to_schema()
 
@@ -321,6 +344,8 @@ class ClaimEvidenceLedger:
             contradicted_claims=contradicted,
             supported_ratio=round(self.supported_ratio, 4),
             unsupported_rate=round(self.unsupported_rate, 4),
+            mandatory_verification_passed=self.mandatory_verification_passed,
+            has_critical_contradiction=self.has_critical_contradiction,
             disagreements=self.disagreements,
             hash_digest=self.evidence_snapshot_hash,
         )

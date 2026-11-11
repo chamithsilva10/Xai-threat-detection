@@ -360,6 +360,8 @@ class AnalystFeedback(BaseModel):
 class Claim(BaseModel):
     statement: str = Field(description="One factual sentence about the alert.")
     evidence_keys: list[str] = Field(description="Evidence keys (JSON pointers or dotted paths).")
+    contradicts: bool = Field(default=False, description="Whether claim contradicts known ground truth evidence")
+    contradiction_detail: str = Field(default="", description="Reasoning for contradiction")
 
     _list = field_validator("evidence_keys", mode="before")(_as_list)
 
@@ -386,6 +388,8 @@ class ClaimEvidenceLedgerSchema(BaseModel):
     contradicted_claims: int = 0
     supported_ratio: float = 0.0
     unsupported_rate: float = 0.0
+    mandatory_verification_passed: bool = False
+    has_critical_contradiction: bool = False
     disagreements: list[str] = Field(default_factory=list)
     hash_digest: str = ""
 

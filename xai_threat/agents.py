@@ -202,6 +202,7 @@ class ResponseOrchestratorAgent:
         grounded: bool,
         flags: list,
         conformal_result: ConformalTriageResult | None,
+        ledger: ClaimEvidenceLedger | None = None,
     ) -> PolicyDecision:
         return enforce_policy(
             plan=plan,
@@ -212,6 +213,7 @@ class ResponseOrchestratorAgent:
             injection_flags=flags,
             critical_assets=self.critical_assets,
             conformal_result=conformal_result,
+            ledger=ledger,
         )
 
 

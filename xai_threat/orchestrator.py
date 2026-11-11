@@ -245,6 +245,7 @@ class Orchestrator:
             grounded=grounding.ok,
             flags=flags,
             conformal_result=conformal_res,
+            ledger=ledger,
         )
 
         # C13: Composite Explanation Trust Score (ETS)

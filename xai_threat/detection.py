@@ -273,7 +273,8 @@ class ThreatDetector:
         return det
 
     @classmethod
-    def load_or_train(cls, path: Path) -> "ThreatDetector":
+    def load_or_train(cls, path: Path | str) -> "ThreatDetector":
+        path = Path(path)
         if path.is_file():
             try:
                 return cls.load(path)
