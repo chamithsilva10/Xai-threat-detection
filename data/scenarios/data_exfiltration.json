@@ -1,0 +1,18 @@
+{
+  "window_minutes": 5,
+  "protocol": "tcp",
+  "flow_id": "F-1002",
+  "timestamp": "2026-10-07T23:41:55Z",
+  "host": "ws-finance-07",
+  "src_ip": "10.0.3.22",
+  "dst_ip": "45.133.1.20",
+  "dst_port": 443,
+  "failed_logins": 0,
+  "conn_rate": 4.1,
+  "distinct_dst_ports": 2,
+  "bytes_out_mb": 840,
+  "bytes_in_mb": 1.8,
+  "off_hours": 1,
+  "dns_query_entropy": 3.0,
+  "beacon_regularity": 0.3
+}

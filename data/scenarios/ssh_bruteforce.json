@@ -1,0 +1,19 @@
+{
+  "window_minutes": 5,
+  "protocol": "tcp",
+  "flow_id": "F-1001",
+  "timestamp": "2026-10-07T02:14:09Z",
+  "host": "10.0.2.15",
+  "src_ip": "185.220.101.47",
+  "dst_ip": "10.0.2.15",
+  "dst_port": 22,
+  "username": "root",
+  "failed_logins": 212,
+  "conn_rate": 58,
+  "distinct_dst_ports": 1,
+  "bytes_out_mb": 0.4,
+  "bytes_in_mb": 0.6,
+  "off_hours": 1,
+  "dns_query_entropy": 2.4,
+  "beacon_regularity": 0.35
+}

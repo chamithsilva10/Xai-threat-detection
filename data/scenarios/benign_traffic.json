@@ -1,0 +1,20 @@
+{
+  "window_minutes": 5,
+  "protocol": "tcp",
+  "flow_id": "BENIGN-2026-001",
+  "timestamp": "2026-11-11T09:00:00Z",
+  "host": "ws-engineering-04",
+  "src_ip": "10.0.1.44",
+  "dst_ip": "10.0.0.15",
+  "dst_port": 443,
+  "username": "developer",
+  "failed_logins": 0,
+  "conn_rate": 2.5,
+  "distinct_dst_ports": 2,
+  "bytes_out_mb": 1.2,
+  "bytes_in_mb": 4.5,
+  "off_hours": 0,
+  "dns_query_entropy": 2.55,
+  "beacon_regularity": 0.12,
+  "notes": "Standard developer HTTPS web browsing and internal code repository access."
+}

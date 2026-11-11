@@ -1,0 +1,14 @@
+{
+  "host": "10.0.2.15",
+  "anomaly_score": 0.93,
+  "classifier_label": "SSH_BruteForce (0.96)",
+  "failed_logins": 212,
+  "window_minutes": 4,
+  "src_ip_intel": "listed in known Tor-exit IOC feed",
+  "shap_top": {
+    "failed_logins": 0.41,
+    "conn_rate": 0.22,
+    "off_hours": 0.09
+  },
+  "bytes_out_mb": 2
+}

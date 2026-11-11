@@ -1,0 +1,19 @@
+{
+  "window_minutes": 5,
+  "protocol": "tcp",
+  "flow_id": "IOMT-2024-001",
+  "timestamp": "2026-11-05T08:15:00Z",
+  "host": "infusion-pump-01",
+  "src_ip": "10.0.12.88",
+  "dst_ip": "198.51.100.99",
+  "dst_port": 8883,
+  "failed_logins": 0,
+  "conn_rate": 4.1,
+  "distinct_dst_ports": 1,
+  "bytes_out_mb": 0.4,
+  "bytes_in_mb": 0.3,
+  "off_hours": 0,
+  "dns_query_entropy": 4.25,
+  "beacon_regularity": 0.96,
+  "notes": "IoMT smart infusion pump in Intensive Care Unit 3 transmitting telemetry to untrusted external IP over MQTT/TLS."
+}

@@ -1,0 +1,30 @@
+{
+  "_comment": "Example IOC feed for the demo. Replace with MISP/OpenCTI/AbuseIPDB exports.",
+  "indicators": [
+    {
+      "indicator": "185.220.101.47",
+      "feeds": [
+        "tor-exit-nodes",
+        "abuse-ssh-bruteforce"
+      ],
+      "category": "anonymizer/bruteforce",
+      "first_seen": "2026-08-14"
+    },
+    {
+      "indicator": "45.133.1.20",
+      "feeds": [
+        "exfil-staging-hosts"
+      ],
+      "category": "data-exfiltration",
+      "first_seen": "2026-09-02"
+    },
+    {
+      "indicator": "91.219.236.18",
+      "feeds": [
+        "c2-tracker"
+      ],
+      "category": "command-and-control",
+      "first_seen": "2026-07-21"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "window_minutes": 5,
+  "protocol": "tcp",
+  "flow_id": "F-1003",
+  "timestamp": "2026-10-07T11:02:31Z",
+  "host": "web-dmz-02",
+  "src_ip": "193.32.162.77",
+  "dst_ip": "10.0.1.40",
+  "failed_logins": 2,
+  "conn_rate": 95,
+  "distinct_dst_ports": 640,
+  "bytes_out_mb": 0.3,
+  "bytes_in_mb": 0.4,
+  "off_hours": 0,
+  "dns_query_entropy": 2.6,
+  "beacon_regularity": 0.5
+}

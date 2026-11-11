@@ -1,0 +1,18 @@
+{
+  "window_minutes": 5,
+  "protocol": "tcp",
+  "flow_id": "F-1004",
+  "timestamp": "2026-10-07T04:00:00Z",
+  "host": "db-prod-01",
+  "src_ip": "10.0.5.40",
+  "dst_ip": "91.219.236.18",
+  "dst_port": 443,
+  "failed_logins": 0,
+  "conn_rate": 2.7,
+  "distinct_dst_ports": 1,
+  "bytes_out_mb": 1.1,
+  "bytes_in_mb": 0.9,
+  "off_hours": 1,
+  "dns_query_entropy": 4.3,
+  "beacon_regularity": 0.94
+}

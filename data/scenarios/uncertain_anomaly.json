@@ -1,0 +1,20 @@
+{
+  "window_minutes": 5,
+  "protocol": "tcp",
+  "flow_id": "ANOM-2026-002",
+  "timestamp": "2026-11-11T09:15:00Z",
+  "host": "srv-app-dev-02",
+  "src_ip": "10.0.3.88",
+  "dst_ip": "10.0.3.1",
+  "dst_port": 8080,
+  "username": "qa_tester",
+  "failed_logins": 2,
+  "conn_rate": 20.0,
+  "distinct_dst_ports": 12,
+  "bytes_out_mb": 1.0,
+  "bytes_in_mb": 1.0,
+  "off_hours": 1,
+  "dns_query_entropy": 3.0,
+  "beacon_regularity": 0.60,
+  "notes": "Borderline / ambiguous activity: moderate ports and rates causing classification uncertainty s(x) > lambda."
+}
