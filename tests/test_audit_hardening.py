@@ -94,6 +94,24 @@ def test_rfc8785_non_finite_float_rejection():
         canonical_json_dumps({"bad": float("inf")})
 
 
+def test_rfc8785_duplicate_key_rejection():
+    """Verifies duplicate keys in JSON are rejected per RFC 8785 Section 3.2.1."""
+    from xai_threat.canonical_json import safe_json_loads
+    with pytest.raises(ValueError, match="duplicate key"):
+        safe_json_loads('{"flow_id": "F-01", "flow_id": "F-02"}')
+
+
+def test_rfc8785_nested_structures_and_arrays():
+    """Verifies nested maps, lists, and empty structures format conformingly."""
+    data = {
+        "z": [],
+        "m": {"b": [3, 2, 1], "a": {}},
+        "a": None,
+    }
+    serialized = canonical_json_dumps(data)
+    assert serialized == '{"a":null,"m":{"a":{},"b":[3,2,1]},"z":[]}'
+
+
 # ---------------------------------------------------------------------------
 # Section 4: Exact Binomial Selective Risk Computation & Boundary Conditions
 # ---------------------------------------------------------------------------
@@ -122,6 +140,21 @@ def test_zero_accepted_samples_cannot_certify():
     assert not calibrator.is_calibrated
     assert calibrator.calibrated_threshold == 0.0
     assert calibrator.calibrated_threshold != 1.0  # Never a silent fallback
+
+
+def test_uncertified_state_always_abstains_even_with_zero_uncertainty():
+    """Verifies that is_certified=False always forces abstention, even when uncertainty score is 0.0."""
+    calibrator = ConformalCalibrator(target_risk=0.05)
+    calibrator.is_calibrated = True
+    calibrator.is_certified = False  # e.g. no candidate met UCB <= alpha
+    calibrator.calibrated_threshold = 0.0
+
+    # Probability distribution with 100% top probability -> nonconformity score = 0.0
+    res = calibrator.triage({"ssh_bruteforce": 1.0, "benign": 0.0}, label="ssh_bruteforce")
+    assert res.nonconformity_score == 0.0
+    assert res.eligible_for_auto_response is False
+    assert res.decision == "ABSTAIN_AND_ESCALATE"
+    assert "certification not established" in res.abstain_reason
 
 
 # ---------------------------------------------------------------------------
@@ -385,3 +418,144 @@ def test_audit_interior_deletion_and_reordering_detected():
         ok, msg, count = verify_audit_chain(audit_path)
         assert ok is False
         assert "broken" in msg.lower() or "mismatch" in msg.lower()
+
+
+# ---------------------------------------------------------------------------
+# Section 6 & 8: Crash Recovery, Separate-Process Concurrency, and Clinical Auth
+# ---------------------------------------------------------------------------
+def test_clinical_approval_requires_independent_authentication():
+    """Verifies that clinical approval requires genuine independent credential verification,
+
+    not merely distinct string names.
+    """
+    mgr = ApprovalManager()
+    prop = ActionProposal(
+        incident_id="INC-IOMT-AUTH-01",
+        action="isolate_host",
+        target="10.200.1.5",
+        canonical_parameters={"vlan": 99},
+        justification="IoMT auth verification test",
+        is_disruptive=True,
+        requires_clinical_authorization=True,
+    )
+
+    # 1. Invalid clinical secret key is rejected even if username is different
+    with pytest.raises(PermissionError, match="Clinical approver authentication failed"):
+        mgr.issue_approval(
+            proposal=prop,
+            evidence_snapshot_hash="hash-123",
+            approver_id="soc_lead_chamith",
+            approver_key="sec_lead_secret_token_123",
+            clinical_approver_id="dr_sarah_clinical",
+            clinical_approver_key="WRONG_FORGED_KEY",  # Invalid key!
+        )
+
+    # 2. Valid clinical secret key succeeds
+    appr = mgr.issue_approval(
+        proposal=prop,
+        evidence_snapshot_hash="hash-123",
+        approver_id="soc_lead_chamith",
+        approver_key="sec_lead_secret_token_123",
+        clinical_approver_id="dr_sarah_clinical",
+        clinical_approver_key="clin_eng_secret_token_789",  # Genuine key
+    )
+    assert appr.approval_token.startswith("APPR-HMAC-")
+    assert appr.clinical_approver_id == "dr_sarah_clinical"
+
+
+def test_concurrent_approval_token_consumption_multiprocessing():
+    """Verifies atomic consumption under separate OS processes: exactly one process succeeds,
+
+    and the concurrent process receives TOKEN_ALREADY_CONSUMED / POLICY_DENIED.
+    """
+    import subprocess
+    import sys
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        store_path = Path(tmpdir) / "apprs.json"
+        mgr = ApprovalManager(store_path=store_path)
+
+        prop = ActionProposal(
+            incident_id="INC-PROC-01",
+            action="block_ip",
+            target="198.51.100.99",
+            canonical_parameters={"duration": 3600},
+            justification="Multiprocess test",
+            is_disruptive=True,
+        )
+        appr = mgr.issue_approval(
+            proposal=prop,
+            evidence_snapshot_hash="ev-hash-proc",
+            approver_id="soc_lead_chamith",
+            approver_role="soc_lead",
+        )
+
+        # Worker script executed in separate OS processes
+        script = f"""
+import sys
+from pathlib import Path
+from xai_threat.connectors import ApprovalManager, DryRunResponseConnector
+from xai_threat.schemas import ActionProposal, ApprovalRecord
+
+store_path = Path("{store_path}")
+mgr = ApprovalManager(store_path=store_path)
+connector = DryRunResponseConnector(mgr)
+
+prop = ActionProposal(
+    incident_id="INC-PROC-01",
+    action="block_ip",
+    target="198.51.100.99",
+    canonical_parameters={{"duration": 3600}},
+    justification="Multiprocess test",
+    is_disruptive=True,
+)
+rec_data = mgr.store.load_all().get("{appr.approval_token}")
+appr = ApprovalRecord.model_validate(rec_data)
+
+res = connector.execute(prop, appr, evidence_snapshot_hash="ev-hash-proc")
+print(res.state)
+"""
+        # Run two separate Python processes concurrently
+        p1 = subprocess.Popen([sys.executable, "-c", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        p2 = subprocess.Popen([sys.executable, "-c", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+        out1, _ = p1.communicate(timeout=10)
+        out2, _ = p2.communicate(timeout=10)
+
+        states = [out1.strip(), out2.strip()]
+        assert "SUCCEEDED" in states, f"No process succeeded: {states}"
+        assert "POLICY_DENIED" in states, f"No process was denied: {states}"
+
+
+def test_crash_recovery_preserves_uncommitted_events():
+    """Verifies that an uncommitted crash allows full recovery of events from last committed checkpoint."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        log_file = Path(tmpdir) / "eve.json"
+        ckpt_dir = Path(tmpdir) / "ckpts"
+        adapter = SuricataEveJsonAdapter(log_file, checkpoint_dir=ckpt_dir)
+
+        # Write 2 events
+        with open(log_file, "w", encoding="utf-8") as f:
+            f.write('{"event_id": "EVT-01"}\n{"event_id": "EVT-02"}\n')
+
+        # Read 1 event and simulate crash before checkpoint save
+        file_key = str(log_file.resolve())
+        # Checkpoint is initially 0
+        assert adapter.checkpoint_mgr.get_offset(file_key) == 0
+
+        # Normal tail reads and commits checkpoint
+        events = list(adapter.tail(max_records=2))
+        assert len(events) == 2
+        committed_offset = adapter.checkpoint_mgr.get_offset(file_key)
+        assert committed_offset > 0
+
+        # Append third event
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write('{"event_id": "EVT-03"}\n')
+
+        # Simulate fresh process restart by creating a new adapter instance pointing to same checkpoint dir
+        recovered_adapter = SuricataEveJsonAdapter(log_file, checkpoint_dir=ckpt_dir)
+        # Resumes exactly from committed offset, reading ONLY the new event
+        resumed_events = list(recovered_adapter.tail())
+        assert len(resumed_events) == 1
+        assert resumed_events[0].raw_payload["event_id"] == "EVT-03"

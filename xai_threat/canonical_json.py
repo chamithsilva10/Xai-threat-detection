@@ -1,112 +1,80 @@
 """RFC 8785 JSON Canonicalization Scheme (JCS) Implementation.
 
 Strict compliance with RFC 8785:
-- Object keys sorted by UTF-16 code units.
-- Numbers formatted strictly according to ECMAScript / RFC 8785 rules:
-  * Negative zero (-0.0) is serialized as '0'.
-  * Integers are formatted without a decimal point.
-  * Finite floating point numbers formatted with minimum significant digits.
-  * Non-finite numbers (NaN, Infinity) are rejected with ValueError.
-- Strings escaped with standard JSON escape sequences (\\", \\\\, \\b, \\f, \\n, \\r, \\t, \\uXXXX).
-- No whitespace around separators (',' and ':').
+- Uses the official `rfc8785` reference engine.
+- Negative zero (-0.0) serialized as '0'.
+- Integers formatted without trailing '.0'.
+- Numbers formatted strictly according to ECMAScript / RFC 8785 Section 3.2.2.3 rules.
+- Object keys sorted by UTF-16 code units (RFC 8785 Section 3.2.3).
+- Duplicate keys in JSON payloads are strictly rejected.
+- Non-finite numbers (NaN, Infinity) are strictly rejected with ValueError.
+- Explicit serialization version tag: "RFC8785-v1.0".
 """
 
 from __future__ import annotations
 
-import math
+import json
 from typing import Any
+import rfc8785
+
+CANONICAL_SERIALIZATION_SCHEME = "RFC8785-v1.0"
 
 
-def rfc8785_format_number(val: float | int) -> str:
-    """Format numbers according to RFC 8785 Section 3.2.2.3 (ECMAScript 7.1.12.1)."""
-    if isinstance(val, bool):
-        return "true" if val else "false"
-
-    if isinstance(val, int):
-        return str(val)
-
-    if not math.isfinite(val):
-        raise ValueError(f"RFC 8785 prohibits non-finite numbers: {val}")
-
-    # Negative zero rule: -0.0 -> 0
-    if val == 0.0:
-        return "0"
-
-    # In Python, standard float string representation matches ECMAScript rules for almost all values
-    # Verify integer floats serialize without trailing .0
-    if val.is_integer() and abs(val) < 1e21:
-        return str(int(val))
-
-    # General float formatting
-    s = f"{val:.16g}"
-    # Convert 'e+05' to 'e+5', 'e-05' to 'e-5'
-    if "e" in s:
-        mantissa, exp = s.split("e")
-        sign = exp[0]
-        digits = exp[1:].lstrip("0") or "0"
-        s = f"{mantissa}e{sign}{digits}"
-    return s
+def reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """Rejects duplicate dictionary keys during JSON decoding per RFC 8785."""
+    res = {}
+    for k, v in pairs:
+        if k in res:
+            raise ValueError(f"RFC 8785 violation: duplicate key '{k}' in JSON object")
+        res[k] = v
+    return res
 
 
-def utf16_sort_key(s: str) -> list[int]:
-    """Sort key matching UTF-16 code unit ordering required by RFC 8785 Section 3.2.3."""
-    return list(s.encode("utf-16-be"))
+def safe_json_loads(data: str | bytes) -> Any:
+    """Parse JSON while strictly rejecting duplicate object keys."""
+    if isinstance(data, bytes):
+        data = data.decode("utf-8")
+    return json.loads(data, object_pairs_hook=reject_duplicate_keys)
+
+
+def _prepare_for_canonical(obj: Any) -> Any:
+    """Convert custom objects, pydantic models, sets, or paths into native JSON-serializable types."""
+    if obj is None or isinstance(obj, (bool, int, str)):
+        return obj
+    if isinstance(obj, float):
+        if obj == 0.0:
+            return 0
+        return obj
+    if hasattr(obj, "model_dump"):
+        return _prepare_for_canonical(obj.model_dump(mode="json"))
+    if hasattr(obj, "to_dict"):
+        return _prepare_for_canonical(obj.to_dict())
+    if isinstance(obj, dict):
+        return {str(k): _prepare_for_canonical(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_prepare_for_canonical(v) for v in obj]
+    if isinstance(obj, (set, frozenset)):
+        return sorted([_prepare_for_canonical(v) for v in obj], key=str)
+    return str(obj)
 
 
 def canonicalize(obj: Any) -> str:
-    """Serialize any JSON-compatible object to an RFC 8785 Canonical JSON string."""
-    if obj is None:
-        return "null"
-    if isinstance(obj, bool):
-        return "true" if obj else "false"
-    if isinstance(obj, (int, float)):
-        return rfc8785_format_number(obj)
-    if isinstance(obj, str):
-        # Escape string safely
-        escaped = []
-        for ch in obj:
-            cp = ord(ch)
-            if ch == '"':
-                escaped.append('\\"')
-            elif ch == "\\":
-                escaped.append("\\\\")
-            elif ch == "\b":
-                escaped.append("\\b")
-            elif ch == "\f":
-                escaped.append("\\f")
-            elif ch == "\n":
-                escaped.append("\\n")
-            elif ch == "\r":
-                escaped.append("\\r")
-            elif ch == "\t":
-                escaped.append("\\t")
-            elif cp < 0x20:
-                escaped.append(f"\\u{cp:04x}")
-            else:
-                escaped.append(ch)
-        return '"' + "".join(escaped) + '"'
-    if isinstance(obj, (list, tuple)):
-        return "[" + ",".join(canonicalize(item) for item in obj) + "]"
-    if isinstance(obj, dict):
-        # Keys must be sorted by UTF-16 code units
-        sorted_keys = sorted(obj.keys(), key=utf16_sort_key)
-        items = []
-        for k in sorted_keys:
-            items.append(canonicalize(str(k)) + ":" + canonicalize(obj[k]))
-        return "{" + ",".join(items) + "}"
-
-    # Fallback for custom objects / pydantic models
-    if hasattr(obj, "model_dump"):
-        return canonicalize(obj.model_dump())
-    if hasattr(obj, "to_dict"):
-        return canonicalize(obj.to_dict())
-
-    raise TypeError(f"Object of type {type(obj).__name__} is not RFC 8785 serializable")
+    """Serialize object to strictly conforming RFC 8785 Canonical JSON string."""
+    prepared = _prepare_for_canonical(obj)
+    try:
+        canonical_bytes = rfc8785.dumps(prepared)
+    except rfc8785.FloatDomainError as err:
+        raise ValueError(f"RFC 8785 prohibits non-finite numbers: {err}") from err
+    return canonical_bytes.decode("utf-8")
 
 
 def canonical_json_bytes(obj: Any) -> bytes:
-    """Return RFC 8785 canonical JSON as UTF-8 encoded bytes."""
-    return canonicalize(obj).encode("utf-8")
+    """Serialize object to strictly conforming RFC 8785 Canonical JSON bytes."""
+    prepared = _prepare_for_canonical(obj)
+    try:
+        return rfc8785.dumps(prepared)
+    except rfc8785.FloatDomainError as err:
+        raise ValueError(f"RFC 8785 prohibits non-finite numbers: {err}") from err
 
 
 canonical_json_dumps = canonicalize

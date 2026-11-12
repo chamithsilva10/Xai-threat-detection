@@ -33,9 +33,11 @@ def _csv_set(value: str) -> frozenset[str]:
 
 @dataclass(frozen=True)
 class Settings:
-    model: str = "gpt-oss:120b"
-    host: str = "https://ollama.com"
+    model: str = "llama3.1:8b"
+    verifier_model: str | None = None
+    host: str = "http://localhost:11434"
     api_key: str | None = None
+    offline: bool = False
     request_timeout: float = 120.0
     max_retries: int = 2
     max_revision_rounds: int = 2          # analyst <-> critic debate rounds
@@ -53,8 +55,10 @@ class Settings:
         env = os.environ
         values = dict(
             model=env.get("OLLAMA_MODEL", cls.model),
+            verifier_model=env.get("OLLAMA_VERIFIER_MODEL"),
             host=env.get("OLLAMA_HOST", cls.host).rstrip("/"),
             api_key=env.get("OLLAMA_API_KEY") or None,
+            offline=env.get("OFFLINE_MODE", "false").lower() in ("true", "1", "yes"),
             request_timeout=float(env.get("OLLAMA_TIMEOUT", cls.request_timeout)),
             alert_threshold=float(env.get("ALERT_THRESHOLD", cls.alert_threshold)),
             critical_assets=_csv_set(env.get("CRITICAL_ASSETS", "10.0.0.5,10.0.0.10,dc01,db-prod-01")),
@@ -66,4 +70,8 @@ class Settings:
 
     @property
     def is_cloud(self) -> bool:
-        return self.host.startswith("https://ollama.com")
+        return not (
+            self.host.startswith("http://localhost")
+            or self.host.startswith("http://127.0.0.1")
+            or self.host.startswith("http://0.0.0.0")
+        )
