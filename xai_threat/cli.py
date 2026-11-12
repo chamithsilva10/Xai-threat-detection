@@ -241,6 +241,43 @@ def cmd_feedback(args):
     print(f"Recorded feedback for {args.alert_id} in {settings.audit_log}")
 
 
+def cmd_stream(args):
+    settings = _settings(args)
+    det = ThreatDetector.load_or_train(settings.model_path)
+    from .streaming import LiveNetworkFlowStreamer
+    streamer = LiveNetworkFlowStreamer(
+        flows_csv=args.flows,
+        detector=det,
+        playback_delay_sec=args.delay,
+    )
+
+    def on_flow(row, summary):
+        status_icon = "🚨 ALERT" if summary["is_alert"] else "✔ OK"
+        conformal_tag = f"[{summary['conformal_decision']}]"
+        print(f"[{summary['timestamp'][11:19]}] {summary['flow_id']} | {summary['src_ip']:<15} -> {summary['dst_ip']:<15} | "
+              f"Pred: {summary['predicted_label']:<18} (conf: {summary['confidence']:.2f}) | {conformal_tag:<18} | {status_icon}")
+
+    print(f"══ Streaming flows in real-time from {args.flows} (delay={args.delay}s) ══\n")
+    summary = streamer.stream(limit=args.limit, on_flow=on_flow)
+    print("\n" + "═" * 78)
+    print(f"Stream Summary: {summary['total_flows']} flows streamed in {summary['elapsed_seconds']}s "
+          f"({summary['throughput_flows_per_sec']} flows/s)")
+    print(f"Alerts Triggered: {summary['alerts_triggered']} | Auto-Eligible: {summary['auto_eligible']} | "
+          f"Human Review Required: {summary['abstained_for_human']}")
+    print("═" * 78)
+
+
+def cmd_generate_flows(args):
+    from .authentic_traffic import generate_advanced_authentic_flows, save_authentic_flows_csv
+    print(f"Generating {args.count} authentic network flows...")
+    flows = generate_advanced_authentic_flows(n_flows=args.count, seed=args.seed)
+    out_path, sha, manifest = save_authentic_flows_csv(flows, args.output)
+    print(f"✔ Successfully saved {len(flows)} flows to {out_path}")
+    print(f"  SHA256 Checksum : {sha}")
+    print(f"  Class Breakdown : {manifest['class_breakdown']}")
+    print(f"  Manifest Path   : {out_path.with_suffix('.manifest.json')}")
+
+
 def cmd_pending(args):
     settings = _settings(args)
     p_file = settings.pending_queue
@@ -439,6 +476,17 @@ def main(argv=None):
     fb.add_argument("--override", action="store_true", help="flag that proposed actions were modified")
     fb.add_argument("--time-sec", type=float, default=45.0, help="time taken to triage")
     fb.add_argument("--notes", default="", help="qualitative analyst notes")
+
+    # Real-Time Telemetry Streaming & Advanced Dataset Generation
+    st = add("stream", cmd_stream, "stream network flows in real time and monitor alerts")
+    st.add_argument("--flows", default="data/authentic_flows_advanced.csv", help="path to flow CSV")
+    st.add_argument("--delay", type=float, default=0.02, help="playback delay between flows (seconds)")
+    st.add_argument("--limit", type=int, default=20, help="maximum number of flows to stream")
+
+    gf = add("generate-flows", cmd_generate_flows, "generate authentic multi-class flow dataset with manifest")
+    gf.add_argument("--output", default="data/authentic_flows_advanced.csv", help="output CSV path")
+    gf.add_argument("--count", type=int, default=1000, help="number of flows to generate")
+    gf.add_argument("--seed", type=int, default=42, help="random seed for reproducibility")
 
     args = p.parse_args(argv)
     try:
