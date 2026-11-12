@@ -10,6 +10,7 @@ Provides rigorous, reproducible experimental evaluation matching the Project Pro
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import time
 from typing import Any
 import numpy as np
@@ -213,16 +214,60 @@ def evaluate_rq4_benchmarks(
     detector: ThreatDetector,
     datasets: tuple[str, ...] = ("NSL-KDD", "CIC-IDS2017", "UNSW-NB15", "CICIoMT2024"),
 ) -> dict:
-    """Evaluates cross-corpus generalisation, conformal calibration under distribution shift,
-    and IoMT clinical safeguards.
-    """
-    benchmarks_results = {}
+    """Evaluates cross-corpus generalisation, genuine local captures, and authentic benchmark status."""
+    from .datasets import BENCHMARKS, evaluate_genuine_local_flows, run_cross_dataset_shift_test
+
+    # 1. Genuine Local Captured Dataset Evaluation
+    local_eval = evaluate_genuine_local_flows(detector, Path("data/sample_flows.csv"))
+    adv_csv = Path("data/authentic_flows_advanced.csv")
+    adv_eval = evaluate_genuine_local_flows(detector, adv_csv) if adv_csv.is_file() else None
+
+    # 2. External Benchmark Audit (Checking for presence of raw multi-GB captures)
+    benchmarks_status = {}
+    synthetic_shifts = {}
+
     for ds in datasets:
+        meta = BENCHMARKS.get(ds)
+        # Check if raw files exist locally
+        raw_paths = {
+            "NSL-KDD": Path("data/raw/nsl_kdd/KDDTrain+.txt"),
+            "CIC-IDS2017": Path("data/raw/cic_ids2017"),
+            "UNSW-NB15": Path("data/raw/unsw_nb15/UNSW_NB15_training-set.csv"),
+            "CICIoMT2024": Path("data/raw/ciciomt2024"),
+        }
+        target_path = raw_paths.get(ds, Path(f"data/raw/{ds.lower()}"))
+        raw_exists = target_path.is_file() or (target_path.is_dir() and any(target_path.iterdir()))
+
+        if raw_exists:
+            benchmarks_status[ds] = {
+                "status": "RAW_FILES_PRESENT",
+                "path": str(target_path),
+                "evaluation": "PENDING_ARFF_PARSING",
+            }
+        else:
+            benchmarks_status[ds] = {
+                "status": "NOT_RUN (RAW_DATASETS_ABSENT)",
+                "publisher": meta.publisher if meta else "Unknown",
+                "device_context": meta.device_context if meta else "Unknown",
+                "authentic_classes": meta.publisher_attack_classes if meta else [],
+                "missing_path": str(target_path),
+                "reason": "Raw empirical PCAP/CSV captures are absent from repository; synthetic generators must not be substituted for real datasets.",
+            }
+
+        # Run synthetic shift test strictly labeled as synthetic distribution stand-in
         shift_res = run_cross_dataset_shift_test(
             detector=detector,
             source_name="Synthetic Baseline",
             target_name=ds,
             n_samples_per_class=100,
         )
-        benchmarks_results[ds] = shift_res
-    return benchmarks_results
+        synthetic_shifts[ds] = shift_res
+
+    return {
+        "genuine_dataset_evaluation": {
+            "sample_flows": local_eval,
+            "authentic_flows_advanced": adv_eval,
+        },
+        "external_benchmarks_audit": benchmarks_status,
+        "synthetic_distribution_shift_demonstration": synthetic_shifts,
+    }
