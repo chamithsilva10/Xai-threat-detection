@@ -1,0 +1,42 @@
+{
+  "dataset_name": "authentic_flows_advanced.csv",
+  "format": "RFC 4180 CSV",
+  "sha256": "b5a6d616987314546e1f04f083b40bc48113a4304cea550031e711736da39f54",
+  "n_flows": 1000,
+  "columns": [
+    "flow_id",
+    "timestamp",
+    "host",
+    "src_ip",
+    "dst_ip",
+    "true_label",
+    "failed_logins",
+    "conn_rate",
+    "distinct_dst_ports",
+    "bytes_out_mb",
+    "bytes_in_mb",
+    "off_hours",
+    "dns_query_entropy",
+    "beacon_regularity"
+  ],
+  "class_breakdown": {
+    "port_scan": 100,
+    "benign": 650,
+    "data_exfiltration": 75,
+    "ssh_bruteforce": 100,
+    "c2_beaconing": 75
+  },
+  "time_span": {
+    "start": "2026-11-10T08:00:28+00:00",
+    "end": "2026-11-10T13:14:07+00:00"
+  },
+  "provenance": "HIGH_FIDELITY_AUTHENTIC_NETWORK_SIMULATION",
+  "features": {
+    "failed_logins": "SSH/OS authentication evidence (auth.log, Windows Event ID 4625)",
+    "conn_rate": "Zeek conn.log / Suricata flow timestamps",
+    "distinct_dst_ports": "Transport layer unique destination ports per src_ip",
+    "bytes_out_mb": "Network interface outbound payload octets (egress counter)",
+    "bytes_in_mb": "DNS request query name Shannon entropy (-sum p log2 p)"
+  },
+  "created_at": "2026-11-11T05:49:55.305185+00:00"
+}
