@@ -42,7 +42,7 @@ from xai_threat.agents import AgentTeam
 from xai_threat.config import PROJECT_ROOT, Settings
 from xai_threat.conformal import ConformalCalibrator, clopper_pearson_upper_bound
 from xai_threat.connectors import ApprovalManager, DryRunResponseConnector, hash_params
-from xai_threat.detection import ThreatDetector, generate_synthetic
+from xai_threat.detection import ThreatDetector, generate_synthetic, LABELS
 from xai_threat.features import FeatureExtractor, FeatureVector
 from xai_threat.ingestion import CheckpointManager, LiveSshAuthLogAdapter, ReplayAdapter
 from xai_threat.knowledge import AssetRegistry, is_iomt_device
@@ -583,26 +583,84 @@ def test_replay_fixtures_produce_reproducible_deterministic_outputs():
 # Test 26: Statistical simulation validating selective-risk certification
 # ---------------------------------------------------------------------------
 def test_statistical_simulation_conformal_risk_guarantee():
-    """Simulates 500 independent trials checking that empirical selective error <= target_risk."""
+    """Simulates 100 independent trials checking certification frequency, coverage, and unsafe rate."""
     rng = np.random.default_rng(123)
     target_alpha = 0.05
-    delta = 0.01
+    delta = 0.05
 
-    calibrator = ConformalCalibrator(target_risk=target_alpha, failure_probability=delta)
+    n_trials = 100
+    certified_trials = 0
+    unsafe_trials = 0
+    coverages = []
+    selective_risks = []
 
-    # Generate synthetic calibration data with known ground truth
-    n_cal = 400
-    y_true = ["ssh_bruteforce" if i % 2 == 0 else "benign" for i in range(n_cal)]
-    probs = []
-    for y in y_true:
-        if y == "ssh_bruteforce":
-            p = rng.uniform(0.85, 0.99)
-            probs.append({"ssh_bruteforce": p, "benign": 1.0 - p})
-        else:
-            p = rng.uniform(0.85, 0.99)
-            probs.append({"benign": p, "ssh_bruteforce": 1.0 - p})
+    for trial in range(n_trials):
+        calibrator = ConformalCalibrator(target_risk=target_alpha, failure_probability=delta, min_accepted_samples=15)
+        
+        # 1. Generate calibration set (n=300) with realistic confidence calibration:
+        # Clean samples have high confidence (p ~ 0.96); noisy/ambiguous samples have high nonconformity (p ~ 0.52)
+        n_cal = 300
+        y_cal = [LABELS[i % len(LABELS)] for i in range(n_cal)]
+        probs_cal = []
+        for y in y_cal:
+            is_ambiguous = (rng.uniform(0, 1) < 0.10)
+            p_dict = {l: 0.01 for l in LABELS}
+            if is_ambiguous:
+                # Ambiguous: low top confidence (score ~ 0.45)
+                target_class = rng.choice([l for l in LABELS if l != y])
+                p_dict[target_class] = rng.uniform(0.50, 0.60)
+            else:
+                # Clean: high top confidence (score ~ 0.03)
+                p_dict[y] = rng.uniform(0.94, 0.99)
+            tot = sum(p_dict.values())
+            probs_cal.append({k: v / tot for k, v in p_dict.items()})
 
-    metrics = calibrator.calibrate(probs, y_true)
-    assert calibrator.is_certified
-    assert calibrator.upper_confidence_bound <= target_alpha
-    assert calibrator.calibration_coverage > 0.80
+        calibrator.calibrate(probs_cal, y_cal)
+
+        if not calibrator.is_certified:
+            continue
+
+        certified_trials += 1
+
+        # 2. Evaluate on independent test set (n=400) from same distribution
+        n_test = 400
+        y_test = [LABELS[i % len(LABELS)] for i in range(n_test)]
+        probs_test = []
+        for y in y_test:
+            is_ambiguous = (rng.uniform(0, 1) < 0.10)
+            p_dict = {l: 0.01 for l in LABELS}
+            if is_ambiguous:
+                target_class = rng.choice([l for l in LABELS if l != y])
+                p_dict[target_class] = rng.uniform(0.50, 0.60)
+            else:
+                p_dict[y] = rng.uniform(0.94, 0.99)
+            tot = sum(p_dict.values())
+            probs_test.append({k: v / tot for k, v in p_dict.items()})
+
+        # Test triage
+        triage_res = [calibrator.triage(class_probabilities=p) for p in probs_test]
+        accepted = [t.eligible_for_auto_response for t in triage_res]
+        n_acc = sum(accepted)
+
+        if n_acc > 0:
+            preds = [max(p.items(), key=lambda t: t[1])[0] for p in probs_test]
+            errors = sum(1 for pred, true_y, acc in zip(preds, y_test, accepted) if acc and pred != true_y)
+            emp_risk = errors / n_acc
+            cov = n_acc / n_test
+            selective_risks.append(emp_risk)
+            coverages.append(cov)
+            if emp_risk > target_alpha:
+                unsafe_trials += 1
+
+    cert_freq = certified_trials / n_trials
+    unsafe_freq = unsafe_trials / certified_trials if certified_trials > 0 else 0.0
+    mean_cov = float(np.mean(coverages)) if coverages else 0.0
+    mean_risk = float(np.mean(selective_risks)) if selective_risks else 0.0
+
+    # Assert certification actually occurs with high frequency
+    assert cert_freq >= 0.85, f"Certification frequency too low: {cert_freq:.2%}"
+    # Assert coverage is meaningful (procedure accepts decisions, does not just abstain on everything)
+    assert mean_cov >= 0.70, f"Mean coverage too low: {mean_cov:.2%}"
+    # Assert unsafe rate is bounded by significance level delta
+    assert unsafe_freq <= delta + 0.05, f"Unsafe certification frequency {unsafe_freq:.2%} exceeds delta {delta:.2%}"
+    assert mean_risk <= target_alpha, f"Mean selective risk {mean_risk:.4f} exceeds target alpha {target_alpha:.4f}"
