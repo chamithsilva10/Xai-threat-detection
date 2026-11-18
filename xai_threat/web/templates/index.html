@@ -683,6 +683,81 @@
     <!-- 6. NINE-AGENT PIPELINE MAP                                        -->
     <!-- ----------------------------------------------------------------- -->
     <section id="view-agents" class="space-y-6 hidden">
+      <!-- Interactive Scrubbable 9-Agent Pipeline Trace Player -->
+      <div class="glass-card rounded-xl overflow-hidden border border-soc-border shadow-lg">
+        <!-- Trace Header -->
+        <div class="px-5 py-3 border-b border-soc-border flex flex-wrap items-center justify-between gap-3 bg-soc-base/80">
+          <div class="flex items-center gap-2.5">
+            <span id="traceIndicator" class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+            <span id="traceRunId" class="font-mono text-xs font-bold text-white">INC-2026-892 · Nine-Agent Pipeline Execution Trace</span>
+            <span class="text-xs text-slate-400 font-mono hidden sm:inline">Dual-LLM (llama3.1:8b / mistral:7b) · 23 Spans</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1 bg-soc-panel border border-soc-border rounded p-0.5 text-[11px] font-mono">
+              <span class="text-slate-400 px-1.5">Speed:</span>
+              <button onclick="setTraceSpeed(0.5)" id="speedBtn-05" class="px-2 py-0.5 rounded text-slate-400 hover:text-white transition">0.5x</button>
+              <button onclick="setTraceSpeed(1)" id="speedBtn-1" class="px-2 py-0.5 rounded bg-cyan-500 text-black font-bold transition">1x</button>
+              <button onclick="setTraceSpeed(2)" id="speedBtn-2" class="px-2 py-0.5 rounded text-slate-400 hover:text-white transition">2x</button>
+            </div>
+            <span id="traceRunBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-emerald-950/80 text-emerald-400 border border-emerald-800">
+              Completed
+            </span>
+          </div>
+        </div>
+
+        <!-- Trace Ruler & Track -->
+        <div class="relative bg-soc-card">
+          <!-- Time Ruler -->
+          <div class="relative h-6 border-b border-soc-border text-[10px] font-mono text-slate-500 select-none">
+            <div class="absolute left-60 right-48 inset-y-0">
+              <span class="absolute left-[0%] top-1.5 -translate-x-1/2">0s</span>
+              <span class="absolute left-[19.1%] top-1.5 -translate-x-1/2">2s</span>
+              <span class="absolute left-[38.3%] top-1.5 -translate-x-1/2">4s</span>
+              <span class="absolute left-[57.4%] top-1.5 -translate-x-1/2">6s</span>
+              <span class="absolute left-[76.6%] top-1.5 -translate-x-1/2">8s</span>
+              <span class="absolute left-[100%] top-1.5 -translate-x-1/2">10.45s</span>
+            </div>
+          </div>
+
+          <!-- Spans List with Playhead -->
+          <div class="relative py-2 custom-scroll max-h-[460px] overflow-y-auto">
+            <!-- Gridlines -->
+            <div aria-hidden="true" class="absolute left-60 right-48 inset-y-0 pointer-events-none">
+              <div class="absolute left-[0%] inset-y-0 w-px bg-soc-border/40"></div>
+              <div class="absolute left-[19.1%] inset-y-0 w-px bg-soc-border/40"></div>
+              <div class="absolute left-[38.3%] inset-y-0 w-px bg-soc-border/40"></div>
+              <div class="absolute left-[57.4%] inset-y-0 w-px bg-soc-border/40"></div>
+              <div class="absolute left-[76.6%] inset-y-0 w-px bg-soc-border/40"></div>
+              <div class="absolute left-[100%] inset-y-0 w-px bg-soc-border/40"></div>
+            </div>
+
+            <!-- Playhead line -->
+            <div id="tracePlayhead" class="absolute left-60 right-48 inset-y-0 pointer-events-none z-20" style="transform: translateX(100%);">
+              <div class="absolute inset-y-0 left-0 w-px bg-cyan-400 shadow-glow-cyan"></div>
+              <div class="absolute top-0 -left-1 w-2.5 h-2.5 bg-cyan-400 rotate-45"></div>
+            </div>
+
+            <!-- Spans rows populated by JS -->
+            <div id="traceRowsContainer" class="divide-y divide-soc-border/30">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Transport Bar -->
+          <div class="px-5 py-3 border-t border-soc-border bg-soc-base/90 flex items-center gap-4">
+            <button id="tracePlayBtn" onclick="toggleTracePlay()" class="w-8 h-8 rounded-full bg-cyan-500 hover:bg-cyan-400 text-black flex items-center justify-center font-bold transition shadow-sm">
+              <span id="tracePlayIcon">&#9658;</span>
+            </button>
+            <div class="flex-1 relative flex items-center">
+              <input id="traceSlider" type="range" min="0" max="10450" value="10450" oninput="onTraceSliderInput(this.value)" class="w-full accent-cyan-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg">
+            </div>
+            <span id="traceClock" class="font-mono text-xs text-slate-300 w-28 text-right tabular-nums">
+              10.45s / 10.45s
+            </span>
+          </div>
+        </div>
+      </div>
+
       <div class="glass-card p-5 rounded-xl space-y-4">
         <div class="pb-3 border-b border-soc-border">
           <h2 class="text-sm font-bold uppercase font-mono text-white tracking-wide">
@@ -1288,6 +1363,169 @@
       }
     }
 
+    // =========================================================================
+    // INTERACTIVE NINE-AGENT TRACE PLAYER (TOKENS REMOVED)
+    // =========================================================================
+    const SENTINEL_TOTAL_MS = 10450;
+    const TRACE_SPANS = [
+      { id: "agent_01", label: "01 Ingestion Agent", kind: "agent", depth: 0, start: 0, end: 450, detail: "Schema validated & sanitized" },
+      { id: "sanitizer", label: "regex_sanitizer", kind: "tool", depth: 1, start: 50, end: 220, detail: "0 prompt injection patterns" },
+      { id: "normalize", label: "feature_extractor", kind: "io", depth: 1, start: 240, end: 430, detail: "6 normalized numerical features" },
+
+      { id: "agent_02", label: "02 Detection Agent", kind: "agent", depth: 0, start: 460, end: 1850, detail: "SSH_Bruteforce (p=0.982)" },
+      { id: "xgboost", label: "xgboost_5class", kind: "model", depth: 1, start: 480, end: 1120, detail: "Confidence: 98.2%" },
+      { id: "isoforest", label: "isolation_forest", kind: "model", depth: 1, start: 1140, end: 1820, detail: "Anomaly score: -0.684 (Outlier)" },
+
+      { id: "agent_03", label: "03 Explainability Agent", kind: "agent", depth: 0, start: 1880, end: 3420, detail: "TreeSHAP reconstruction verified" },
+      { id: "shap", label: "treeshap_attribution", kind: "tool", depth: 1, start: 1910, end: 2750, detail: "failed_logins: +0.642 phi" },
+      { id: "cf", label: "counterfactual_engine", kind: "tool", depth: 1, start: 2780, end: 3380, detail: "Target: Benign (delta: -14 logins)" },
+
+      { id: "agent_04", label: "04 Threat Intel Agent", kind: "agent", depth: 0, start: 3440, end: 4300, detail: "T1110.001 Brute Force" },
+      { id: "ioc", label: "ioc_feed_lookup", kind: "io", depth: 1, start: 3470, end: 3880, status: "cached", detail: "Local IOC cache match" },
+      { id: "mitre", label: "mitre_mapper", kind: "tool", depth: 1, start: 3900, end: 4280, detail: "Technique: Credential Stuffing" },
+
+      { id: "agent_05", label: "05 Risk & Triage Agent", kind: "agent", depth: 0, start: 4320, end: 5100, detail: "Certified (s(x) <= lambda_hat)" },
+      { id: "ucb", label: "clopper_pearson_ucb", kind: "tool", depth: 1, start: 4350, end: 4720, detail: "UCB: 0.041 <= alpha: 0.05" },
+      { id: "abstain", label: "conformal_gate", kind: "tool", depth: 1, start: 4740, end: 5080, detail: "Coverage: 95.0% (PASS)" },
+
+      { id: "agent_08", label: "08 LLM Analyst", kind: "model", depth: 0, start: 5120, end: 7200, detail: "Structured RFC 6901 narrative" },
+      { id: "claims", label: "claim_ledger_writer", kind: "tool", depth: 1, start: 5150, end: 5850, detail: "6 claims -> /features/failed_logins" },
+      { id: "narrative", label: "llama3.1:8b", kind: "model", depth: 1, start: 5880, end: 7150, detail: "Evidence grounded" },
+
+      { id: "agent_09", label: "09 LLM Verifier", kind: "model", depth: 0, start: 7220, end: 8900, detail: "Adversarial audit PASSED" },
+      { id: "pointer_chk", label: "pointer_resolver", kind: "tool", depth: 1, start: 7250, end: 7780, detail: "100% pointers verified against C1" },
+      { id: "debate", label: "mistral:7b", kind: "model", depth: 1, start: 7800, end: 8850, detail: "Cross-model consensus" },
+
+      { id: "agent_06", label: "06 Response Orchestrator", kind: "agent", depth: 0, start: 8920, end: 9800, detail: "Playbook: ISOLATE_HOST" },
+      { id: "safety", label: "iomt_clinical_gate", kind: "tool", depth: 1, start: 8950, end: 9380, detail: "C16 dual-auth check: PASS" },
+      { id: "dryrun", label: "dry_run_connector", kind: "io", depth: 1, start: 9400, end: 9780, detail: "external_effect: false (DRY_RUN)" },
+
+      { id: "agent_07", label: "07 Audit & Feedback Agent", kind: "agent", depth: 0, start: 9820, end: 10450, detail: "RFC 8785 hash-chain VALID" },
+      { id: "canon", label: "rfc8785_canonical_json", kind: "tool", depth: 1, start: 9850, end: 10150, detail: "SHA-256 e8f142... linked" },
+      { id: "drift", label: "ks_drift_monitor", kind: "tool", depth: 1, start: 10180, end: 10420, detail: "KS stat: 0.12 (p=0.48, Normal)" },
+    ];
+
+    let traceCurrentTime = 10450;
+    let traceIsPlaying = false;
+    let traceSpeed = 1;
+    let traceRaf = null;
+    let traceLastNow = 0;
+
+    function renderTraceRows() {
+      const container = document.getElementById('traceRowsContainer');
+      if (!container) return;
+      container.innerHTML = TRACE_SPANS.map((s, i) => {
+        const leftPct = (s.start / SENTINEL_TOTAL_MS) * 100;
+        const widthPct = ((s.end - s.start) / SENTINEL_TOTAL_MS) * 100;
+        const dur = s.end - s.start;
+        const durStr = dur < 1000 ? `${dur}ms` : `${(dur / 1000).toFixed(2)}s`;
+        const isAgent = s.kind === 'agent' || s.kind === 'model';
+        const colorClass = isAgent ? 'bg-cyan-500' : 'bg-slate-400';
+        return `
+          <div id="traceRow-${i}" class="flex items-center h-8 hover:bg-soc-panel/50 px-3 transition-colors cursor-pointer group" onclick="seekTrace(${s.start})">
+            <div class="w-60 shrink-0 flex items-center gap-1.5 truncate font-mono text-xs" style="padding-left: ${s.depth * 14 + 4}px">
+              <span class="w-1.5 h-1.5 rounded-full ${isAgent ? 'bg-cyan-400' : 'bg-slate-500'}"></span>
+              <span class="text-slate-200 group-hover:text-cyan-400 truncate">${s.label}</span>
+            </div>
+            <div class="flex-1 relative h-full flex items-center pr-2">
+              <div class="absolute left-0 right-0 h-2 bg-slate-800/80 rounded-full overflow-hidden" style="left: ${leftPct}%; width: ${widthPct}%;">
+                <div id="traceBar-${i}" class="h-full origin-left ${colorClass}" style="transform: scaleX(1);"></div>
+              </div>
+            </div>
+            <div class="w-48 shrink-0 flex items-center justify-end gap-2 text-right font-mono text-[11px] tabular-nums pl-2">
+              <span id="traceMeta-${i}" class="text-slate-400 truncate">${s.detail}</span>
+              <span class="text-slate-300 font-semibold">${durStr}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateTraceUI(t) {
+      traceCurrentTime = Math.max(0, Math.min(SENTINEL_TOTAL_MS, t));
+      const clock = document.getElementById('traceClock');
+      if (clock) clock.innerText = `${(traceCurrentTime / 1000).toFixed(2)}s / ${(SENTINEL_TOTAL_MS / 1000).toFixed(2)}s`;
+      const slider = document.getElementById('traceSlider');
+      if (slider) slider.value = traceCurrentTime;
+      const playhead = document.getElementById('tracePlayhead');
+      if (playhead) playhead.style.transform = `translateX(${(traceCurrentTime / SENTINEL_TOTAL_MS) * 100}%)`;
+
+      const badge = document.getElementById('traceRunBadge');
+      if (badge) {
+        if (traceCurrentTime >= SENTINEL_TOTAL_MS) {
+          badge.innerText = 'Completed';
+          badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-emerald-950/80 text-emerald-400 border border-emerald-800';
+        } else {
+          badge.innerText = 'Running';
+          badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-cyan-950/80 text-cyan-400 border border-cyan-800 animate-pulse';
+        }
+      }
+
+      TRACE_SPANS.forEach((s, i) => {
+        const dur = s.end - s.start;
+        const p = dur > 0 ? Math.max(0, Math.min(1, (traceCurrentTime - s.start) / dur)) : (traceCurrentTime >= s.start ? 1 : 0);
+        const bar = document.getElementById(`traceBar-${i}`);
+        if (bar) bar.style.transform = `scaleX(${p.toFixed(4)})`;
+        const meta = document.getElementById(`traceMeta-${i}`);
+        if (meta) {
+          meta.style.opacity = traceCurrentTime < s.start ? '0' : '1';
+        }
+      });
+    }
+
+    function traceLoop(now) {
+      if (!traceIsPlaying) return;
+      const dt = Math.min(now - (traceLastNow || now), 100);
+      traceLastNow = now;
+      traceCurrentTime += dt * traceSpeed;
+      if (traceCurrentTime >= SENTINEL_TOTAL_MS) {
+        traceCurrentTime = SENTINEL_TOTAL_MS;
+        traceIsPlaying = false;
+        const icon = document.getElementById('tracePlayIcon');
+        if (icon) icon.innerHTML = '&#9658;';
+      }
+      updateTraceUI(traceCurrentTime);
+      if (traceIsPlaying) {
+        traceRaf = requestAnimationFrame(traceLoop);
+      }
+    }
+
+    function toggleTracePlay() {
+      traceIsPlaying = !traceIsPlaying;
+      const icon = document.getElementById('tracePlayIcon');
+      if (traceIsPlaying) {
+        if (traceCurrentTime >= SENTINEL_TOTAL_MS) traceCurrentTime = 0;
+        if (icon) icon.innerHTML = '&#10074;&#10074;';
+        traceLastNow = performance.now();
+        traceRaf = requestAnimationFrame(traceLoop);
+      } else {
+        if (icon) icon.innerHTML = '&#9658;';
+        if (traceRaf) cancelAnimationFrame(traceRaf);
+      }
+    }
+
+    function onTraceSliderInput(val) {
+      if (traceIsPlaying) toggleTracePlay();
+      seekTrace(Number(val));
+    }
+
+    function seekTrace(ms) {
+      updateTraceUI(ms);
+    }
+
+    function setTraceSpeed(spd) {
+      traceSpeed = spd;
+      ['05', '1', '2'].forEach(k => {
+        const b = document.getElementById(`speedBtn-${k}`);
+        if (!b) return;
+        if ((k === '05' && spd === 0.5) || (k === '1' && spd === 1) || (k === '2' && spd === 2)) {
+          b.className = 'px-2 py-0.5 rounded bg-cyan-500 text-black font-bold transition';
+        } else {
+          b.className = 'px-2 py-0.5 rounded text-slate-400 hover:text-white transition';
+        }
+      });
+    }
+
     function refreshAll() {
       loadOverview();
       loadIncidents();
@@ -1297,6 +1535,8 @@
     // Initialize on page load
     loadOverview();
     loadIncidents();
+    renderTraceRows();
+    updateTraceUI(SENTINEL_TOTAL_MS);
   </script>
 </body>
 </html>
