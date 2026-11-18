@@ -1,59 +1,87 @@
+import { useState } from 'react'
 import { SentinelAgentTraceDemo } from './components/ui/demo'
-import { Activity, ShieldCheck } from 'lucide-react'
+import GlassWorkspaceDemo from './components/ui/glass-demo'
+import { Activity, Layers, ShieldCheck } from 'lucide-react'
 
 export function App() {
+  const [activeTab, setActiveTab] = useState<'glass' | 'trace'>('glass')
+
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-start p-4 sm:p-8">
-      {/* Top Banner */}
-      <header className="w-full max-w-5xl flex items-center justify-between pb-6 mb-8 border-b border-border">
+    <div className="min-h-screen bg-[#070b12] text-slate-100 flex flex-col items-center">
+      {/* Universal Top Switcher Bar */}
+      <nav className="w-full bg-[#0d131f]/90 backdrop-blur-md border-b border-[#1b263b] px-6 py-3 flex items-center justify-between z-30 sticky top-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 font-black shadow-lg shadow-cyan-950/50">
-            <ShieldCheck className="w-6 h-6" />
+          <div className="w-8 h-8 rounded-lg bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 font-bold">
+            <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              SENTINEL-XAI <span className="text-xs px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-800/40 font-mono">TRACE-REPLAY</span>
-            </h1>
-            <p className="text-xs text-muted-foreground font-mono">
-              Nine-Agent Explainable Execution Timeline &scrub; Zero-Token Security Telemetry
+            <span className="font-mono text-sm font-bold text-white tracking-wide">
+              SENTINEL-XAI <span className="text-cyan-400">STUDIO</span>
+            </span>
+            <span className="ml-2 text-[10px] font-mono text-slate-400 border border-slate-700/60 rounded px-1.5 py-0.5">
+              v2.2.0
+            </span>
+          </div>
+        </div>
+
+        {/* View Switcher Pills */}
+        <div className="flex items-center p-1 rounded-xl bg-[#070b12] border border-[#1b263b] text-xs font-mono">
+          <button
+            type="button"
+            onClick={() => setActiveTab('glass')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg transition-all ${
+              activeTab === 'glass'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Adjustable Glass Workspace</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('trace')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg transition-all ${
+              activeTab === 'trace'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5" />
+            <span>9-Agent Trace Replay</span>
+          </button>
+        </div>
+
+        <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-400">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Localhost: 5173 / 8000</span>
+        </div>
+      </nav>
+
+      {/* Main View Display */}
+      {activeTab === 'glass' ? (
+        <div className="w-full">
+          <GlassWorkspaceDemo />
+        </div>
+      ) : (
+        <main className="w-full max-w-5xl flex flex-col items-center p-6 sm:p-10">
+          <div className="w-full mb-6">
+            <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 mb-1">
+              <Activity className="w-3.5 h-3.5" />
+              <span>INCIDENT EXECUTION GRAPH & TIMELINE</span>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight">Agent Pipeline Timeline Replay</h2>
+            <p className="text-sm text-slate-400 mt-1">
+              Drag the timeline or press Play to replay the 9-agent detection, explainability, debate, and response cycle.
+              Token metrics are replaced with actual execution latencies, accuracy scores, and verification outcomes.
             </p>
           </div>
-        </div>
 
-        <div className="hidden sm:flex items-center gap-3 text-xs font-mono">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card border border-border">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-muted-foreground">SOC Status:</span>
-            <span className="text-emerald-400 font-semibold">ACTIVE</span>
+          <div className="w-full">
+            <SentinelAgentTraceDemo />
           </div>
-        </div>
-      </header>
-
-      {/* Main Container */}
-      <main className="w-full max-w-5xl flex flex-col items-center">
-        <div className="w-full mb-6">
-          <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 mb-1">
-            <Activity className="w-3.5 h-3.5" />
-            <span>INCIDENT EXECUTION GRAPH & TIMELINE</span>
-          </div>
-          <h2 className="text-2xl font-bold tracking-tight">Agent Pipeline Timeline Replay</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Drag the timeline or press Play to replay the 9-agent detection, explainability, debate, and response cycle.
-            Token metrics are replaced with actual execution latencies, accuracy scores, and verification outcomes.
-          </p>
-        </div>
-
-        {/* The Scrubbable Agent Trace Component */}
-        <div className="w-full">
-          <SentinelAgentTraceDemo />
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="w-full max-w-5xl mt-12 pt-6 border-t border-border flex items-center justify-between text-xs text-muted-foreground font-mono">
-        <div>Sentinel-XAI Platform v2.2.0 · University of Westminster / IIT</div>
-        <div>All 9 Agents Operational · RFC 8785 Verified</div>
-      </footer>
+        </main>
+      )}
     </div>
   )
 }
