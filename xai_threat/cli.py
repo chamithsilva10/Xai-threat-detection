@@ -400,6 +400,45 @@ def cmd_approve(args):
         print(f"No pending actions executed for alert '{args.alert_id}'.")
 
 
+def cmd_dashboard(args) -> None:
+    """Launch the interactive Sentinel-XAI SOC web dashboard."""
+    import uvicorn
+    from .web.app import create_app
+
+    settings = _settings(args)
+    host = getattr(args, "dashboard_host", "127.0.0.1")
+    port = int(getattr(args, "dashboard_port", 8000))
+    print(f"\n=======================================================")
+    print(f"  Sentinel-XAI SOC Dashboard Starting")
+    print(f"  Operating Mode: {settings.mode} (Defensive Dry-Run Enforced)")
+    print(f"  URL: http://{host}:{port}")
+    print(f"=======================================================\n")
+    app = create_app(settings)
+    uvicorn.run(app, host=host, port=port, log_level="info")
+
+
+def cmd_eval_comparative(args) -> None:
+    """Run Section 17 6-configuration comparative ablation study."""
+    from .eval import evaluate_comparative_configurations
+
+    settings = _settings(args)
+    samples = int(getattr(args, "samples", 15))
+    print("\n--- Running Section 17 Comparative Evaluation (6 Configurations) ---")
+    results = evaluate_comparative_configurations(settings, n_samples=samples)
+
+    print("\n" + "=" * 95)
+    print(f"{'Configuration':<45} | {'Latency':<10} | {'Halluc%':<8} | {'Risk Bounded':<12}")
+    print("=" * 95)
+    for k, v in results.items():
+        print(f"{v['title']:<45} | {str(v['latency_ms']) + 'ms':<10} | {str(round(v['hallucination_rate']*100, 1)) + '%':<8} | {str(v['selective_risk_bounded']):<12}")
+    print("=" * 95)
+
+    out_path = Path("runs/comparative_evaluation_report.json")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
+    print(f"\nSaved detailed evaluation metrics to {out_path}\n")
+
+
 # ---------------------------------------------------------------------------
 def main(argv=None):
     p = argparse.ArgumentParser(
@@ -454,7 +493,14 @@ def main(argv=None):
     e3.add_argument("--samples", type=int, default=10)
 
     add("eval-benchmarks", cmd_eval_benchmarks, "evaluate across NSL-KDD, CIC-IDS2017, UNSW-NB15, CICIoMT2024")
+    ec = add("eval-comparative", cmd_eval_comparative, "evaluate 6 comparative configurations (Section 17 ablation)")
+    ec.add_argument("--samples", type=int, default=15, help="number of test samples per configuration")
     add("eval-all", cmd_eval_all, "run the complete experimental evaluation suite for RQ1-RQ4")
+
+    # Interactive Web Dashboard (SOC Interface)
+    dash = add("dashboard", cmd_dashboard, "launch the interactive Sentinel-XAI SOC web dashboard")
+    dash.add_argument("--dashboard-host", default="127.0.0.1", help="dashboard server host (default 127.0.0.1)")
+    dash.add_argument("--dashboard-port", type=int, default=8000, help="dashboard server port (default 8000)")
 
     # Remediation Action Approval & Execution Gate (Agent 06)
     add("pending", cmd_pending, "list pending remediation actions waiting for authorization")
