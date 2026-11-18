@@ -12,7 +12,7 @@ import math
 from typing import Any, Literal
 import uuid
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # ---------------------------------------------------------------------------
 # Enums and Literal Types
@@ -357,17 +357,93 @@ class AnalystFeedback(BaseModel):
 # Backwards-Compatible Models for Existing Pipeline
 # ---------------------------------------------------------------------------
 
+ClaimType = Literal["observed_fact", "model_output", "interpretation", "uncertainty", "hypothesis"]
+
+
 class Claim(BaseModel):
-    statement: str = Field(description="One factual sentence about the alert.")
-    evidence_keys: list[str] = Field(description="Evidence keys (JSON pointers or dotted paths).")
+    claim_id: str = Field(default="", description="Unique claim identifier, e.g. claim-001")
+    claim_type: ClaimType = Field(default="observed_fact", description="Epistemic type of claim")
+    statement: str = Field(default="", description="One factual sentence about the alert.")
+    claim: str = Field(default="", description="Alias for statement for RFC specification compliance.")
+    evidence_keys: list[str] = Field(default_factory=list, description="Evidence keys (JSON pointers or dotted paths).")
+    evidence_pointers: list[str] = Field(default_factory=list, description="RFC 6901 JSON pointers.")
+    expected_values: list[Any] = Field(default_factory=list, description="Expected values at referenced pointers.")
+    resolved_values: list[Any] = Field(default_factory=list, description="Values resolved from evidence.")
+    confidence_label: Literal["supported", "unsupported", "uncertain", "contradicted"] = Field(
+        default="supported", description="Confidence label"
+    )
     contradicts: bool = Field(default=False, description="Whether claim contradicts known ground truth evidence")
     contradiction_detail: str = Field(default="", description="Reasoning for contradiction")
 
-    _list = field_validator("evidence_keys", mode="before")(_as_list)
+    _list = field_validator("evidence_keys", "evidence_pointers", "expected_values", "resolved_values", mode="before")(_as_list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _sync_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            # Sync statement and claim
+            stmt = data.get("statement") or data.get("claim") or ""
+            data["statement"] = stmt
+            data["claim"] = stmt
+
+            # Sync evidence_keys and evidence_pointers
+            keys = data.get("evidence_keys") or data.get("evidence_pointers") or []
+            data["evidence_keys"] = keys
+            data["evidence_pointers"] = keys
+
+            if not data.get("claim_id"):
+                import secrets
+                data["claim_id"] = f"claim-{secrets.token_hex(2)}"
+        return data
+
+
+class AgentExecutionRecord(BaseModel):
+    agent_id: str = Field(description="Unique agent identifier, e.g. agent_01_ingestion")
+    agent_name: str = Field(description="Human-readable agent title")
+    trace_id: str = Field(description="Distributed trace correlation ID")
+    incident_id: str = Field(description="Incident / alert ID")
+    status: Literal["SUCCESS", "FAILED", "DEGRADED", "SKIPPED"] = "SUCCESS"
+    started_at: datetime = Field(default_factory=utc_now)
+    completed_at: datetime = Field(default_factory=utc_now)
+    duration_ms: float = Field(default=0.0, description="Execution duration in milliseconds")
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    model_or_policy_version: str = "1.0.0"
+    input_summary: dict[str, Any] = Field(default_factory=dict)
+    output_summary: dict[str, Any] = Field(default_factory=dict)
+
+
+class WhatIfRequest(BaseModel):
+    flow_id: str = "whatif-flow"
+    base_features: dict[str, float]
+    modifications: dict[str, float]
+
+
+class WhatIfResult(BaseModel):
+    original_label: str
+    original_confidence: float
+    new_label: str
+    new_confidence: float
+    original_anomaly_score: float
+    new_anomaly_score: float
+    modified_features: dict[str, dict[str, float]]
+    decision_changed: bool
+    top_attribution_changes: list[dict[str, Any]]
+    disclaimer: str = "HYPOTHETICAL_SANDBOX_ANALYSIS: Evaluated in isolated model sandbox; source evidence unmodified."
+
+
+class DriftMetrics(BaseModel):
+    sample_size: int
+    feature_drift_scores: dict[str, float]
+    mean_drift: float
+    drift_detected: bool
+    status: Literal["NORMAL", "DRIFT_WARNING", "CALIBRATION_INVALIDATED"]
+    monitored_at: datetime = Field(default_factory=utc_now)
 
 
 class LedgerClaimRecord(BaseModel):
     claim_id: str = Field(description="Unique claim identifier, e.g. CLM-001")
+    claim_type: str = Field(default="observed_fact", description="Epistemic claim category")
     statement: str = Field(description="Atomic claim statement")
     evidence_keys: list[str] = Field(default_factory=list, description="Evidence keys cited")
     resolved_values: dict[str, Any] = Field(default_factory=dict, description="Values resolved from evidence")

@@ -201,6 +201,7 @@ class ClaimEvidenceLedger:
 
         for idx, c in enumerate(claims, 1):
             cid = getattr(c, "claim_id", f"CLM-{round_no:02d}-{idx:02d}")
+            ctype = getattr(c, "claim_type", "observed_fact")
             stmt = getattr(c, "statement", "")
             raw_keys = getattr(c, "evidence_pointers", None) or getattr(c, "evidence_keys", [])
 
@@ -221,6 +222,26 @@ class ClaimEvidenceLedger:
             if getattr(c, "contradicts", False) or getattr(c, "verification_status", None) == "CONTRADICTED":
                 is_contradicted = True
                 contradiction_reasons.append(getattr(c, "contradiction_detail", "") or "Explicit contradiction flag on claim")
+
+            # Check expected values against resolved values if provided
+            expected_vals = getattr(c, "expected_values", None)
+            if expected_vals and isinstance(expected_vals, list) and raw_keys:
+                for ptr_idx, exp_val in enumerate(expected_vals):
+                    if ptr_idx < len(raw_keys):
+                        target_ptr = raw_keys[ptr_idx]
+                        if target_ptr in resolved:
+                            act_val = resolved[target_ptr]
+                            if isinstance(exp_val, (int, float)) and isinstance(act_val, (int, float)):
+                                if abs(float(exp_val) - float(act_val)) > 0.05 * max(abs(float(act_val)), 1.0):
+                                    is_contradicted = True
+                                    contradiction_reasons.append(
+                                        f"Expected value mismatch at {target_ptr}: expected {exp_val}, resolved {act_val}"
+                                    )
+                            elif str(exp_val).strip().lower() != str(act_val).strip().lower():
+                                is_contradicted = True
+                                contradiction_reasons.append(
+                                    f"Expected value mismatch at {target_ptr}: expected '{exp_val}', resolved '{act_val}'"
+                                )
 
             if missing_keys or not raw_keys:
                 is_supported = False
@@ -284,6 +305,7 @@ class ClaimEvidenceLedger:
             records.append(
                 LedgerClaimRecord(
                     claim_id=cid,
+                    claim_type=ctype,
                     statement=stmt,
                     evidence_keys=raw_keys,
                     resolved_values=resolved,

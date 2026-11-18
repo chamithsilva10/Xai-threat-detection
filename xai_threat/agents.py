@@ -96,6 +96,9 @@ class DataIngestionAgent:
     Validates schemas, normalizes flow records, scans for prompt-injection attacks,
     and records input provenance.
     """
+    agent_id: str = "agent_01_ingestion"
+    agent_name: str = "Data Ingestion Agent"
+    version: str = "1.0.0"
 
     def __init__(self, max_field_len: int = 500):
         self.max_field_len = max_field_len
@@ -110,6 +113,9 @@ class DetectionAgent:
     """Agent 02: Supervised Detection & Anomaly Scoring.
     Executes XGBoost multi-class classifier and IsolationForest baseline anomaly detector.
     """
+    agent_id: str = "agent_02_detection"
+    agent_name: str = "Detection Agent"
+    version: str = "1.0.0"
 
     def __init__(self, detector: ThreatDetector):
         self.detector = detector
@@ -123,6 +129,9 @@ class ExplainabilityAgent:
     Produces local SHAP feature attributions, LIME surrogate explanations,
     and contrastive counterfactual guidance (C10).
     """
+    agent_id: str = "agent_03_explainability"
+    agent_name: str = "Explainability Agent"
+    version: str = "1.0.0"
 
     def __init__(self, detector: ThreatDetector):
         self.detector = detector
@@ -145,6 +154,9 @@ class ThreatIntelligenceAgent:
     """Agent 04: Threat Intelligence & Asset Context.
     Deterministic ATT&CK technique mapping, IOC lookups, and asset criticality identification.
     """
+    agent_id: str = "agent_04_threat_intel"
+    agent_name: str = "Threat Intelligence Agent"
+    version: str = "1.0.0"
 
     def __init__(self, intel: ThreatIntel, critical_assets: frozenset[str]):
         self.intel = intel
@@ -161,6 +173,9 @@ class RiskScoringAndTriageAgent:
     Calculates nonconformity score s(x), verifies against calibrated threshold lambda_hat
     to bound expected loss <= alpha, and decides between autonomous handling and escalation.
     """
+    agent_id: str = "agent_05_risk_triage"
+    agent_name: str = "Risk Scoring & Triage Agent"
+    version: str = "1.0.0"
 
     def __init__(self, calibrator: ConformalCalibrator):
         self.calibrator = calibrator
@@ -189,6 +204,9 @@ class ResponseOrchestratorAgent:
     Formulates incident response playbooks, enforces human approval gating on high-impact actions,
     conformal risk abstention limits (C9), and IoMT clinical safeguards (C16).
     """
+    agent_id: str = "agent_06_response_orchestrator"
+    agent_name: str = "Response Orchestration Agent"
+    version: str = "1.0.0"
 
     def __init__(self, critical_assets: frozenset[str]):
         self.critical_assets = critical_assets
@@ -217,11 +235,44 @@ class ResponseOrchestratorAgent:
         )
 
 
+class AuditFeedbackAgent:
+    """Agent 07: Cryptographic Audit Trail & Continuous Feedback.
+    Maintains RFC 8785 canonical hash-chained ledger, records analyst reviews/overrides,
+    and monitors statistical drift across operational feature streams.
+    """
+    agent_id: str = "agent_07_audit_feedback"
+    agent_name: str = "Audit & Feedback Agent"
+    version: str = "1.0.0"
+
+    def __init__(self, audit_log: Any = None):
+        from pathlib import Path
+        self.audit_log = Path(audit_log) if audit_log else None
+
+    def log_event(self, event_type: str, data: dict[str, Any]) -> dict[str, Any]:
+        from . import audit
+        if self.audit_log:
+            return audit.append(self.audit_log, {"event": event_type, **data})
+        return {"event": event_type, **data}
+
+    def verify_integrity(self) -> tuple[bool, str, int]:
+        from . import audit
+        if self.audit_log:
+            return audit.verify(self.audit_log)
+        return False, "No audit log configured", 0
+
+
 # ---------------------------------------------------------------------------
 # LLM Agent Team (Agent 08 Analyst, Agent 09 Verifier, Agent 06 Responder)
 # ---------------------------------------------------------------------------
 class AgentTeam:
     """Team coordinator managing LLM reasoning, cross-model verification, and telemetry."""
+    analyst_agent_id: str = "agent_08_llm_analyst"
+    analyst_agent_name: str = "LLM Analyst Agent"
+    analyst_version: str = "1.0.0"
+
+    verifier_agent_id: str = "agent_09_llm_verifier"
+    verifier_agent_name: str = "Independent LLM Verifier Agent"
+    verifier_version: str = "1.0.0"
 
     def __init__(
         self,

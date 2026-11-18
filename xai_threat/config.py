@@ -33,14 +33,26 @@ def _csv_set(value: str) -> frozenset[str]:
 
 @dataclass(frozen=True)
 class Settings:
-    model: str = "llama3.1:8b"
+    # Core LLM provider configurations (Section 12: Dual-LLM configuration)
+    analyst_provider: str = "ollama"
+    analyst_model: str = "llama3.1:8b"
+    analyst_api_key: str | None = None
+    verifier_provider: str = "ollama"
     verifier_model: str | None = None
+    verifier_api_key: str | None = None
+
+    # Legacy & Direct Model Aliases
+    model: str = "llama3.1:8b"
     host: str = "http://localhost:11434"
     api_key: str | None = None
     offline: bool = False
+    operating_mode: str = "REPLAY"
+    mode: str = "REPLAY"
     request_timeout: float = 120.0
     max_retries: int = 2
     max_revision_rounds: int = 2          # analyst <-> critic debate rounds
+    token_limit: int = 4096
+    redact_sensitive_telemetry: bool = True
     max_field_len: int = 500              # truncate attacker-controlled strings
     alert_threshold: float = 0.70         # ML confidence needed to raise an alert
     audit_log: Path = PROJECT_ROOT / "runs" / "audit_log.jsonl"
@@ -53,13 +65,32 @@ class Settings:
     @classmethod
     def from_env(cls, **overrides) -> "Settings":
         env = os.environ
+        analyst_prov = env.get("ANALYST_LLM_PROVIDER", "ollama")
+        analyst_mod = env.get("ANALYST_LLM_MODEL", env.get("OLLAMA_MODEL", cls.model))
+        analyst_key = env.get("ANALYST_LLM_API_KEY", env.get("OLLAMA_API_KEY"))
+
+        verifier_prov = env.get("VERIFIER_LLM_PROVIDER", analyst_prov)
+        verifier_mod = env.get("VERIFIER_LLM_MODEL", env.get("OLLAMA_VERIFIER_MODEL"))
+        verifier_key = env.get("VERIFIER_LLM_API_KEY", analyst_key)
+
         values = dict(
-            model=env.get("OLLAMA_MODEL", cls.model),
-            verifier_model=env.get("OLLAMA_VERIFIER_MODEL"),
+            analyst_provider=analyst_prov,
+            analyst_model=analyst_mod,
+            analyst_api_key=analyst_key,
+            verifier_provider=verifier_prov,
+            verifier_model=verifier_mod,
+            verifier_api_key=verifier_key,
+            model=analyst_mod,
             host=env.get("OLLAMA_HOST", cls.host).rstrip("/"),
-            api_key=env.get("OLLAMA_API_KEY") or None,
+            api_key=analyst_key,
             offline=env.get("OFFLINE_MODE", "false").lower() in ("true", "1", "yes"),
+            operating_mode=env.get("OPERATING_MODE", env.get("MODE", "REPLAY")).upper(),
+            mode=env.get("OPERATING_MODE", env.get("MODE", "REPLAY")).upper(),
             request_timeout=float(env.get("OLLAMA_TIMEOUT", cls.request_timeout)),
+            max_retries=int(env.get("MAX_RETRIES", cls.max_retries)),
+            max_revision_rounds=int(env.get("MAX_REVISION_ROUNDS", cls.max_revision_rounds)),
+            token_limit=int(env.get("LLM_TOKEN_LIMIT", cls.token_limit)),
+            redact_sensitive_telemetry=env.get("REDACT_TELEMETRY", "true").lower() in ("true", "1", "yes"),
             alert_threshold=float(env.get("ALERT_THRESHOLD", cls.alert_threshold)),
             critical_assets=_csv_set(env.get("CRITICAL_ASSETS", "10.0.0.5,10.0.0.10,dc01,db-prod-01")),
         )

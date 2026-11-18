@@ -29,7 +29,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
 from .conformal import ConformalCalibrator
-from .schemas import ContrastiveExplanation
+from .schemas import ContrastiveExplanation, DriftMetrics, WhatIfResult
 
 logger = logging.getLogger(__name__)
 
@@ -490,3 +490,129 @@ class ThreatDetector:
             inference_latency_ms=latency_ms,
             explainer=f"{self.model_type.lower()}_{method}",
         )
+
+    def what_if_analysis(
+        self,
+        base_features: dict[str, float],
+        modifications: dict[str, float],
+    ) -> WhatIfResult:
+        """Section 16: Isolated What-If Sandbox Analysis.
+        Evaluates hypothetical perturbations in memory without mutating base evidence or state.
+        Enforces strict domain validation bounds on features.
+        """
+        x_base = self.vectorize(base_features)
+        base_proba = self.clf.predict_proba(x_base)[0]
+        base_idx = int(np.argmax(base_proba))
+        orig_label = str(self.classes_[base_idx])
+        orig_conf = float(base_proba[base_idx])
+        orig_anom = float(self.anomaly_percentile(x_base))
+
+        mod_features = dict(base_features)
+        for k, v in modifications.items():
+            if k in self.features:
+                val = float(v)
+                if k == "beacon_regularity":
+                    val = max(0.0, min(1.0, val))
+                elif k in ("failed_logins", "conn_rate", "distinct_dst_ports", "bytes_out_mb", "bytes_in_mb", "dns_query_entropy"):
+                    val = max(0.0, val)
+                elif k == "off_hours":
+                    val = 1.0 if val >= 0.5 else 0.0
+                mod_features[k] = val
+
+        x_mod = self.vectorize(mod_features)
+        mod_proba = self.clf.predict_proba(x_mod)[0]
+        mod_idx = int(np.argmax(mod_proba))
+        new_label = str(self.classes_[mod_idx])
+        new_conf = float(mod_proba[mod_idx])
+        new_anom = float(self.anomaly_percentile(x_mod))
+
+        base_attrs, _, _ = self.explain_shap(x_base, base_idx)
+        new_attrs, _, _ = self.explain_shap(x_mod, mod_idx)
+
+        base_attr_map = {a.get("feature"): a.get("contribution", 0.0) for a in base_attrs if isinstance(a, dict)}
+        new_attr_map = {a.get("feature"): a.get("contribution", 0.0) for a in new_attrs if isinstance(a, dict)}
+
+        attr_changes = []
+        for f in self.features:
+            delta = round(new_attr_map.get(f, 0.0) - base_attr_map.get(f, 0.0), 4)
+            if abs(delta) > 0.001:
+                attr_changes.append({
+                    "feature": f,
+                    "base_contribution": base_attr_map.get(f, 0.0),
+                    "new_contribution": new_attr_map.get(f, 0.0),
+                    "delta": delta,
+                })
+        attr_changes.sort(key=lambda x: abs(x["delta"]), reverse=True)
+
+        feature_deltas = {}
+        for k, v in modifications.items():
+            if k in self.features:
+                feature_deltas[k] = {
+                    "original": float(base_features.get(k, 0.0)),
+                    "modified": float(mod_features.get(k, 0.0)),
+                    "delta": round(float(mod_features.get(k, 0.0)) - float(base_features.get(k, 0.0)), 4),
+                }
+
+        return WhatIfResult(
+            original_label=orig_label,
+            original_confidence=round(orig_conf, 4),
+            new_label=new_label,
+            new_confidence=round(new_conf, 4),
+            original_anomaly_score=round(orig_anom, 4),
+            new_anomaly_score=round(new_anom, 4),
+            modified_features=feature_deltas,
+            decision_changed=(orig_label != new_label),
+            top_attribution_changes=attr_changes,
+            disclaimer="HYPOTHETICAL_SANDBOX_ANALYSIS: Evaluated in isolated model sandbox; source evidence unmodified.",
+        )
+
+    def compute_drift(self, recent_flows: list[dict] | np.ndarray) -> DriftMetrics:
+        """Section 15: Statistical drift monitor evaluating KS-test against baseline reference."""
+        from scipy import stats
+
+        if isinstance(recent_flows, list):
+            if not recent_flows:
+                return DriftMetrics(
+                    sample_size=0,
+                    feature_drift_scores={},
+                    mean_drift=0.0,
+                    drift_detected=False,
+                    status="NORMAL",
+                )
+            arr = np.array([[float(f.get(k, 0.0)) for k in self.features] for f in recent_flows])
+        else:
+            arr = recent_flows
+
+        ref = self._training_sample_X if self._training_sample_X is not None else np.tile(self.baseline, (50, 1))
+
+        if len(arr) < 5:
+            return DriftMetrics(
+                sample_size=len(arr),
+                feature_drift_scores={},
+                mean_drift=0.0,
+                drift_detected=False,
+                status="NORMAL",
+            )
+
+        drift_scores = {}
+        flagged = False
+        for i, feat in enumerate(self.features):
+            ref_col = ref[:, i]
+            cur_col = arr[:, i]
+            res = stats.ks_2samp(ref_col, cur_col)
+            stat = round(float(res.statistic), 4)
+            drift_scores[feat] = stat
+            if res.pvalue < 0.01:
+                flagged = True
+
+        mean_d = float(np.mean(list(drift_scores.values()))) if drift_scores else 0.0
+        status_str = "CALIBRATION_INVALIDATED" if mean_d > 0.45 else ("DRIFT_WARNING" if flagged else "NORMAL")
+
+        return DriftMetrics(
+            sample_size=len(arr),
+            feature_drift_scores=drift_scores,
+            mean_drift=round(mean_d, 4),
+            drift_detected=flagged or (mean_d > 0.45),
+            status=status_str,
+        )
+

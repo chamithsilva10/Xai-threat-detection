@@ -22,11 +22,14 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
+import secrets
+import time
 from typing import Any
 
 from . import audit
 from .agents import (
     AgentTeam,
+    AuditFeedbackAgent,
     DataIngestionAgent,
     DetectionAgent,
     ExplainabilityAgent,
@@ -50,6 +53,7 @@ from .safety import (
 )
 from .schemas import (
     ActionProposal,
+    AgentExecutionRecord,
     AnalystFeedbackRecord,
     AnalystReport,
     ConformalTriageResult,
@@ -86,6 +90,7 @@ class Investigation:
     telemetry_provenance: ProvenanceType = "SIMULATED"
     intel_provenance: ProvenanceType = "SIMULATED"
     action_provenance: ProvenanceType = "SIMULATED"
+    agent_traces: list[AgentExecutionRecord] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -112,6 +117,7 @@ class Investigation:
             "debate_rounds": self.rounds,
             "injection_flags": self.injection_flags,
             "telemetry": self.telemetry,
+            "agent_traces": [t.model_dump() for t in self.agent_traces],
         }
 
 
@@ -155,11 +161,14 @@ class Orchestrator:
 
         # Initialize explicit functional agents
         self.ingestion_agent = DataIngestionAgent(max_field_len=settings.max_field_len)
+        self.detection_agent = DetectionAgent(self.detector) if self.detector else None
+        self.explainability_agent = ExplainabilityAgent(self.detector) if self.detector else None
         self.intel_agent = ThreatIntelligenceAgent(self.intel, settings.critical_assets)
         self.triage_agent = RiskScoringAndTriageAgent(
             self.detector.calibrator if self.detector else ThreatDetector().calibrator
         )
         self.orchestration_agent = ResponseOrchestratorAgent(settings.critical_assets)
+        self.audit_agent = AuditFeedbackAgent(settings.audit_log)
 
     def build_evidence(self, raw: dict) -> tuple[dict, Detection | None, list[dict]]:
         clean, flags = self.ingestion_agent.process(raw)
@@ -178,7 +187,43 @@ class Orchestrator:
 
     def investigate(self, raw: dict, log: callable = lambda *_: None) -> Investigation:
         self.team.telemetry = []
-        evidence, det, flags = self.build_evidence(raw)
+        trace_id = f"trace-{secrets.token_hex(6)}"
+
+        # -------------------------------------------------------------------
+        # Agent 01: Data Ingestion Agent
+        # -------------------------------------------------------------------
+        t0 = time.perf_counter()
+        clean, flags = self.ingestion_agent.process(raw)
+        dur01 = (time.perf_counter() - t0) * 1000.0
+
+        # -------------------------------------------------------------------
+        # Agent 02: Detection Agent & Agent 03: Explainability Agent
+        # -------------------------------------------------------------------
+        is_flow = is_flow_record(clean)
+        t0 = time.perf_counter()
+        if is_flow:
+            if self.detector is None:
+                raise ValueError("A flow record needs the ML detector; none was loaded.")
+            det = self.detector.detect(clean)
+            dur02 = (time.perf_counter() - t0) * 1000.0
+            dur03 = det.inference_latency_ms
+        else:
+            det = None
+            dur02 = 0.0
+            dur03 = 0.0
+
+        # -------------------------------------------------------------------
+        # Agent 04: Threat Intelligence Agent
+        # -------------------------------------------------------------------
+        t0 = time.perf_counter()
+        if det:
+            evidence = self.intel_agent.enrich(clean, det)
+        else:
+            evidence = self.intel_agent.enrich(clean, None)
+        if flags:
+            evidence["input_security_flags"] = flags
+        dur04 = (time.perf_counter() - t0) * 1000.0
+
         aid = evidence["alert_id"]
 
         if det:
@@ -186,21 +231,36 @@ class Orchestrator:
         if flags:
             log(f"[{aid}] ⚠ prompt-injection patterns in input: {sorted({f['pattern'] for f in flags})}")
 
-        # Agent 05: Risk scoring & conformal abstention triage (C9)
+        # -------------------------------------------------------------------
+        # Agent 05: Risk Scoring & Triage Agent
+        # -------------------------------------------------------------------
+        t0 = time.perf_counter()
         conformal_res = self.triage_agent.triage(det)
+        dur05 = (time.perf_counter() - t0) * 1000.0
         log(
             f"[{aid}] Conformal triage: {conformal_res.decision} "
             f"(s={conformal_res.nonconformity_score:.3f}, limit={conformal_res.calibrated_threshold:.3f})"
         )
 
-        # Agent 08 (Analyst) and Agent 09 (Verifier) debate loop with C1 Claim-Evidence Ledger
+        # -------------------------------------------------------------------
+        # Agent 08: LLM Analyst & Agent 09: Independent LLM Verifier (Debate Loop)
+        # -------------------------------------------------------------------
         ledger = ClaimEvidenceLedger(aid)
         rounds: list[dict] = []
+        dur08_total = 0.0
+        dur09_total = 0.0
+
+        t_analyst = time.perf_counter()
         report = self.team.analyst(evidence)
+        dur08_total += (time.perf_counter() - t_analyst) * 1000.0
 
         for r in range(self.settings.max_revision_rounds + 1):
             grounding = check_grounding(report, evidence)
+
+            t_critic = time.perf_counter()
             verdict = self.team.critic(evidence, report, grounding, ledger=ledger)
+            dur09_total += (time.perf_counter() - t_critic) * 1000.0
+
             ledger.register_claims(
                 claims=report.claims,
                 evidence=evidence,
@@ -226,16 +286,21 @@ class Orchestrator:
                 break
 
             problems = grounding.errors + verdict.unsupported_claims + [verdict.feedback_for_analyst]
+            t_analyst = time.perf_counter()
             report = self.team.analyst(
                 evidence,
                 previous=report,
                 round_no=r + 1,
                 feedback="; ".join(p for p in problems if p),
             )
+            dur08_total += (time.perf_counter() - t_analyst) * 1000.0
 
         severity = final_severity(verdict, det, evidence, self.settings.alert_threshold)
 
-        # Agent 06: Response Orchestrator Agent proposing plan and enforcing policy
+        # -------------------------------------------------------------------
+        # Agent 06: Response Orchestration Agent
+        # -------------------------------------------------------------------
+        t0 = time.perf_counter()
         plan = self.team.responder(evidence, report, verdict)
         decision = self.orchestration_agent.enforce(
             plan=plan,
@@ -247,6 +312,7 @@ class Orchestrator:
             conformal_result=conformal_res,
             ledger=ledger,
         )
+        dur06 = (time.perf_counter() - t0) * 1000.0
 
         # C13: Composite Explanation Trust Score (ETS)
         shap_attr = det.attributions if det else []
@@ -278,6 +344,97 @@ class Orchestrator:
         telemetry_prov: ProvenanceType = "REAL" if "real" in str(raw.get("source", "")) else "SIMULATED"
         intel_prov: ProvenanceType = getattr(self.intel, "provenance", "SIMULATED")
 
+        # -------------------------------------------------------------------
+        # Assemble 9 Agent Execution Records
+        # -------------------------------------------------------------------
+        trace_01 = AgentExecutionRecord(
+            agent_id=self.ingestion_agent.agent_id,
+            agent_name=self.ingestion_agent.agent_name,
+            trace_id=trace_id,
+            incident_id=aid,
+            duration_ms=round(dur01, 2),
+            input_summary={"raw_fields_count": len(raw)},
+            output_summary={"injection_flags_count": len(flags)},
+        )
+        trace_02 = AgentExecutionRecord(
+            agent_id="agent_02_detection",
+            agent_name="Detection Agent",
+            trace_id=trace_id,
+            incident_id=aid,
+            duration_ms=round(dur02, 2),
+            input_summary={"is_flow_record": is_flow},
+            output_summary={"predicted_label": det.label if det else "none", "confidence": round(det.confidence, 4) if det else 0.0},
+        )
+        trace_03 = AgentExecutionRecord(
+            agent_id="agent_03_explainability",
+            agent_name="Explainability Agent",
+            trace_id=trace_id,
+            incident_id=aid,
+            duration_ms=round(dur03, 2),
+            input_summary={"detection_label": det.label if det else "none"},
+            output_summary={"xai_method": det.explainer if det else "none", "shap_features": len(shap_attr), "lime_features": len(lime_attr)},
+        )
+        trace_04 = AgentExecutionRecord(
+            agent_id=self.intel_agent.agent_id,
+            agent_name=self.intel_agent.agent_name,
+            trace_id=trace_id,
+            incident_id=aid,
+            duration_ms=round(dur04, 2),
+            input_summary={"candidate_techniques": len(evidence.get("candidate_mitre", []))},
+            output_summary={"host_critical": evidence.get("asset", {}).get("host_is_critical", False), "is_iomt": evidence.get("asset", {}).get("is_iomt", False)},
+        )
+        trace_05 = AgentExecutionRecord(
+            agent_id=self.triage_agent.agent_id,
+            agent_name=self.triage_agent.agent_name,
+            trace_id=trace_id,
+            incident_id=aid,
+            duration_ms=round(dur05, 2),
+            input_summary={"nonconformity_score": round(conformal_res.nonconformity_score, 4)},
+            output_summary={"decision": conformal_res.decision, "eligible_for_auto_response": conformal_res.eligible_for_auto_response},
+        )
+        trace_08 = AgentExecutionRecord(
+            agent_id=self.team.analyst_agent_id,
+            agent_name=self.team.analyst_agent_name,
+            trace_id=trace_id,
+            incident_id=aid,
+            duration_ms=round(dur08_total, 2),
+            input_summary={"revision_rounds": len(rounds)},
+            output_summary={"claims_generated": len(report.claims), "mitre_techniques": report.mitre_techniques},
+        )
+        trace_09 = AgentExecutionRecord(
+            agent_id=self.team.verifier_agent_id,
+            agent_name=self.team.verifier_agent_name,
+            trace_id=trace_id,
+            incident_id=aid,
+            duration_ms=round(dur09_total, 2),
+            input_summary={"verifier_family": getattr(self.team.verifier_backend, "model_family", "independent_verifier")},
+            output_summary={"approved": verdict.approved, "corrected_severity": verdict.corrected_severity, "unsupported_claims": len(verdict.unsupported_claims)},
+        )
+        trace_06 = AgentExecutionRecord(
+            agent_id=self.orchestration_agent.agent_id,
+            agent_name=self.orchestration_agent.agent_name,
+            trace_id=trace_id,
+            incident_id=aid,
+            duration_ms=round(dur06, 2),
+            input_summary={"proposed_actions": len(plan.actions)},
+            output_summary={
+                "auto_execute": len(decision.auto_execute),
+                "rejected": len(decision.rejected),
+                "pending_approval": len(decision.pending_approval),
+            },
+        )
+        trace_07 = AgentExecutionRecord(
+            agent_id=self.audit_agent.agent_id,
+            agent_name=self.audit_agent.agent_name,
+            trace_id=trace_id,
+            incident_id=aid,
+            duration_ms=0.0,
+            input_summary={"incident_id": aid},
+            output_summary={"hash_chain_persisted": True},
+        )
+
+        all_traces = [trace_01, trace_02, trace_03, trace_04, trace_05, trace_08, trace_09, trace_06, trace_07]
+
         inv = Investigation(
             alert_id=aid,
             evidence=evidence,
@@ -301,8 +458,11 @@ class Orchestrator:
             telemetry_provenance=telemetry_prov,
             intel_provenance=intel_prov,
             action_provenance="SIMULATED",
+            agent_traces=all_traces,
         )
+        t_persist = time.perf_counter()
         self._persist(inv)
+        trace_07.duration_ms = round((time.perf_counter() - t_persist) * 1000.0, 2)
         return inv
 
     def _persist(self, inv: Investigation) -> None:
