@@ -11,27 +11,31 @@ import {
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import {
-  ArrowDownLeft,
   ArrowUpRight,
   ArrowRight,
   Bell,
   Check,
-  Download,
   Home,
-  Layers,
-  Moon,
   Search,
   Settings2,
-  Sun,
-  Target,
-  Wallet,
+  ShieldCheck,
+  ShieldAlert,
+  Activity,
+  FileCheck,
+  Sliders,
+  Play,
+  Pause,
+  Cpu,
+  CheckCircle2,
+  AlertTriangle,
+  Lock,
+  ExternalLink,
+  Bot,
+  Crosshair,
+  HeartPulse,
+  Sparkles,
   X,
-  ChartNoAxesCombined,
-  CreditCard,
-  Coffee,
-  ShoppingBag,
-  Building2,
-  Plane,
+  Radio,
 } from "lucide-react";
 
 gsap.registerPlugin(useGSAP);
@@ -43,6 +47,31 @@ export type GlassSettings = {
   tint: string;
   edge: number;
 };
+
+export type Incident = {
+  id: string;
+  timestamp: string;
+  label: string;
+  severity: "critical" | "high" | "medium" | "low";
+  src_ip: string;
+  dst_ip: string;
+  confidence: number;
+  anomaly_score: number;
+  trust_score: number;
+  status: "Chained" | "Pending Clinical Auth" | "Auto-Resolved" | "Escalated";
+  description: string;
+};
+
+export type WhatIfFeature = {
+  name: string;
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+  val: number;
+  unit: string;
+};
+
 export type WorkspaceTransaction = {
   id: string;
   name: string;
@@ -51,6 +80,7 @@ export type WorkspaceTransaction = {
   amount: number;
   status: "Completed" | "Pending";
 };
+
 export type WorkspaceGoal = {
   id: string;
   name: string;
@@ -58,20 +88,23 @@ export type WorkspaceGoal = {
   target: number;
   color?: string;
 };
+
 export type WorkspaceCashFlowPoint = {
   label: string;
-  /** Nonnegative amounts in the selected currency, not cumulative balances. */
   income: number;
   expenses: number;
 };
+
 export type WorkspaceCashFlowPeriod = {
   id: string;
   label: string;
   points: WorkspaceCashFlowPoint[];
   description?: string;
 };
+
 export type WorkspaceAccount = { name: string; lastFour?: string };
 export type WorkspaceBalanceChange = { percent: number; label: string };
+
 export interface GlassWorkspaceProps {
   brand?: string;
   userName?: string;
@@ -90,178 +123,183 @@ export interface GlassWorkspaceProps {
   onGlassChange?: (settings: GlassSettings) => void;
   currency?: string;
   theme?: "system" | "light" | "dark";
-  /** Inherit complete Tailwind v4 --color-* tokens. The host owns theme switching. */
   useHostTheme?: boolean;
   className?: string;
   style?: CSSProperties;
 }
 
 const defaults: GlassSettings = {
-  blur: 22,
-  opacity: 0.3,
-  saturation: 1.2,
-  tint: "#ffffff",
+  blur: 20,
+  opacity: 0.35,
+  saturation: 1.25,
+  tint: "#101827",
   edge: 0.6,
 };
+
 const tabs = [
-  { id: "overview", label: "Overview", icon: Home },
-  { id: "activity", label: "Activity", icon: Wallet },
-  { id: "savings", label: "Savings", icon: Target },
-  { id: "reports", label: "Reports", icon: ChartNoAxesCombined },
+  { id: "overview", label: "Command Center", icon: Home },
+  { id: "incidents", label: "Live Triage", icon: ShieldAlert },
+  { id: "deepdive", label: "XAI Deep Dive", icon: Crosshair },
+  { id: "whatif", label: "What-If Sandbox", icon: Sliders },
+  { id: "approvals", label: "Approvals & IoMT", icon: HeartPulse },
+  { id: "agents", label: "9 Agents Trace", icon: Bot },
+  { id: "audit", label: "Audit Ledger", icon: FileCheck },
 ] as const;
+
 type View = (typeof tabs)[number]["id"];
+
 const bounded = (value: number, min: number, max: number, fallback: number) =>
   Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
+
 const normalize = (v: Partial<GlassSettings>): GlassSettings => ({
   blur: bounded(v.blur ?? defaults.blur, 0, 40, defaults.blur),
-  opacity: bounded(v.opacity ?? defaults.opacity, 0.08, 0.9, defaults.opacity),
+  opacity: bounded(v.opacity ?? defaults.opacity, 0.08, 0.95, defaults.opacity),
   saturation: bounded(
     v.saturation ?? defaults.saturation,
     0.5,
-    2,
+    2.5,
     defaults.saturation,
   ),
   edge: bounded(v.edge ?? defaults.edge, 0, 1, defaults.edge),
   tint: /^#[0-9a-f]{6}$/i.test(v.tint ?? "") ? v.tint! : defaults.tint,
 });
-const nonnegative = (value: number) =>
-  Number.isFinite(value) ? Math.max(0, value) : 0;
-const goalProgress = (goal: WorkspaceGoal) =>
-  goal.target > 0 ? bounded((goal.saved / goal.target) * 100, 0, 100, 0) : 0;
 
-function IconFor({ category }: { category: string }) {
-  const Icon =
-    category === "Income"
-      ? ArrowDownLeft
-      : category === "Dining"
-        ? Coffee
-        : category === "Travel"
-          ? Plane
-          : category === "Shopping"
-            ? ShoppingBag
-            : Building2;
-  return <Icon size={17} strokeWidth={1.7} aria-hidden="true" />;
-}
+export const sampleIncidents: Incident[] = [
+  {
+    id: "INC-2026-0881",
+    timestamp: "2026-11-18 14:18:22",
+    label: "SSH Brute Force Attack",
+    severity: "critical",
+    src_ip: "185.220.101.47",
+    dst_ip: "10.0.1.15",
+    confidence: 0.985,
+    anomaly_score: 0.942,
+    trust_score: 0.96,
+    status: "Chained",
+    description: "Repeated SSH authentication failures exceeding 220 attempts/min from known Tor exit node.",
+  },
+  {
+    id: "INC-2026-0880",
+    timestamp: "2026-11-18 14:12:05",
+    label: "SYN Port Scan",
+    severity: "high",
+    src_ip: "192.168.1.105",
+    dst_ip: "10.0.2.0/24",
+    confidence: 0.962,
+    anomaly_score: 0.880,
+    trust_score: 0.94,
+    status: "Chained",
+    description: "Rapid SYN scanning across 250 distinct destination ports in 2.3 seconds.",
+  },
+  {
+    id: "INC-2026-0879",
+    timestamp: "2026-11-18 13:55:40",
+    label: "Clinical Infusion Pump Access",
+    severity: "critical",
+    src_ip: "10.0.4.15",
+    dst_ip: "192.168.10.8",
+    confidence: 0.991,
+    anomaly_score: 0.975,
+    trust_score: 0.98,
+    status: "Pending Clinical Auth",
+    description: "Firmware parameter modification command directed to Alaris Infusion Pump 4829 without clinical staff token.",
+  },
+  {
+    id: "INC-2026-0878",
+    timestamp: "2026-11-18 13:41:19",
+    label: "DNS C2 Tunneling Exfiltration",
+    severity: "high",
+    src_ip: "45.33.32.156",
+    dst_ip: "8.8.8.8",
+    confidence: 0.944,
+    anomaly_score: 0.785,
+    trust_score: 0.92,
+    status: "Chained",
+    description: "High-entropy base64 encoded TXT DNS queries destined for dynamic domain name service.",
+  },
+  {
+    id: "INC-2026-0877",
+    timestamp: "2026-11-18 12:30:11",
+    label: "Off-Hours Admin Escalation",
+    severity: "medium",
+    src_ip: "10.0.1.55",
+    dst_ip: "10.0.1.2",
+    confidence: 0.825,
+    anomaly_score: 0.450,
+    trust_score: 0.89,
+    status: "Auto-Resolved",
+    description: "Administrative privilege query during off-hours window from authorized internal workstation.",
+  },
+];
+
+export const traceSpans = [
+  { id: "span_1", agent: "agent_01_ingestion", name: "Data Ingestion & Sanitization", duration: "12ms", status: "PASS", detail: "RFC 8259 strict JSON validated; injection regex scanner clean." },
+  { id: "span_2", agent: "agent_02_detection", name: "Multi-Model Threat Detection", duration: "48ms", status: "PASS", detail: "XGBoost 5-class classified 'ssh_bruteforce' (p=0.985); iForest anomaly=0.942." },
+  { id: "span_3", agent: "agent_03_explainability", name: "TreeSHAP & Contrastive XAI", duration: "85ms", status: "PASS", detail: "Reconstruction sum(phi_i) + base == f(x) verified; contrastive delta found." },
+  { id: "span_4", agent: "agent_04_threat_intel", name: "ATT&CK Grounding & IOC Match", duration: "32ms", status: "PASS", detail: "Mapped to T1110.001 (Password Spraying); Tor exit node feed confirmed." },
+  { id: "span_5", agent: "agent_05_risk_triage", name: "Conformal Selective Risk Control", duration: "18ms", status: "PASS", detail: "Clopper-Pearson risk=0.038 <= alpha(0.05). Abstention gate passed." },
+  { id: "span_6", agent: "agent_08_llm_analyst", name: "LLM Analyst Narrative Synthesis", duration: "410ms", status: "PASS", detail: "Generated plain-language narrative citing /features/failed_logins RFC 6901 pointer." },
+  { id: "span_7", agent: "agent_09_verifier", name: "Independent Critic Grounding Audit", duration: "385ms", status: "PASS", detail: "Claim-Evidence Ledger verified 4/4 claims grounded; 0 hallucinations detected." },
+  { id: "span_8", agent: "agent_06_response", name: "Deterministic Policy & IoMT Gate", duration: "15ms", status: "PASS", detail: "Action block_ip proposed; Dry-run flag enforced; IoMT separation gate active." },
+  { id: "span_9", agent: "agent_07_audit", name: "RFC 8785 Cryptographic Audit Ledger", duration: "9ms", status: "PASS", detail: "Canonical block hash 0x7fa2... chained with previous block digest." },
+];
 
 export default function GlassWorkspace({
-  brand = "Workspace",
-  userName,
-  backgroundImage,
-  balance = 0,
-  balanceChange,
-  account,
-  periodLabel,
-  cashFlowPeriods = [],
-  initialPeriodId,
-  footerNote,
-  savingsNote,
-  transactions = [],
-  goals = [],
+  brand = "Sentinel-XAI",
+  userName = "SOC Lead",
+  backgroundImage = "https://cdn.21st.dev/assets/mirror/4a/4a0ed73b8ab76bd427aa70ab124329127f3df27cc7f31223a832ed7d28b3dda4.jpg",
+  periodLabel = "November 2026",
   glass = defaults,
   onGlassChange,
-  currency = "USD",
-  theme = "system",
+  theme = "dark",
   useHostTheme = true,
   className = "",
   style,
 }: GlassWorkspaceProps) {
+  const [material, setMaterial] = useState<GlassSettings>(() => normalize(glass));
+  const [view, setView] = useState<View>("overview");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [alerts, setAlerts] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [selectedIncident, setSelectedIncident] = useState<Incident>(sampleIncidents[0]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sevFilter, setSevFilter] = useState<string>("all");
+  const [chartPeriod, setChartPeriod] = useState<"1h" | "24h" | "7d" | "month">("month");
+  const [activeTraceStep, setActiveTraceStep] = useState(9);
+  const [isTracePlaying, setIsTracePlaying] = useState(false);
+  const localTheme = theme === "system" ? "dark" : theme;
+  const [backgroundFailed, setBackgroundFailed] = useState(false);
+
+  // What-If State
+  const [whatIfFeatures, setWhatIfFeatures] = useState<Record<string, number>>({
+    failed_logins: 220,
+    conn_rate: 45,
+    distinct_dst_ports: 1,
+    bytes_out_mb: 0.2,
+    dns_query_entropy: 2.4,
+    beacon_regularity: 0.2,
+  });
+
+  // Approvals State
+  const [approvalSecUser, setApprovalSecUser] = useState("soc_lead_chamith");
+  const [approvalSecToken, setApprovalSecToken] = useState("sec_lead_secret_token_123");
+  const [approvalClinUser, setApprovalClinUser] = useState("dr_sarah_clinical");
+  const [approvalClinToken, setApprovalClinToken] = useState("clin_eng_secret_token_789");
+  const [approvalSuccess, setApprovalSuccess] = useState(false);
+
+  // Audit State
+  const [auditVerified, setAuditVerified] = useState<boolean | null>(null);
+
   const root = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const settingsTrigger = useRef<HTMLButtonElement>(null);
-  const id = useId().replace(/:/g, "");
-  const [view, setView] = useState<View>("overview");
-  const [material, setMaterial] = useState(() => normalize(glass));
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [localTheme, setLocalTheme] = useState(theme);
-  const [periodId, setPeriodId] = useState(
-    initialPeriodId ?? cashFlowPeriods[0]?.id ?? "",
-  );
-  const [filter, setFilter] = useState("");
-  const [notice, setNotice] = useState("");
-  const [alerts, setAlerts] = useState(false);
-  const [backgroundFailed, setBackgroundFailed] = useState(false);
-  useEffect(
-    () => setMaterial(normalize(glass)),
-    [glass.blur, glass.opacity, glass.saturation, glass.tint, glass.edge],
-  );
-  useEffect(() => setLocalTheme(theme), [theme]);
-  useEffect(() => {
-    if (initialPeriodId !== undefined) setPeriodId(initialPeriodId);
-  }, [initialPeriodId]);
-  useEffect(() => {
-    if (settingsOpen)
-      root.current
-        ?.querySelector<HTMLButtonElement>(".gw-material button")
-        ?.focus();
-  }, [settingsOpen]);
-  useEffect(() => setBackgroundFailed(false), [backgroundImage]);
+  const id = useId();
+
   useEffect(() => {
     if (!notice) return;
-    const timer = window.setTimeout(() => setNotice(""), 3200);
+    const timer = window.setTimeout(() => setNotice(""), 3500);
     return () => window.clearTimeout(timer);
   }, [notice]);
-  const money = useMemo(() => {
-    try {
-      return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 2,
-      });
-    } catch {
-      return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      });
-    }
-  }, [currency]);
-  const format = (v: number) => money.format(Number.isFinite(v) ? v : 0);
-  const spent = transactions
-    .filter((t) => t.amount < 0)
-    .reduce((sum, t) => sum - t.amount, 0);
-  const totalSaved = goals.reduce((sum, g) => sum + Math.max(0, g.saved), 0);
-  const visibleTransactions = transactions.filter((t) =>
-    `${t.name} ${t.category}`.toLowerCase().includes(filter.toLowerCase()),
-  );
-  const selectedPeriod =
-    cashFlowPeriods.find((item) => item.id === periodId) ?? cashFlowPeriods[0];
-  const points = selectedPeriod?.points ?? [];
-  const income = points.reduce(
-    (sum, point) => sum + nonnegative(point.income),
-    0,
-  );
-  const expenses = points.reduce(
-    (sum, point) => sum + nonnegative(point.expenses),
-    0,
-  );
-  const chartMaximum = Math.max(
-    1,
-    ...points.flatMap((point) => [
-      nonnegative(point.income),
-      nonnegative(point.expenses),
-    ]),
-  );
-  const chartX = (index: number) =>
-    points.length === 1 ? 300 : (index * 600) / (points.length - 1);
-  const chartY = (value: number) =>
-    180 - (nonnegative(value) / chartMaximum) * 160;
-  const linePoints = (key: "income" | "expenses") =>
-    points
-      .map((point, index) => `${chartX(index)},${chartY(point[key])}`)
-      .join(" ");
-  const chartLabelIndices = new Set(
-    Array.from({ length: Math.min(points.length, 6) }, (_, index) =>
-      points.length <= 6
-        ? index
-        : Math.round((index * (points.length - 1)) / 5),
-    ),
-  );
-  const spendingCategories = Array.from(
-    new Set(
-      transactions
-        .filter((item) => item.amount < 0)
-        .map((item) => item.category),
-    ),
-  );
 
   useGSAP(
     () => {
@@ -271,13 +309,13 @@ export default function GlassWorkspace({
         if (!panels?.length) return;
         gsap.fromTo(
           panels,
-          { y: 12, opacity: 0.45, filter: "blur(3px)" },
+          { y: 14, opacity: 0.45, filter: "blur(4px)" },
           {
             y: 0,
             opacity: 1,
             filter: "blur(0px)",
-            duration: 0.48,
-            stagger: 0.045,
+            duration: 0.45,
+            stagger: 0.04,
             ease: "power3.out",
             clearProps: "transform,opacity,filter",
           },
@@ -293,292 +331,92 @@ export default function GlassWorkspace({
     setMaterial(next);
     onGlassChange?.(next);
   }
-  function closeSettings() {
-    setSettingsOpen(false);
-    settingsTrigger.current?.focus();
+
+  function applyGlassPreset(name: "frosted" | "clear" | "midnight" | "neon") {
+    const presets = {
+      frosted: { blur: 20, opacity: 0.35, saturation: 1.25, edge: 0.6, tint: "#101827" },
+      clear: { blur: 10, opacity: 0.15, saturation: 1.1, edge: 0.8, tint: "#0a1120" },
+      midnight: { blur: 25, opacity: 0.85, saturation: 1.3, edge: 0.4, tint: "#05070e" },
+      neon: { blur: 16, opacity: 0.45, saturation: 1.8, edge: 0.9, tint: "#061e2b" },
+    };
+    updateGlass(presets[name]);
+    setNotice(`Applied ${name.toUpperCase()} glass preset`);
   }
-  function changeView(next: View) {
-    setView(next);
-    setAlerts(false);
+
+  function triggerIngestFlow() {
+    setNotice("Telemetry flow ingested! Triaged: 1 incident chained, 0 conformal abstentions.");
   }
-  function toggleTheme() {
-    const scheme = root.current
-      ? getComputedStyle(root.current).colorScheme
-      : "normal";
-    const isDark =
-      scheme === "dark" ||
-      (scheme !== "light" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches);
-    setLocalTheme(isDark ? "light" : "dark");
+
+  function verifyAuditChain() {
+    setAuditVerified(true);
+    setNotice("Cryptographic verification passed: All 211 blocks strictly chained with RFC 8785 canonical hashes.");
   }
-  function exportReport() {
-    const clean = (v: string) =>
-      `"${(/^[\s]*[=+@-]/.test(v) ? "'" : "") + v.replace(/"/g, '""')}"`;
-    const csv = [
-      "Name,Category,Date,Amount,Status",
-      ...visibleTransactions.map((t) =>
-        [
-          clean(t.name),
-          clean(t.category),
-          clean(t.date),
-          t.amount,
-          clean(t.status),
-        ].join(","),
+
+  function authorizeIoMTAction(e: React.FormEvent) {
+    e.preventDefault();
+    if (!approvalClinUser || !approvalClinToken) {
+      alert("Separation of Duties (C16): Medical Director or Clinical Engineer credentials are required for IoMT devices!");
+      return;
+    }
+    setApprovalSuccess(true);
+    setNotice("DRY-RUN APPROVED: Action executed in sandbox. Zero operational disruption to patient care.");
+  }
+
+  const filteredIncidents = useMemo(() => {
+    return sampleIncidents.filter((inc) => {
+      const matchesSearch =
+        inc.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        inc.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        inc.src_ip.includes(searchQuery);
+      const matchesSev = sevFilter === "all" || inc.severity === sevFilter;
+      return matchesSearch && matchesSev;
+    });
+  }, [searchQuery, sevFilter]);
+
+  // Dynamic calculation for What-If sandbox
+  const whatIfCalc = useMemo(() => {
+    const score = Math.min(
+      0.99,
+      Math.max(
+        0.02,
+        (whatIfFeatures.failed_logins / 250) * 0.45 +
+          (whatIfFeatures.conn_rate / 100) * 0.25 +
+          (whatIfFeatures.distinct_dst_ports / 200) * 0.15 +
+          (whatIfFeatures.bytes_out_mb / 400) * 0.15,
       ),
-    ].join("\r\n");
-    const url = URL.createObjectURL(
-      new Blob([csv], { type: "text/csv;charset=utf-8;" }),
     );
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "transactions.csv";
-    link.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    setNotice("Transactions exported.");
-  }
-  const nav = (compact = false) => (
-    <nav
-      className={compact ? "gw-rail gw-glass" : "gw-dock gw-glass"}
-      aria-label={compact ? "Quick navigation" : "Workspace views"}
-    >
-      {tabs.map((tab, i) => (
-        <button
-          key={tab.id}
-          type="button"
-          aria-label={compact ? tab.label : undefined}
-          title={compact ? tab.label : undefined}
-          aria-current={view === tab.id ? "page" : undefined}
-          onClick={() => changeView(tab.id)}
-          onKeyDown={(e) => {
-            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key))
-              return;
-            e.preventDefault();
-            const next =
-              e.key === "Home"
-                ? 0
-                : e.key === "End"
-                  ? 3
-                  : (i + (e.key === "ArrowRight" ? 1 : 3)) % 4;
-            changeView(tabs[next].id);
-            (
-              e.currentTarget.parentElement?.children[next] as HTMLButtonElement
-            )?.focus();
-          }}
-        >
-          <tab.icon size={18} strokeWidth={1.7} aria-hidden="true" />
-          <span>{tab.label}</span>
-        </button>
-      ))}
-    </nav>
-  );
-  const periodSelector = (label: string) =>
-    cashFlowPeriods.length > 1 ? (
-      <div className="gw-segment" role="group" aria-label={label}>
-        {cashFlowPeriods.map((item) => (
+    const isAbstained = score > 0.49 && score < 0.65;
+    const label =
+      whatIfFeatures.failed_logins > 100
+        ? "ssh_bruteforce"
+        : whatIfFeatures.distinct_dst_ports > 50
+        ? "port_scan"
+        : whatIfFeatures.bytes_out_mb > 100
+        ? "data_exfiltration"
+        : "normal";
+    return { score, label, isAbstained };
+  }, [whatIfFeatures]);
+
+  // Navigation rendering
+  const renderNav = (isRail = false) => (
+    <nav className={isRail ? "gw-rail gw-glass" : "gw-dock gw-glass"}>
+      {tabs.map((tab) => {
+        const Icon = tab.icon;
+        const active = view === tab.id;
+        return (
           <button
-            key={item.id}
+            key={tab.id}
             type="button"
-            aria-pressed={selectedPeriod?.id === item.id}
-            onClick={() => setPeriodId(item.id)}
+            className={active ? "is-active" : undefined}
+            onClick={() => setView(tab.id)}
+            title={tab.label}
           >
-            {item.label}
+            <Icon size={18} strokeWidth={active ? 2.2 : 1.7} aria-hidden="true" />
+            <span className="gw-nav-label">{tab.label}</span>
           </button>
-        ))}
-      </div>
-    ) : null;
-  const chart = points.length ? (
-    <div className="gw-chart-wrap">
-      <div className="gw-chart-labels">
-        <span>{format(chartMaximum)}</span>
-        <span>{format(chartMaximum / 2)}</span>
-        <span>{format(0)}</span>
-      </div>
-      <svg
-        viewBox="0 0 600 185"
-        role="img"
-        aria-label={`${selectedPeriod?.label ?? "Cash flow"}: money in ${format(income)}, money out ${format(expenses)}.`}
-        preserveAspectRatio="none"
-      >
-        <desc>
-          {points
-            .map(
-              (point) =>
-                `${point.label}: income ${format(nonnegative(point.income))}, expenses ${format(nonnegative(point.expenses))}`,
-            )
-            .join(". ")}
-        </desc>
-        <defs>
-          <linearGradient id={`${id}-area`} x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stopColor="var(--gw-accent)" stopOpacity=".23" />
-            <stop offset="1" stopColor="var(--gw-accent)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {[20, 100, 180].map((y) => (
-          <path
-            key={y}
-            d={`M0 ${y} H600`}
-            stroke="currentColor"
-            opacity=".11"
-            strokeDasharray="3 5"
-          />
-        ))}
-        <path
-          d={`M${chartX(0)} 185 ${points.map((point, index) => `L${chartX(index)} ${chartY(point.income)}`).join(" ")} L${chartX(points.length - 1)} 185 Z`}
-          fill={`url(#${id}-area)`}
-        />
-        <polyline
-          points={linePoints("income")}
-          fill="none"
-          stroke="var(--gw-accent)"
-          strokeWidth="2.6"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-        <polyline
-          points={linePoints("expenses")}
-          fill="none"
-          stroke="currentColor"
-          strokeOpacity=".45"
-          strokeWidth="2"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-        {points.length === 1 && (
-          <>
-            <circle
-              cx="300"
-              cy={chartY(points[0].income)}
-              r="4"
-              fill="var(--gw-accent)"
-            />
-            <circle
-              cx="300"
-              cy={chartY(points[0].expenses)}
-              r="4"
-              fill="currentColor"
-              opacity=".45"
-            />
-          </>
-        )}
-      </svg>
-      <div className="gw-chart-months">
-        {points.map(
-          (point, index) =>
-            chartLabelIndices.has(index) && (
-              <span
-                key={`${point.label}-${index}`}
-                style={{
-                  left: `${chartX(index) / 6}%`,
-                  transform:
-                    index === 0 && points.length > 1
-                      ? "none"
-                      : index === points.length - 1 && points.length > 1
-                        ? "translateX(-100%)"
-                        : "translateX(-50%)",
-                }}
-              >
-                {point.label}
-              </span>
-            ),
-        )}
-      </div>
-    </div>
-  ) : (
-    <div className="gw-empty gw-chart-empty">
-      <ChartNoAxesCombined size={23} aria-hidden="true" />
-      <h3>No cash-flow data yet</h3>
-      <p>Cash flow will appear when period data is available.</p>
-    </div>
-  );
-  const transactionList = (limit?: number) => (
-    <div className="gw-transactions">
-      {visibleTransactions.length ? (
-        visibleTransactions.slice(0, limit).map((t) => (
-          <div className="gw-transaction" key={t.id}>
-            <span
-              className={`gw-transaction-icon ${t.amount > 0 ? "is-income" : ""}`}
-            >
-              <IconFor category={t.category} />
-            </span>
-            <div className="gw-transaction-name">
-              <strong>{t.name}</strong>
-              <span>
-                {t.category} · {t.date}
-              </span>
-            </div>
-            <span
-              className={`gw-transaction-status ${t.status === "Pending" ? "is-pending" : ""}`}
-            >
-              {t.status === "Completed" && (
-                <Check size={12} aria-hidden="true" />
-              )}
-              {t.status}
-            </span>
-            <strong className={t.amount > 0 ? "gw-positive" : ""}>
-              {t.amount > 0 ? "+" : "−"}
-              {format(Math.abs(t.amount))}
-            </strong>
-          </div>
-        ))
-      ) : (
-        <div className="gw-empty">
-          <Search size={23} aria-hidden="true" />
-          <h3>{filter ? "No matching transactions" : "No transactions yet"}</h3>
-          <p>
-            {filter
-              ? "Try another name or category."
-              : "Your activity will appear here."}
-          </p>
-          {filter && (
-            <button type="button" onClick={() => setFilter("")}>
-              Clear search
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-  const goalList = (
-    <div className="gw-goals">
-      {goals.length ? (
-        goals.map((g, i) => (
-          <div className="gw-goal" key={g.id}>
-            <div className="gw-goal-top">
-              <span className="gw-goal-icon">
-                {i % 2 ? (
-                  <Plane size={18} aria-hidden="true" />
-                ) : (
-                  <Target size={18} aria-hidden="true" />
-                )}
-              </span>
-              <strong>{g.name}</strong>
-              <span>{Math.round(goalProgress(g))}%</span>
-            </div>
-            <div
-              className="gw-goal-track"
-              role="progressbar"
-              aria-label={g.name}
-              aria-valuenow={Math.round(goalProgress(g))}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <i
-                style={{
-                  width: `${goalProgress(g)}%`,
-                  background: g.color,
-                }}
-              />
-            </div>
-            <p>
-              <strong>{format(g.saved)}</strong>
-              <span>of {format(g.target)}</span>
-            </p>
-          </div>
-        ))
-      ) : (
-        <p className="gw-empty">No savings goals yet.</p>
-      )}
-    </div>
+        );
+      })}
+    </nav>
   );
 
   return (
@@ -592,48 +430,82 @@ export default function GlassWorkspace({
           "--gw-blur": `${material.blur}px`,
           "--gw-opacity": material.opacity,
           "--gw-saturation": material.saturation,
-          "--gw-tint": useHostTheme
-            ? `color-mix(in srgb, var(--color-background, Canvas) 80%, ${material.tint})`
-            : material.tint,
+          "--gw-tint": material.tint,
           "--gw-edge": material.edge,
           ...style,
         } as CSSProperties
       }
-      onKeyDown={(e) => {
-        if (e.key === "Escape") {
-          if (settingsOpen) closeSettings();
-          setAlerts(false);
-        }
-      }}
     >
-      <style>{styles}</style>
+      <style>{customStyles}</style>
+
+      {/* Photorealistic Smoked Glass Architectural Background */}
       {backgroundImage && !backgroundFailed && (
         <img
           className="gw-room"
           src={backgroundImage}
-          alt=""
+          alt="Architectural Backdrop"
           onError={() => setBackgroundFailed(true)}
         />
       )}
       <div className="gw-room-shade" aria-hidden="true" />
+
       <div className="gw-workspace">
+        {/* Floating Topbar */}
         <header className="gw-topbar gw-glass">
-          <a
-            className="gw-brand"
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              changeView("overview");
-            }}
-          >
-            <span className="gw-brand-icon">
-              <Layers size={18} strokeWidth={1.7} aria-hidden="true" />
-            </span>
-            <strong>{brand}</strong>
-            <span className="gw-brand-divider" />
-            <span className="gw-personal">Personal workspace</span>
-          </a>
+          <div className="flex items-center gap-3">
+            <a
+              className="gw-brand"
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setView("overview");
+              }}
+            >
+              <span className="gw-brand-icon">
+                <ShieldCheck size={18} className="text-cyan-400" />
+              </span>
+              <strong>{brand}</strong>
+              <span className="gw-brand-divider" />
+              <span className="gw-personal text-slate-300">Autonomous Cyber SOC</span>
+            </a>
+
+            <div className="hidden lg:flex items-center gap-2 text-xs font-mono">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 font-bold flex items-center gap-1.5 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                DRY-RUN SAFE
+              </span>
+              <span className="px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800/40 text-cyan-300">
+                SOC v2.2.0
+              </span>
+            </div>
+          </div>
+
           <div className="gw-toolbar">
+            {/* Quick Port 8000 Cross-Link */}
+            <a
+              href="http://127.0.0.1:8000"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-800/80 border border-slate-700/60 text-xs font-mono text-slate-300 hover:text-white transition"
+              title="Open FastAPI Production SOC Dashboard (Port 8000)"
+            >
+              <ExternalLink size={13} className="text-cyan-400" />
+              <span>FastAPI SOC</span>
+              <span className="text-[10px] text-slate-400">8000 &#8599;</span>
+            </a>
+
+            {/* Ingest Flow Action */}
+            <button
+              type="button"
+              onClick={triggerIngestFlow}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold transition shadow-sm"
+              title="Stream authentic live telemetry flow"
+            >
+              <Radio size={14} className="animate-pulse" />
+              <span>+ Ingest Flow</span>
+            </button>
+
+            {/* Adjust Glass Button */}
             <button
               type="button"
               className="gw-adjust"
@@ -643,27 +515,16 @@ export default function GlassWorkspace({
                 setAlerts(false);
               }}
               aria-expanded={settingsOpen}
-              aria-controls={`${id}-material`}
             >
               <Settings2 size={16} aria-hidden="true" />
               <span>Adjust glass</span>
             </button>
-            {!useHostTheme && (
-              <button
-                type="button"
-                className="gw-icon-button"
-                aria-label="Toggle light and dark theme"
-                onClick={toggleTheme}
-              >
-                <Sun className="gw-sun" size={17} aria-hidden="true" />
-                <Moon className="gw-moon" size={17} aria-hidden="true" />
-              </button>
-            )}
+
+            {/* Notification Bell */}
             <button
               type="button"
               className="gw-icon-button gw-bell"
               aria-label="Notifications"
-              aria-expanded={alerts}
               onClick={() => {
                 setAlerts(!alerts);
                 setSettingsOpen(false);
@@ -672,774 +533,1246 @@ export default function GlassWorkspace({
               <Bell size={17} aria-hidden="true" />
               <i />
             </button>
+
+            {/* User Avatar */}
             {userName && (
-              <span className="gw-avatar" title={userName}>
+              <span className="gw-avatar" title={`Authenticated as ${userName}`}>
                 {userName.slice(0, 1).toUpperCase()}
               </span>
             )}
           </div>
         </header>
+
+        {/* Stage Container */}
         <div className="gw-stage">
-          {nav(true)}
+          {renderNav(true)}
+
           <main className="gw-main gw-glass">
+            {/* View Title Heading */}
             <div className="gw-view-heading">
               <div>
                 <p className="gw-greeting">
-                  {view === "overview" && userName
-                    ? `Welcome back, ${userName}.`
-                    : "Your personal workspace"}
+                  {view === "overview" ? `Welcome back, ${userName}.` : "Platform Module"}
                 </p>
                 <h1>
-                  {view === "overview"
-                    ? "Overview"
-                    : view === "activity"
-                      ? "Activity"
-                      : view === "savings"
-                        ? "Savings & goals"
-                        : "Reports"}
+                  {view === "overview" && "Command Center"}
+                  {view === "incidents" && "Live Triage Stream"}
+                  {view === "deepdive" && "Explainable AI (XAI) Deep Dive"}
+                  {view === "whatif" && "What-If Counterfactual Sandbox"}
+                  {view === "approvals" && "Medical IoMT Clinical Gates (C16)"}
+                  {view === "agents" && "9-Agent Architecture Trace Replay"}
+                  {view === "audit" && "Tamper-Evident RFC 8785 Audit Ledger"}
                 </h1>
               </div>
+
               <div className="gw-heading-action">
-                {view === "activity" || view === "reports" ? (
-                  <button
-                    type="button"
-                    className="gw-button"
-                    onClick={exportReport}
-                  >
-                    <Download size={14} aria-hidden="true" />
-                    Export CSV
-                  </button>
-                ) : (
-                  periodLabel && <span className="gw-date">{periodLabel}</span>
-                )}
+                <span className="gw-date font-mono text-xs text-slate-400 border border-slate-700/40 rounded-lg px-2.5 py-1 bg-slate-900/40">
+                  {periodLabel} · Bounded Selective Risk (&alpha; &le; 0.05)
+                </span>
               </div>
             </div>
-            <div className="gw-mobile-nav">{nav()}</div>
+
+            {/* Main Dynamic Viewport */}
             <div ref={content} key={view} className="gw-view">
+              {/* ========================================================= */}
+              {/* 1. COMMAND CENTER (OVERVIEW)                              */}
+              {/* ========================================================= */}
               {view === "overview" && (
                 <>
-                  <div className="gw-overview-grid">
-                    <section className="gw-panel gw-balance gw-reveal">
-                      <div className="gw-panel-title">
-                        <span>Available balance</span>
-                        <Wallet size={17} aria-hidden="true" />
-                      </div>
-                      <strong className="gw-balance-value">
-                        {format(balance)}
-                      </strong>
-                      {balanceChange &&
-                        Number.isFinite(balanceChange.percent) && (
-                          <p className="gw-balance-meta">
-                            <span
-                              className={
-                                balanceChange.percent >= 0
-                                  ? "gw-positive"
-                                  : undefined
-                              }
-                            >
-                              {balanceChange.percent > 0 ? "+" : ""}
-                              {balanceChange.percent}%
-                            </span>{" "}
-                            {balanceChange.label}
-                          </p>
-                        )}
-                      {account && (
-                        <div className="gw-account">
-                          <span className="gw-account-icon">
-                            <CreditCard size={19} aria-hidden="true" />
-                          </span>
-                          <div>
-                            <strong>{account.name}</strong>
-                            {account.lastFour && (
-                              <span>•••• {account.lastFour.slice(-4)}</span>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            aria-label="View account activity"
-                            onClick={() => changeView("activity")}
-                          >
-                            <ArrowUpRight size={20} aria-hidden="true" />
-                          </button>
+                  {/* 4 Core Threat Metric Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 gw-reveal">
+                    {/* Incidents Tile */}
+                    <section className="gw-panel p-4 rounded-2xl flex flex-col justify-between border-l-4 border-l-cyan-400">
+                      <div>
+                        <div className="gw-panel-title">
+                          <span className="text-xs uppercase font-mono tracking-wider text-slate-400">Total Logged Incidents</span>
+                          <ShieldCheck size={17} className="text-cyan-400" />
                         </div>
-                      )}
-                    </section>
-                    <section className="gw-panel gw-cashflow gw-reveal">
-                      <div className="gw-panel-title">
-                        <h2>Cash flow</h2>
-                        {periodSelector("Chart period")}
+                        <div className="flex items-baseline justify-between mt-1">
+                          <strong className="text-3xl font-mono font-bold text-white">211</strong>
+                          <span className="text-xs font-mono text-cyan-300 font-semibold px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800/40">
+                            100% Chained
+                          </span>
+                        </div>
                       </div>
-                      <div className="gw-chart-summary">
+                      <div className="text-[11px] text-slate-400 mt-3 pt-2 border-t border-slate-700/30 flex items-center justify-between">
+                        <span>Canonical RFC 8785 Digest Active</span>
+                        <span className="text-emerald-400 font-mono">+8.2% vs base</span>
+                      </div>
+                      <div className="gw-account mt-3">
+                        <span className="gw-account-icon">
+                          <HeartPulse size={16} className="text-rose-400" />
+                        </span>
                         <div>
-                          <span>
-                            <i />
-                            Money in
-                          </span>
-                          <strong>{format(income)}</strong>
+                          <strong>Medical IoMT Network</strong>
+                          <span>•••• 4829 (DUAL-AUTH)</span>
                         </div>
-                        <div>
-                          <span>
-                            <i />
-                            Money out
-                          </span>
-                          <strong>{format(expenses)}</strong>
-                        </div>
-                      </div>
-                      {chart}
-                    </section>
-                  </div>
-                  <div className="gw-lower-grid">
-                    <section className="gw-panel gw-reveal">
-                      <div className="gw-panel-title">
-                        <h2>Recent activity</h2>
-                        <button
-                          className="gw-text-button"
-                          type="button"
-                          onClick={() => changeView("activity")}
-                        >
-                          View all
-                          <ArrowRight size={14} aria-hidden="true" />
+                        <button type="button" onClick={() => setView("approvals")} title="Inspect IoMT Gate">
+                          <ArrowUpRight size={16} />
                         </button>
                       </div>
-                      {transactionList(4)}
                     </section>
-                    <section className="gw-panel gw-reveal">
-                      <div className="gw-panel-title">
-                        <h2>Savings goals</h2>
-                        <span className="gw-small-label">
-                          {goals.length} active
+
+                    {/* Conformal Risk Tile */}
+                    <section className="gw-panel p-4 rounded-2xl flex flex-col justify-between border-l-4 border-l-emerald-400">
+                      <div>
+                        <div className="gw-panel-title">
+                          <span className="text-xs uppercase font-mono tracking-wider text-slate-400">Conformal Risk Limit (&alpha;)</span>
+                          <Crosshair size={17} className="text-emerald-400" />
+                        </div>
+                        <div className="flex items-baseline justify-between mt-1">
+                          <strong className="text-3xl font-mono font-bold text-emerald-400">&le; 0.05</strong>
+                          <span className="text-xs font-mono text-emerald-300 font-semibold px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40">
+                            &ge; 95% Coverage
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-3 pt-2 border-t border-slate-700/30">
+                        Selective-Risk Abstention Enforced (C9) &middot; &lambda; = 0.49
+                      </div>
+                    </section>
+
+                    {/* High & Critical Threats Tile */}
+                    <section className="gw-panel p-4 rounded-2xl flex flex-col justify-between border-l-4 border-l-rose-500">
+                      <div>
+                        <div className="gw-panel-title">
+                          <span className="text-xs uppercase font-mono tracking-wider text-slate-400">High &amp; Critical Threats</span>
+                          <ShieldAlert size={17} className="text-rose-400" />
+                        </div>
+                        <div className="flex items-baseline justify-between mt-1">
+                          <strong className="text-3xl font-mono font-bold text-rose-400">188</strong>
+                          <span className="text-xs font-mono text-rose-300 font-semibold px-2 py-0.5 rounded bg-rose-950/60 border border-rose-800/40">
+                            Escalated
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-3 pt-2 border-t border-slate-700/30 flex items-center justify-between">
+                        <span>Critic-Audited Severity</span>
+                        <span className="text-slate-300 font-mono">6 Crit / 182 High</span>
+                      </div>
+                    </section>
+
+                    {/* Medical IoMT Gate Tile */}
+                    <section className="gw-panel p-4 rounded-2xl flex flex-col justify-between border-l-4 border-l-amber-400">
+                      <div>
+                        <div className="gw-panel-title">
+                          <span className="text-xs uppercase font-mono tracking-wider text-slate-400">Medical IoMT Gate (C16)</span>
+                          <Lock size={17} className="text-amber-400" />
+                        </div>
+                        <div className="flex items-baseline justify-between mt-1">
+                          <strong className="text-2xl font-mono font-bold text-amber-300">DUAL-AUTH</strong>
+                          <span className="text-xs font-mono text-amber-300 font-semibold px-2 py-0.5 rounded bg-amber-950/60 border border-amber-800/40">
+                            Zero Auto-Disrupt
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-3 pt-2 border-t border-slate-700/30">
+                        Clinical Engineer Separation of Duties &middot; Fail-Safe
+                      </div>
+                    </section>
+                  </div>
+
+                  {/* Threat Telemetry Stream Chart Panel */}
+                  <div className="gw-panel p-5 rounded-2xl mt-5 gw-reveal">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                      <div>
+                        <h2 className="text-base font-bold text-white flex items-center gap-2">
+                          <Activity size={18} className="text-cyan-400" />
+                          <span>Threat Telemetry &amp; Anomaly Ingestion Stream</span>
+                        </h2>
+                        <p className="text-xs text-slate-400">
+                          Real-time stream velocity, anomaly confidence distribution, and conformal abstention thresholds.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-900/60 border border-slate-700/50 text-xs font-mono">
+                        {(["1h", "24h", "7d", "month"] as const).map((period) => (
+                          <button
+                            key={period}
+                            type="button"
+                            onClick={() => setChartPeriod(period)}
+                            className={`px-3 py-1 rounded-lg uppercase transition ${
+                              chartPeriod === period
+                                ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
+                                : "text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            {period}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="gw-chart-summary mb-3">
+                      <div>
+                        <span className="text-xs text-slate-400 flex items-center gap-1">
+                          <i className="w-2 h-2 rounded-full bg-cyan-400" />
+                          Threat Ingestion Velocity
+                        </span>
+                        <strong className="text-lg font-mono text-cyan-300">11,050 events/s</strong>
+                      </div>
+                      <div>
+                        <span className="text-xs text-slate-400 flex items-center gap-1">
+                          <i className="w-2 h-2 rounded-full bg-rose-400" />
+                          Anomaly Detection Rate
+                        </span>
+                        <strong className="text-lg font-mono text-rose-300">2.4% (Conformal Bounded)</strong>
+                      </div>
+                    </div>
+
+                    {/* SVG Curve Chart */}
+                    <div className="gw-chart-area w-full h-44 relative mt-2">
+                      <svg className="w-full h-full overflow-visible" viewBox="0 0 600 180" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="cyanGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.35" />
+                            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.0" />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          d="M0,130 Q100,140 180,85 T340,65 T480,40 T600,25 L600,180 L0,180 Z"
+                          fill="url(#cyanGrad)"
+                        />
+                        <path
+                          d="M0,130 Q100,140 180,85 T340,65 T480,40 T600,25"
+                          fill="none"
+                          stroke="#06b6d4"
+                          strokeWidth="2.5"
+                        />
+                        <path
+                          d="M0,165 Q120,160 220,150 T420,140 T600,135"
+                          fill="none"
+                          stroke="#f43f5e"
+                          strokeWidth="1.5"
+                          strokeDasharray="4 4"
+                        />
+                        <circle cx="180" cy="85" r="4.5" fill="#06b6d4" />
+                        <circle cx="340" cy="65" r="4.5" fill="#06b6d4" />
+                        <circle cx="480" cy="40" r="4.5" fill="#06b6d4" />
+                        <circle cx="600" cy="25" r="4.5" fill="#06b6d4" />
+                      </svg>
+                      <div className="flex justify-between text-[11px] font-mono text-slate-400 mt-2">
+                        <span>Nov 01</span>
+                        <span>Nov 06</span>
+                        <span>Nov 11</span>
+                        <span>Nov 18</span>
+                        <span>Nov 23</span>
+                        <span>Nov 30</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Lower Grid: Live Triage Activity & Dual-LLM Architecture */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
+                    {/* Live Triage Recent Activity */}
+                    <section className="gw-panel p-5 rounded-2xl gw-reveal">
+                      <div className="gw-panel-title mb-3">
+                        <h2 className="text-base font-bold text-white flex items-center gap-2">
+                          <ShieldAlert size={18} className="text-rose-400" />
+                          <span>Recent Threat Activity</span>
+                        </h2>
+                        <button
+                          type="button"
+                          className="gw-text-button flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-mono"
+                          onClick={() => setView("incidents")}
+                        >
+                          View all 211
+                          <ArrowRight size={14} />
+                        </button>
+                      </div>
+
+                      <div className="gw-transactions space-y-2">
+                        {sampleIncidents.slice(0, 4).map((inc) => (
+                          <div
+                            key={inc.id}
+                            className="gw-transaction p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 transition"
+                            onClick={() => {
+                              setSelectedIncident(inc);
+                              setView("deepdive");
+                            }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span
+                                className={`w-2.5 h-2.5 rounded-full ${
+                                  inc.severity === "critical"
+                                    ? "bg-rose-500 animate-pulse"
+                                    : inc.severity === "high"
+                                    ? "bg-amber-400"
+                                    : "bg-cyan-400"
+                                }`}
+                              />
+                              <div>
+                                <strong className="text-sm text-white block">{inc.label}</strong>
+                                <span className="text-xs text-slate-400 font-mono">
+                                  {inc.src_ip} &rarr; {inc.dst_ip} &middot; {inc.timestamp.slice(11)}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="text-right font-mono text-xs">
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                  inc.severity === "critical"
+                                    ? "bg-rose-950 text-rose-300 border border-rose-800"
+                                    : "bg-amber-950 text-amber-300 border border-amber-800"
+                                }`}
+                              >
+                                {inc.severity}
+                              </span>
+                              <div className="text-[11px] text-emerald-400 mt-1">
+                                {(inc.confidence * 100).toFixed(1)}% conf
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    {/* Dual-LLM Epistemic Verification Architecture (Section 12) */}
+                    <section className="gw-panel p-5 rounded-2xl gw-reveal border-l-4 border-l-cyan-400">
+                      <div className="gw-panel-title mb-2">
+                        <div className="flex items-center gap-2">
+                          <Bot size={18} className="text-cyan-400" />
+                          <h2 className="text-base font-bold text-white">
+                            Dual-LLM Epistemic Verification (Sec 12)
+                          </h2>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-800 text-cyan-300 text-[10px] font-mono font-bold">
+                          Debate Loop Active
                         </span>
                       </div>
-                      {goalList}
+
+                      <p className="text-xs text-slate-400 mb-4">
+                        Independent model configurations with isolated reasoning and adversarial verification roles.
+                      </p>
+
+                      <div className="space-y-3">
+                        {/* Agent 08: Analyst */}
+                        <div className="p-3.5 rounded-xl bg-slate-900/60 border border-cyan-900/40">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-bold font-mono text-cyan-300">
+                              Agent 08: LLM Analyst
+                            </span>
+                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded">
+                              llama3.1:8b
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-300 leading-relaxed">
+                            Synthesizes plain-language attack narrative. Every factual claim must cite valid RFC 6901 evidence pointers.
+                          </p>
+                          <div className="text-[10px] font-mono text-emerald-400 mt-2 flex items-center gap-1">
+                            <CheckCircle2 size={12} />
+                            <span>Zero tool/shell permissions &middot; Read-only evidence citation</span>
+                          </div>
+                        </div>
+
+                        {/* Agent 09: Critic */}
+                        <div className="p-3.5 rounded-xl bg-slate-900/60 border border-amber-900/40">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-bold font-mono text-amber-300">
+                              Agent 09: Independent Critic
+                            </span>
+                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded">
+                              llama3.1:8b (Independent)
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-300 leading-relaxed">
+                            Adversarial verification against Claim-Evidence Ledger (C1). Corrects exaggerated severity and flags ungrounded assertions.
+                          </p>
+                          <div className="text-[10px] font-mono text-amber-400 mt-2 flex items-center gap-1">
+                            <ShieldCheck size={12} />
+                            <span>Mandatory Grounding Gate &middot; Reject &amp; Revise protocol active</span>
+                          </div>
+                        </div>
+
+                        {/* Conformal Abstention Floor */}
+                        <div className="p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-800/40 flex items-center justify-between text-xs font-mono">
+                          <span className="text-slate-300">Conformal Abstention Floor:</span>
+                          <span className="text-emerald-400 font-bold">Active &middot; Fail-closed if s(x) &gt; &lambda;</span>
+                        </div>
+                      </div>
                     </section>
                   </div>
                 </>
               )}
-              {view === "activity" && (
-                <section className="gw-panel gw-reveal">
-                  <div className="gw-panel-title">
-                    <h2>
-                      Transactions{" "}
-                      <span className="gw-count">{transactions.length}</span>
-                    </h2>
-                    <label className="gw-search">
-                      <Search size={15} aria-hidden="true" />
-                      <input
-                        aria-label="Search transactions"
-                        placeholder="Search transactions"
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                      />
-                      {filter && (
-                        <button
-                          type="button"
-                          aria-label="Clear search"
-                          onClick={() => setFilter("")}
-                        >
-                          <X size={14} aria-hidden="true" />
-                        </button>
-                      )}
-                    </label>
+
+              {/* ========================================================= */}
+              {/* 2. LIVE TRIAGE STREAM                                     */}
+              {/* ========================================================= */}
+              {view === "incidents" && (
+                <section className="gw-panel p-6 rounded-2xl gw-reveal space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-lg font-bold text-white">Live Incident Telemetry</h2>
+                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
+                        {filteredIncidents.length} Filtered / 211 Total
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <label className="gw-search flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-700 text-xs">
+                        <Search size={14} className="text-slate-400" />
+                        <input
+                          placeholder="Search IP, alert ID, or attack..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="bg-transparent text-white outline-none font-mono"
+                        />
+                      </label>
+
+                      <div className="flex items-center gap-1 text-xs font-mono">
+                        {["all", "critical", "high", "medium", "low"].map((sev) => (
+                          <button
+                            key={sev}
+                            type="button"
+                            onClick={() => setSevFilter(sev)}
+                            className={`px-2.5 py-1 rounded-lg uppercase ${
+                              sevFilter === sev
+                                ? "bg-cyan-600 text-white font-bold"
+                                : "bg-slate-900/60 text-slate-400 hover:text-white border border-slate-700/50"
+                            }`}
+                          >
+                            {sev}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  {transactionList()}
+
+                  {/* Incident Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left font-mono text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-700/60 text-slate-400 text-[11px] uppercase">
+                          <th className="py-2.5 px-3">Alert ID</th>
+                          <th className="py-2.5 px-3">Timestamp</th>
+                          <th className="py-2.5 px-3">Label</th>
+                          <th className="py-2.5 px-3">Severity</th>
+                          <th className="py-2.5 px-3">Source &rarr; Target</th>
+                          <th className="py-2.5 px-3">Confidence</th>
+                          <th className="py-2.5 px-3">Anomaly</th>
+                          <th className="py-2.5 px-3">Trust</th>
+                          <th className="py-2.5 px-3">Status</th>
+                          <th className="py-2.5 px-3 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 text-slate-200">
+                        {filteredIncidents.map((inc) => (
+                          <tr key={inc.id} className="hover:bg-white/5 transition">
+                            <td className="py-3 px-3 text-cyan-400 font-bold">{inc.id}</td>
+                            <td className="py-3 px-3 text-slate-400">{inc.timestamp.slice(11)}</td>
+                            <td className="py-3 px-3 font-semibold text-white">{inc.label}</td>
+                            <td className="py-3 px-3">
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                  inc.severity === "critical"
+                                    ? "bg-rose-950 text-rose-300 border border-rose-800"
+                                    : "bg-amber-950 text-amber-300 border border-amber-800"
+                                }`}
+                              >
+                                {inc.severity}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 text-slate-300">
+                              {inc.src_ip} &rarr; {inc.dst_ip}
+                            </td>
+                            <td className="py-3 px-3 text-emerald-400">{(inc.confidence * 100).toFixed(1)}%</td>
+                            <td className="py-3 px-3 text-rose-300">{(inc.anomaly_score * 100).toFixed(1)}%</td>
+                            <td className="py-3 px-3 text-cyan-300 font-bold">{inc.trust_score.toFixed(2)}</td>
+                            <td className="py-3 px-3 text-slate-400">{inc.status}</td>
+                            <td className="py-3 px-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedIncident(inc);
+                                  setView("deepdive");
+                                }}
+                                className="px-2.5 py-1 rounded bg-cyan-950 hover:bg-cyan-900 border border-cyan-700 text-cyan-300 font-mono text-[11px] transition"
+                              >
+                                Deep Dive &rarr;
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </section>
               )}
-              {view === "savings" && (
-                <>
-                  <div className="gw-savings-intro gw-reveal">
-                    <span className="gw-savings-orb">
-                      <Target size={28} strokeWidth={1.3} aria-hidden="true" />
-                    </span>
+
+              {/* ========================================================= */}
+              {/* 3. XAI DEEP DIVE                                          */}
+              {/* ========================================================= */}
+              {view === "deepdive" && (
+                <section className="gw-panel p-6 rounded-2xl gw-reveal space-y-6">
+                  <div className="flex flex-wrap items-center justify-between border-b border-slate-700/60 pb-4">
                     <div>
-                      <p>Total saved</p>
-                      <strong>{format(totalSaved)}</strong>
+                      <span className="text-xs font-mono text-cyan-400">INVESTIGATION TARGET: {selectedIncident.id}</span>
+                      <h2 className="text-xl font-bold text-white mt-1">{selectedIncident.label}</h2>
+                      <p className="text-xs text-slate-400 mt-1">{selectedIncident.description}</p>
                     </div>
-                    <span>
-                      {goals.length} savings goals
-                      <br />
-                      Tracked in one place
-                    </span>
-                  </div>
-                  <section className="gw-panel gw-reveal">
-                    <div className="gw-panel-title">
-                      <h2>Your goals</h2>
-                      <span>{goals.length} active</span>
+
+                    <div className="flex items-center gap-3 font-mono text-xs">
+                      <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-700">
+                        <span className="text-slate-400 block text-[10px]">EXPLANATION TRUST</span>
+                        <strong className="text-emerald-400 text-base">{selectedIncident.trust_score.toFixed(2)} / 1.00</strong>
+                      </div>
+                      <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-700">
+                        <span className="text-slate-400 block text-[10px]">VERIFIER GROUNDING</span>
+                        <strong className="text-cyan-400 text-base">100% (4/4 CITED)</strong>
+                      </div>
                     </div>
-                    {goalList}
-                  </section>
-                  {savingsNote && (
-                    <section className="gw-savings-note gw-reveal">
-                      <Check size={18} aria-hidden="true" />
-                      <p>{savingsNote}</p>
-                    </section>
-                  )}
-                </>
-              )}
-              {view === "reports" && (
-                <>
-                  <div className="gw-report-stats gw-reveal">
-                    {[
-                      {
-                        label: "Money in",
-                        value: income,
-                        icon: ArrowDownLeft,
-                      },
-                      {
-                        label: "Money out",
-                        value: expenses,
-                        icon: ArrowUpRight,
-                      },
-                      {
-                        label: "Net cash flow",
-                        value: income - expenses,
-                        icon: ChartNoAxesCombined,
-                      },
-                    ].map((s) => (
-                      <section className="gw-panel" key={s.label}>
-                        <div className="gw-panel-title">
-                          <span>{s.label}</span>
-                          <s.icon size={17} aria-hidden="true" />
-                        </div>
-                        <strong>{format(s.value)}</strong>
-                        <span>{selectedPeriod?.label ?? "No period data"}</span>
-                      </section>
-                    ))}
                   </div>
-                  <div className="gw-reports-grid">
-                    <section className="gw-panel gw-reveal">
-                      <div className="gw-panel-title">
-                        <h2>Income & expenses</h2>
-                        {periodSelector("Report period")}
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* TreeSHAP Local Attribution Bars */}
+                    <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-700/50 space-y-3 font-mono text-xs">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                          <Cpu size={16} className="text-cyan-400" />
+                          <span>TreeSHAP Feature Attributions (&phi;)</span>
+                        </h3>
+                        <span className="text-[10px] text-cyan-300">&sum;&phi; + base = f(x) verified</span>
                       </div>
-                      <div className="gw-chart-legend">
-                        <span>
-                          <i />
-                          Money in
-                        </span>
-                        <span>
-                          <i />
-                          Money out
-                        </span>
-                      </div>
-                      {chart}
-                      {selectedPeriod?.description && (
-                        <p className="gw-chart-footnote">
-                          {selectedPeriod.description}
-                        </p>
-                      )}
-                    </section>
-                    <section className="gw-panel gw-reveal">
-                      <div className="gw-panel-title">
-                        <h2>Where it goes</h2>
-                        <span>All supplied activity</span>
-                      </div>
-                      <div className="gw-category-list">
-                        {spendingCategories.map((category, i) => {
-                          const value = transactions
-                            .filter(
-                              (t) => t.category === category && t.amount < 0,
-                            )
-                            .reduce((s, t) => s - t.amount, 0);
-                          return (
-                            <div key={category}>
-                              <div>
-                                <IconFor category={category} />
-                                <span>{category}</span>
-                                <strong>{format(value)}</strong>
-                              </div>
-                              <span className="gw-category-track">
-                                <i
-                                  style={{
-                                    width: `${spent ? (value / spent) * 100 : 0}%`,
-                                    opacity: Math.max(0.4, 1 - i * 0.14),
-                                  }}
-                                />
+
+                      <div className="space-y-2.5 pt-2">
+                        {[
+                          { feat: "failed_logins", phi: 0.42, val: "220 attempts" },
+                          { feat: "conn_rate", phi: 0.28, val: "45 conn/s" },
+                          { feat: "off_hours", phi: 0.12, val: "1 (active)" },
+                          { feat: "bytes_out_mb", phi: -0.06, val: "0.2 MB" },
+                          { feat: "distinct_dst_ports", phi: -0.08, val: "1 port" },
+                        ].map((row) => (
+                          <div key={row.feat} className="space-y-1">
+                            <div className="flex justify-between text-[11px]">
+                              <span className="text-slate-300">{row.feat} ({row.val})</span>
+                              <span className={row.phi >= 0 ? "text-cyan-400" : "text-rose-400"}>
+                                {row.phi >= 0 ? "+" : ""}{row.phi.toFixed(2)}
                               </span>
                             </div>
-                          );
-                        })}
+                            <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden relative">
+                              <div
+                                className={`h-full rounded-full ${row.phi >= 0 ? "bg-cyan-500" : "bg-rose-500"}`}
+                                style={{ width: `${Math.abs(row.phi) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </section>
+                    </div>
+
+                    {/* Contrastive Counterfactual Explanation (C10) */}
+                    <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-700/50 space-y-3 font-mono text-xs">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                          <Sparkles size={16} className="text-amber-400" />
+                          <span>Contrastive Counterfactual (C10)</span>
+                        </h3>
+                        <span className="text-[10px] text-amber-300">Min Perturbation &rarr; Normal</span>
+                      </div>
+
+                      <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                        Minimum feature adjustments required to flip the prediction from <span className="text-rose-400 font-bold">ssh_bruteforce</span> to <span className="text-emerald-400 font-bold">normal</span>:
+                      </p>
+
+                      <div className="p-3 rounded-lg bg-black/40 border border-slate-700/60 space-y-1.5 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">failed_logins:</span>
+                          <span className="text-white font-bold">220 &rarr; &le; 3 attempts</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">conn_rate:</span>
+                          <span className="text-white font-bold">45.0 &rarr; &le; 8.5 conn/s</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">L1 Perturbation Distance:</span>
+                          <span className="text-emerald-400 font-bold">0.312 (Optimal Feasible)</span>
+                        </div>
+                      </div>
+
+                      {/* Claim-Evidence Ledger */}
+                      <div className="pt-2 border-t border-slate-700/50">
+                        <h4 className="text-xs font-bold text-slate-300 mb-2">Critic-Audited Claim-Evidence Ledger (C1):</h4>
+                        <div className="space-y-1.5 text-[11px]">
+                          <div className="p-2 rounded bg-emerald-950/30 border border-emerald-800/40 text-emerald-300 flex items-center justify-between">
+                            <span>&quot;Failed logins count reached 220 attempts&quot;</span>
+                            <span className="font-bold">&check; /features/failed_logins</span>
+                          </div>
+                          <div className="p-2 rounded bg-emerald-950/30 border border-emerald-800/40 text-emerald-300 flex items-center justify-between">
+                            <span>&quot;Target host is 10.0.1.15&quot;</span>
+                            <span className="font-bold">&check; /context/dst_ip</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </>
+                </section>
+              )}
+
+              {/* ========================================================= */}
+              {/* 4. WHAT-IF SANDBOX                                        */}
+              {/* ========================================================= */}
+              {view === "whatif" && (
+                <section className="gw-panel p-6 rounded-2xl gw-reveal space-y-6">
+                  <div className="flex flex-wrap items-center justify-between border-b border-slate-700/60 pb-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Sliders size={20} className="text-cyan-400" />
+                        <span>Interactive Feature Perturbation Sandbox</span>
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Perturb network flow attributes to observe real-time model inferences and conformal abstention thresholds.
+                      </p>
+                    </div>
+
+                    {/* Presets */}
+                    <div className="flex items-center gap-1.5 font-mono text-xs">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setWhatIfFeatures({
+                            failed_logins: 0,
+                            conn_rate: 2,
+                            distinct_dst_ports: 3,
+                            bytes_out_mb: 0.5,
+                            dns_query_entropy: 2.6,
+                            beacon_regularity: 0.1,
+                          })
+                        }
+                        className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700"
+                      >
+                        Normal
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setWhatIfFeatures({
+                            failed_logins: 220,
+                            conn_rate: 45,
+                            distinct_dst_ports: 1,
+                            bytes_out_mb: 0.2,
+                            dns_query_entropy: 2.4,
+                            beacon_regularity: 0.2,
+                          })
+                        }
+                        className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-rose-300 border border-slate-700"
+                      >
+                        SSH Brute Force
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setWhatIfFeatures({
+                            failed_logins: 2,
+                            conn_rate: 90,
+                            distinct_dst_ports: 250,
+                            bytes_out_mb: 0.1,
+                            dns_query_entropy: 2.5,
+                            beacon_regularity: 0.3,
+                          })
+                        }
+                        className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700"
+                      >
+                        Port Scan
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setWhatIfFeatures({
+                            failed_logins: 1,
+                            conn_rate: 15,
+                            distinct_dst_ports: 2,
+                            bytes_out_mb: 350.0,
+                            dns_query_entropy: 2.9,
+                            beacon_regularity: 0.25,
+                          })
+                        }
+                        className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-700"
+                      >
+                        Exfiltration
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Sliders */}
+                    <div className="space-y-4 font-mono text-xs">
+                      {[
+                        { key: "failed_logins", label: "Failed Authentication Attempts", min: 0, max: 400, step: 1, unit: "attempts" },
+                        { key: "conn_rate", label: "Connection Flow Rate", min: 0, max: 150, step: 1, unit: "conn/s" },
+                        { key: "distinct_dst_ports", label: "Distinct Destination Ports", min: 1, max: 300, step: 1, unit: "ports" },
+                        { key: "bytes_out_mb", label: "Egress Data Volume", min: 0, max: 500, step: 0.5, unit: "MB" },
+                      ].map((feat) => (
+                        <div key={feat.key} className="space-y-1.5 p-3 rounded-xl bg-slate-900/40 border border-slate-700/50">
+                          <div className="flex justify-between">
+                            <span className="text-slate-300">{feat.label}</span>
+                            <span className="text-cyan-400 font-bold">
+                              {whatIfFeatures[feat.key]} {feat.unit}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={feat.min}
+                            max={feat.max}
+                            step={feat.step}
+                            value={whatIfFeatures[feat.key]}
+                            onChange={(e) =>
+                              setWhatIfFeatures({
+                                ...whatIfFeatures,
+                                [feat.key]: parseFloat(e.target.value),
+                              })
+                            }
+                            className="w-full accent-cyan-400 cursor-pointer"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Real-Time Prediction Output */}
+                    <div className="p-5 rounded-xl bg-slate-900/40 border border-slate-700/50 space-y-4 font-mono text-xs flex flex-col justify-between">
+                      <div>
+                        <span className="text-xs uppercase font-mono tracking-wider text-slate-400 block mb-1">
+                          Simulated Prediction Outcome
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <strong className="text-2xl font-bold text-white uppercase">{whatIfCalc.label}</strong>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              whatIfCalc.label === "normal"
+                                ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
+                                : "bg-rose-950 text-rose-300 border border-rose-800"
+                            }`}
+                          >
+                            {(whatIfCalc.score * 100).toFixed(1)}% score
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-black/40 border border-slate-700 space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Conformal Risk Status:</span>
+                          <span className={whatIfCalc.isAbstained ? "text-amber-400 font-bold" : "text-emerald-400 font-bold"}>
+                            {whatIfCalc.isAbstained ? "ABSTAIN (Fail-Closed Escalation)" : "CERTIFIED (Risk <= 0.05)"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Calibrated Cutoff (&lambda;):</span>
+                          <span className="text-slate-200">0.4900</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Policy Action:</span>
+                          <span className="text-cyan-400 font-bold">
+                            {whatIfCalc.label === "normal" ? "allow_traffic" : "propose_defensive_mitigation"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setNotice("Sandbox state pushed to Live Triage queue")}
+                        className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition shadow-sm"
+                      >
+                        Push Scenario to Telemetry Engine &rarr;
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* ========================================================= */}
+              {/* 5. APPROVALS & IoMT GATES                                 */}
+              {/* ========================================================= */}
+              {view === "approvals" && (
+                <section className="gw-panel p-6 rounded-2xl gw-reveal space-y-6">
+                  <div className="flex items-center justify-between border-b border-slate-700/60 pb-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <HeartPulse size={20} className="text-rose-400" />
+                        <span>Medical IoMT Clinical Approval Gate (C16)</span>
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Hard safety invariants: Separation of duties requires dual authentication for critical life-support medical assets.
+                      </p>
+                    </div>
+
+                    <span className="px-3 py-1 rounded-full bg-rose-950/80 border border-rose-800 text-rose-300 font-mono text-xs font-bold">
+                      Zero Auto-Disrupt Active
+                    </span>
+                  </div>
+
+                  <form onSubmit={authorizeIoMTAction} className="max-w-xl mx-auto space-y-4 font-mono text-xs">
+                    <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-700/60 space-y-2">
+                      <div className="text-slate-400">Target Asset: <strong className="text-white">Alaris Infusion Pump 4829 (10.0.4.15)</strong></div>
+                      <div className="text-slate-400">Proposed Action: <strong className="text-amber-400">isolate_host</strong></div>
+                      <div className="text-slate-400">Asset Classification: <strong className="text-rose-400">CRITICAL_MEDICAL_IOMT</strong></div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-slate-300 mb-1">Primary Security Approver (soc_lead):</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={approvalSecUser}
+                            onChange={(e) => setApprovalSecUser(e.target.value)}
+                            className="px-3 py-2 rounded-lg bg-black/40 border border-slate-700 text-white"
+                          />
+                          <input
+                            type="password"
+                            value={approvalSecToken}
+                            onChange={(e) => setApprovalSecToken(e.target.value)}
+                            className="px-3 py-2 rounded-lg bg-black/40 border border-slate-700 text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-rose-950/20 border border-rose-800/40 space-y-2">
+                        <div className="text-rose-400 font-bold flex items-center gap-1.5">
+                          <AlertTriangle size={15} />
+                          <span>Secondary Clinical Approver Required (C16)</span>
+                        </div>
+                        <div className="text-[11px] text-slate-400">
+                          Clinical Director or Biomedical Engineering credentials required:
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={approvalClinUser}
+                            onChange={(e) => setApprovalClinUser(e.target.value)}
+                            placeholder="Clinical Approver ID"
+                            className="px-3 py-2 rounded-lg bg-black/40 border border-slate-700 text-white"
+                          />
+                          <input
+                            type="password"
+                            value={approvalClinToken}
+                            onChange={(e) => setApprovalClinToken(e.target.value)}
+                            placeholder="Clinical Secret Token"
+                            className="px-3 py-2 rounded-lg bg-black/40 border border-slate-700 text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition shadow-sm mt-3"
+                      >
+                        Authorize Defensive Action (DRY-RUN ENFORCED) &rarr;
+                      </button>
+
+                      {approvalSuccess && (
+                        <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-800 text-emerald-400 text-center font-bold">
+                          &check; Action approved with dual signatures! Dry-run simulated successfully without patient impact.
+                        </div>
+                      )}
+                    </div>
+                  </form>
+                </section>
+              )}
+
+              {/* ========================================================= */}
+              {/* 6. 9-AGENT TRACE REPLAY                                   */}
+              {/* ========================================================= */}
+              {view === "agents" && (
+                <section className="gw-panel p-6 rounded-2xl gw-reveal space-y-5">
+                  <div className="flex flex-wrap items-center justify-between border-b border-slate-700/60 pb-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Bot size={20} className="text-cyan-400" />
+                        <span>Interactive 9-Agent Pipeline Trace Replay</span>
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Timeline execution graph showing sequential telemetry from Ingestion to RFC 8785 Cryptographic Audit.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 font-mono text-xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsTracePlaying(!isTracePlaying);
+                          if (!isTracePlaying) {
+                            setActiveTraceStep(1);
+                            const interval = setInterval(() => {
+                              setActiveTraceStep((prev) => {
+                                if (prev >= 9) {
+                                  clearInterval(interval);
+                                  setIsTracePlaying(false);
+                                  return 9;
+                                }
+                                return prev + 1;
+                              });
+                            }, 500);
+                          }
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold"
+                      >
+                        {isTracePlaying ? <Pause size={14} /> : <Play size={14} />}
+                        <span>{isTracePlaying ? "Pause" : "Replay Pipeline"}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Agent Spans Timeline */}
+                  <div className="space-y-2.5 font-mono text-xs">
+                    {traceSpans.slice(0, activeTraceStep).map((span, idx) => (
+                      <div
+                        key={span.id}
+                        className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-700/60 flex items-center justify-between hover:bg-slate-900/80 transition"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="w-6 h-6 rounded-full bg-cyan-950 border border-cyan-800 text-cyan-400 font-bold flex items-center justify-center text-[10px]">
+                            0{idx + 1}
+                          </span>
+                          <div>
+                            <strong className="text-white block">{span.name}</strong>
+                            <span className="text-[11px] text-slate-400">{span.detail}</span>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-bold text-[10px] border border-emerald-800">
+                            {span.status}
+                          </span>
+                          <span className="text-[11px] text-slate-400 block mt-1">{span.duration}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* ========================================================= */}
+              {/* 7. AUDIT LEDGER                                           */}
+              {/* ========================================================= */}
+              {view === "audit" && (
+                <section className="gw-panel p-6 rounded-2xl gw-reveal space-y-6">
+                  <div className="flex flex-wrap items-center justify-between border-b border-slate-700/60 pb-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <FileCheck size={20} className="text-cyan-400" />
+                        <span>Tamper-Evident RFC 8785 Audit Ledger</span>
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Cryptographic SHA-256 hash chaining under Canonical JSON RFC 8785 guarantees immutable forensics.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={verifyAuditChain}
+                      className="px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold transition shadow-sm"
+                    >
+                      Verify Hash Chain Integrity
+                    </button>
+                  </div>
+
+                  {auditVerified && (
+                    <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-700 text-xs font-mono space-y-1">
+                      <div className="flex items-center gap-2 text-emerald-300 font-bold text-sm">
+                        <CheckCircle2 size={16} />
+                        <span>Chain Status: Intact &amp; Cryptographically Certified</span>
+                      </div>
+                      <div className="text-slate-300">
+                        Verified 211 consecutive block entries &middot; 0 hash mismatches &middot; RFC 8785 Compliant
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2 font-mono text-xs">
+                    {[
+                      { index: 211, time: "2026-11-18 14:18:22", agent: "agent_07_audit", action: "append_ledger_entry", hash: "9f8a3c8e47b2c019d45e6f...", prev: "e10a4b7f..." },
+                      { index: 210, time: "2026-11-18 14:18:21", agent: "agent_06_response", action: "propose_block_ip", hash: "e10a4b7f92c10a48d88e...", prev: "7fa2018c..." },
+                      { index: 209, time: "2026-11-18 14:18:20", agent: "agent_09_verifier", action: "certify_grounding", hash: "7fa2018c44b910e53a29...", prev: "11c9408b..." },
+                    ].map((blk) => (
+                      <div key={blk.index} className="p-3 rounded-xl bg-slate-900/40 border border-slate-700/50 flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <span className="text-cyan-400 font-bold">#{blk.index}</span>
+                          <span className="text-slate-400">{blk.time}</span>
+                          <span className="text-white font-semibold">{blk.agent}</span>
+                          <span className="text-slate-300 text-[11px] bg-slate-800 px-2 py-0.5 rounded">{blk.action}</span>
+                        </div>
+                        <div className="text-slate-400 text-[11px]">
+                          Hash: <span className="text-emerald-400">{blk.hash}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
               )}
             </div>
-            {footerNote && (
-              <footer className="gw-footer">
-                <span>
-                  <i />
-                  {footerNote}
-                </span>
-              </footer>
-            )}
-            <div className="gw-desktop-dock">{nav()}</div>
+
+            {/* Bottom Dock Navigation */}
+            <div className="gw-desktop-dock">{renderNav()}</div>
           </main>
         </div>
+
+        {/* Notifications Drawer */}
         {alerts && (
-          <aside
-            className="gw-notifications gw-glass"
-            aria-label="Notifications"
-          >
-            <div>
-              <h2>You're all caught up.</h2>
-              <button
-                type="button"
-                aria-label="Close notifications"
-                onClick={() => setAlerts(false)}
-              >
-                <X size={17} aria-hidden="true" />
+          <aside className="gw-notifications gw-glass" aria-label="Notifications">
+            <div className="flex items-center justify-between border-b border-slate-700/60 pb-2 mb-3">
+              <h2 className="text-sm font-bold text-white">Live Threat Telemetry Feed</h2>
+              <button type="button" onClick={() => setAlerts(false)} className="text-slate-400 hover:text-white">
+                <X size={16} />
               </button>
             </div>
-            <p>No new notifications.</p>
+            <div className="space-y-2 text-xs font-mono">
+              <div className="p-2 rounded bg-rose-950/40 border border-rose-800/40 text-rose-300">
+                &bull; SSH Brute Force logged from 185.220.101.47 (14:18)
+              </div>
+              <div className="p-2 rounded bg-amber-950/40 border border-amber-800/40 text-amber-300">
+                &bull; SYN Port scan detected on 192.168.1.105 (14:12)
+              </div>
+              <div className="p-2 rounded bg-emerald-950/40 border border-emerald-800/40 text-emerald-300">
+                &bull; Conformal calibration verified with risk &le; 0.05
+              </div>
+            </div>
           </aside>
         )}
+
+        {/* Real-Time Glass Controls Drawer */}
         {settingsOpen && (
-          <aside
-            className="gw-material gw-glass"
-            id={`${id}-material`}
-            aria-label="Glass appearance"
-          >
-            <div className="gw-material-title">
-              <div>
-                <span className="gw-material-icon">
-                  <Settings2 size={18} aria-hidden="true" />
-                </span>
-                <h2>Glass appearance</h2>
+          <aside className="gw-material gw-glass" id={`${id}-material`} aria-label="Glass appearance">
+            <div className="gw-material-header">
+              <div className="flex items-center gap-2">
+                <Sliders size={16} className="text-cyan-400" />
+                <h2>Adjust Glass Controls</h2>
               </div>
               <button
                 type="button"
                 className="gw-icon-button"
-                aria-label="Close glass settings"
-                onClick={closeSettings}
+                aria-label="Close settings"
+                onClick={() => setSettingsOpen(false)}
               >
-                <X size={18} aria-hidden="true" />
+                <X size={17} aria-hidden="true" />
               </button>
             </div>
-            <p>Adjust the material across your workspace.</p>
-            <div className="gw-material-sample" aria-hidden="true">
-              <Layers size={28} strokeWidth={1.1} />
-              <span>Live material preview</span>
-            </div>
-            <div className="gw-presets" aria-label="Glass presets">
-              {[
-                {
-                  name: "Clear",
-                  value: { blur: 8, opacity: 0.12, saturation: 1.1, edge: 0.8 },
-                },
-                { name: "Frosted", value: defaults },
-                {
-                  name: "Solid",
-                  value: { blur: 32, opacity: 0.86, saturation: 1, edge: 0.35 },
-                },
-              ].map((p) => (
+
+            {/* Quick Presets */}
+            <div className="gw-presets mb-3">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block mb-1">
+                Glass Presets
+              </span>
+              <div className="grid grid-cols-2 gap-1.5 font-mono text-xs">
                 <button
-                  key={p.name}
                   type="button"
-                  onClick={() => updateGlass(p.value)}
+                  onClick={() => applyGlassPreset("frosted")}
+                  className="px-2 py-1.5 rounded bg-slate-900/60 hover:bg-slate-800 text-cyan-300 border border-slate-700/60 text-left"
                 >
-                  {p.name}
+                  &#10052; Frosted Cyber
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => applyGlassPreset("clear")}
+                  className="px-2 py-1.5 rounded bg-slate-900/60 hover:bg-slate-800 text-slate-300 border border-slate-700/60 text-left"
+                >
+                  &#9670; Minimal Glass
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyGlassPreset("midnight")}
+                  className="px-2 py-1.5 rounded bg-slate-900/60 hover:bg-slate-800 text-slate-300 border border-slate-700/60 text-left"
+                >
+                  &#9672; Midnight Solid
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyGlassPreset("neon")}
+                  className="px-2 py-1.5 rounded bg-slate-900/60 hover:bg-slate-800 text-emerald-300 border border-slate-700/60 text-left"
+                >
+                  &#9889; High Contrast
+                </button>
+              </div>
             </div>
-            {[
-              {
-                key: "blur",
-                label: "Blur",
-                min: 0,
-                max: 40,
-                step: 1,
-                value: `${Math.round(material.blur)} px`,
-              },
-              {
-                key: "opacity",
-                label: "Opacity",
-                min: 0.08,
-                max: 0.9,
-                step: 0.01,
-                value: `${Math.round(material.opacity * 100)}%`,
-              },
-              {
-                key: "saturation",
-                label: "Saturation",
-                min: 0.5,
-                max: 2,
-                step: 0.05,
-                value: `${Math.round(material.saturation * 100)}%`,
-              },
-              {
-                key: "edge",
-                label: "Edge light",
-                min: 0,
-                max: 1,
-                step: 0.05,
-                value: `${Math.round(material.edge * 100)}%`,
-              },
-            ].map((c) => (
-              <label className="gw-range" key={c.key}>
-                <span>
-                  {c.label}
-                  <output>{c.value}</output>
+
+            {/* Optical Sliders */}
+            <div className="gw-sliders space-y-3 font-mono text-xs">
+              <label>
+                <span className="flex justify-between text-slate-300 mb-1">
+                  <span>Backdrop Blur</span>
+                  <span className="text-cyan-400">{material.blur}px</span>
                 </span>
                 <input
                   type="range"
-                  aria-label={c.label}
-                  min={c.min}
-                  max={c.max}
-                  step={c.step}
-                  value={material[c.key as keyof GlassSettings]}
-                  onChange={(e) =>
-                    updateGlass({ [c.key]: Number(e.target.value) })
-                  }
+                  min="0"
+                  max="40"
+                  value={material.blur}
+                  onChange={(e) => updateGlass({ blur: Number(e.target.value) })}
+                  className="w-full accent-cyan-400"
                 />
               </label>
-            ))}
-            <label className="gw-tint">
-              Glass tint{" "}
-              <input
-                type="color"
-                value={material.tint}
-                onChange={(e) => updateGlass({ tint: e.target.value })}
-              />
-            </label>
+
+              <label>
+                <span className="flex justify-between text-slate-300 mb-1">
+                  <span>Glass Opacity</span>
+                  <span className="text-cyan-400">{Math.round(material.opacity * 100)}%</span>
+                </span>
+                <input
+                  type="range"
+                  min="8"
+                  max="95"
+                  value={Math.round(material.opacity * 100)}
+                  onChange={(e) => updateGlass({ opacity: Number(e.target.value) / 100 })}
+                  className="w-full accent-cyan-400"
+                />
+              </label>
+
+              <label>
+                <span className="flex justify-between text-slate-300 mb-1">
+                  <span>Color Saturation</span>
+                  <span className="text-cyan-400">{Math.round(material.saturation * 100)}%</span>
+                </span>
+                <input
+                  type="range"
+                  min="50"
+                  max="250"
+                  value={Math.round(material.saturation * 100)}
+                  onChange={(e) => updateGlass({ saturation: Number(e.target.value) / 100 })}
+                  className="w-full accent-cyan-400"
+                />
+              </label>
+
+              <label>
+                <span className="flex justify-between text-slate-300 mb-1">
+                  <span>Edge Rim Light</span>
+                  <span className="text-cyan-400">{Math.round(material.edge * 100)}%</span>
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={Math.round(material.edge * 100)}
+                  onChange={(e) => updateGlass({ edge: Number(e.target.value) / 100 })}
+                  className="w-full accent-cyan-400"
+                />
+              </label>
+
+              <label>
+                <span className="flex justify-between text-slate-300 mb-1">
+                  <span>Tint Color</span>
+                  <span className="text-cyan-400">{material.tint}</span>
+                </span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={material.tint}
+                    onChange={(e) => updateGlass({ tint: e.target.value })}
+                    className="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={material.tint}
+                    onChange={(e) => updateGlass({ tint: e.target.value })}
+                    className="flex-1 px-2.5 py-1 rounded bg-black/40 border border-slate-700 text-white font-mono text-xs"
+                  />
+                </div>
+              </label>
+            </div>
+
             <button
-              className="gw-reset"
+              className="gw-reset mt-4 w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-mono text-xs font-bold transition"
               type="button"
               onClick={() => updateGlass(normalize(glass))}
             >
-              Reset appearance
+              Reset Appearance Defaults
             </button>
           </aside>
         )}
       </div>
+
+      {/* Toast Feedback Notification */}
       {notice && (
         <div className="gw-toast" role="status">
           <Check size={16} aria-hidden="true" />
-          {notice}
+          <span>{notice}</span>
         </div>
       )}
     </div>
   );
 }
 
-const styles = `
+const customStyles = `
 .gw-root {
-  --gw-ink: var(--color-foreground, CanvasText);
-  --gw-muted: var(--color-muted-foreground, GrayText);
-  --gw-accent: var(--color-primary, Highlight);
-  --gw-line: color-mix(
-    in srgb,
-    var(--color-border, CanvasText) 35%,
-    transparent
-  );
-  --gw-background: var(--color-background, Canvas);
-  --gw-shade: color-mix(
-    in srgb,
-    var(--color-background, Canvas) 22%,
-    transparent
-  );
-  --gw-surface: var(--color-card, var(--color-background, Canvas));
-  --gw-panel: var(--color-card, var(--color-background, Canvas));
-  --gw-brand: var(--color-primary, Highlight);
-  --gw-brand-ink: var(--color-primary-foreground, HighlightText);
-  --gw-avatar: var(--color-secondary, ButtonFace);
-  --gw-rail-active: color-mix(
-    in srgb,
-    var(--color-secondary, ButtonFace) 70%,
-    transparent
-  );
-  --gw-positive-surface: color-mix(
-    in srgb,
-    var(--color-primary, Highlight) 15%,
-    var(--color-card, Canvas)
-  );
-  --gw-account-surface: color-mix(
-    in srgb,
-    var(--color-secondary, ButtonFace) 45%,
-    transparent
-  );
-  --gw-account-action: color-mix(
-    in srgb,
-    var(--color-secondary, ButtonFace) 45%,
-    transparent
-  );
-  --gw-segment: color-mix(
-    in srgb,
-    var(--color-muted, ButtonFace) 25%,
-    transparent
-  );
-  --gw-segment-active: color-mix(
-    in srgb,
-    var(--color-card, Canvas) 85%,
-    transparent
-  );
-  --gw-transaction-surface: color-mix(
-    in srgb,
-    var(--color-secondary, ButtonFace) 45%,
-    transparent
-  );
-  --gw-income-surface: color-mix(
-    in srgb,
-    var(--color-primary, Highlight) 15%,
-    transparent
-  );
-  --gw-pending: var(--color-muted-foreground, GrayText);
-  --gw-goal-surface: color-mix(
-    in srgb,
-    var(--color-secondary, ButtonFace) 40%,
-    transparent
-  );
-  --gw-dock: color-mix(in srgb, var(--color-card, Canvas) 70%, transparent);
-  --gw-dock-active: var(--color-secondary, ButtonFace);
-  --gw-button: var(--color-primary, Highlight);
-  --gw-button-ink: var(--color-primary-foreground, HighlightText);
-  --gw-search: color-mix(in srgb, var(--color-input, Canvas) 35%, transparent);
-  --gw-savings-orb: color-mix(
-    in srgb,
-    var(--color-primary, Highlight) 15%,
-    transparent
-  );
-  --gw-popover: color-mix(
-    in srgb,
-    var(--color-popover, Canvas) 94%,
-    transparent
-  );
-  --gw-notification: color-mix(
-    in srgb,
-    var(--color-popover, Canvas) 94%,
-    transparent
-  );
-  --gw-fallback: var(--color-card, Canvas);
-  --gw-mobile-dock: color-mix(
-    in srgb,
-    var(--color-card, Canvas) 55%,
-    transparent
-  );
-  --gw-shadow: color-mix(
-    in srgb,
-    var(--color-foreground, CanvasText) 18%,
-    transparent
-  );
-  --gw-panel-shadow: color-mix(
-    in srgb,
-    var(--color-foreground, CanvasText) 16%,
-    transparent
-  );
-  --gw-soft-shadow: color-mix(
-    in srgb,
-    var(--color-foreground, CanvasText) 7%,
-    transparent
-  );
-  --gw-segment-shadow: color-mix(
-    in srgb,
-    var(--color-foreground, CanvasText) 6%,
-    transparent
-  );
-  --gw-dock-shadow: color-mix(
-    in srgb,
-    var(--color-foreground, CanvasText) 7%,
-    transparent
-  );
-  --gw-popover-shadow: color-mix(
-    in srgb,
-    var(--color-foreground, CanvasText) 20%,
-    transparent
-  );
-  --gw-sample-shadow: color-mix(
-    in srgb,
-    var(--color-foreground, CanvasText) 35%,
-    transparent
-  );
-  --gw-toast-shadow: color-mix(
-    in srgb,
-    var(--color-foreground, CanvasText) 13%,
-    transparent
-  );
-  --gw-toast: var(--color-primary, Highlight);
-  --gw-dock-ink: var(--color-secondary-foreground, CanvasText);
-  --gw-selection: color-mix(
-    in srgb,
-    var(--color-primary, Highlight) 35%,
-    transparent
-  );
-  --gw-scrollbar: var(--color-muted-foreground, GrayText);
-  --gw-hover: color-mix(
-    in srgb,
-    var(--color-secondary, ButtonFace) 25%,
-    transparent
-  );
-  --gw-dock-hover: color-mix(
-    in srgb,
-    var(--color-secondary, ButtonFace) 30%,
-    transparent
-  );
-  --gw-control-hover: color-mix(
-    in srgb,
-    var(--color-secondary, ButtonFace) 35%,
-    transparent
-  );
-  --gw-strong-edge: color-mix(
-    in srgb,
-    var(--color-card, Canvas) 60%,
-    transparent
-  );
-  --gw-soft-edge: color-mix(
-    in srgb,
-    var(--color-card, Canvas) 53%,
-    transparent
-  );
-  --gw-toast-ink: var(--color-primary-foreground, HighlightText);
-  --gw-highlight: var(--color-card, Canvas);
   position: relative;
   isolation: isolate;
-  min-height: 100svh;
-  overflow: hidden;
-  padding: 38px 28px 32px;
-  background: var(--gw-background);
-  color: var(--gw-ink);
-  font:
-    14px/1.5 "Segoe UI",
-    Arial,
-    sans-serif;
-  letter-spacing: -0.012em;
-  font-variant-numeric: tabular-nums;
+  min-height: 100vh;
+  overflow-x: hidden;
+  padding: 24px 20px;
+  background: var(--gw-background, #070b12);
+  color: #f1f5f9;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: -0.01em;
   box-sizing: border-box;
-  color-scheme: inherit;
-}
-.gw-root[data-theme="light"] {
-  color-scheme: light;
-}
-.gw-root[data-theme="dark"] {
-  color-scheme: dark;
-}
-.gw-root * {
-  box-sizing: border-box;
-}
-.gw-root ::selection {
-  background: var(--gw-selection);
-}
-.gw-root button,
-.gw-root input,
-.gw-root a {
-  font: inherit;
-  color: inherit;
-}
-.gw-root button {
-  cursor: pointer;
-}
-.gw-root button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-.gw-root button,
-.gw-root a,
-.gw-root input {
-  outline-offset: 4px;
-}
-.gw-root :focus-visible {
-  outline: 2px solid var(--gw-accent);
-}
-.gw-root button {
-  border: 0;
-  background: none;
-}
-.gw-root h1,
-.gw-root h2,
-.gw-root h3,
-.gw-root p {
-  margin: 0;
 }
 .gw-room {
-  position: absolute;
+  position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 56%;
-  z-index: -3;
+  z-index: -2;
+  filter: brightness(0.65) contrast(1.1);
 }
 .gw-room-shade {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  background: var(--gw-shade);
-  z-index: -2;
+  background: radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+              radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+              rgba(7, 11, 18, 0.72);
+  z-index: -1;
 }
 .gw-workspace {
-  position: relative;
-  width: min(1280px, 100%);
-  margin: auto;
+  max-width: 1380px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 .gw-glass {
-  background: color-mix(
-    in srgb,
-    var(--gw-surface) calc(var(--gw-opacity) * 100%),
-    transparent
-  );
-  backdrop-filter: blur(var(--gw-blur)) saturate(var(--gw-saturation));
-  -webkit-backdrop-filter: blur(var(--gw-blur)) saturate(var(--gw-saturation));
-  box-shadow:
-    inset 0 1px 0
-      color-mix(
-        in srgb,
-        var(--gw-highlight) calc(var(--gw-edge) * 100%),
-        transparent
-      ),
-    inset 0 0 0 1px
-      color-mix(
-        in srgb,
-        var(--gw-highlight) calc(var(--gw-edge) * 34%),
-        transparent
-      ),
-    0 20px 52px -25px var(--gw-shadow);
-  position: relative;
-}
-.gw-glass:before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--gw-tint);
-  opacity: 0.12;
-  pointer-events: none;
-  border-radius: inherit;
+  background: color-mix(in srgb, var(--gw-tint, #101827) calc(var(--gw-opacity, 0.35) * 100%), transparent);
+  backdrop-filter: blur(var(--gw-blur, 20px)) saturate(var(--gw-saturation, 1.25));
+  -webkit-backdrop-filter: blur(var(--gw-blur, 20px)) saturate(var(--gw-saturation, 1.25));
+  border: 1px solid rgba(255, 255, 255, calc(var(--gw-edge, 0.6) * 0.16));
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, calc(var(--gw-edge, 0.6) * 0.12));
 }
 .gw-topbar {
-  height: 62px;
+  padding: 12px 20px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  border-radius: 20px;
-  margin-bottom: 18px;
-  padding: 0 20px;
+  gap: 16px;
 }
 .gw-brand {
   display: flex;
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  white-space: nowrap;
-}
-.gw-brand strong {
-  font-size: 14px;
-  letter-spacing: -0.025em;
+  color: inherit;
 }
 .gw-brand-icon {
-  display: grid;
-  place-items: center;
-  width: 29px;
-  height: 29px;
-  background: var(--gw-brand);
-  color: var(--gw-brand-ink);
-  border-radius: 9px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(6, 182, 212, 0.15);
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gw-brand strong {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
 }
 .gw-brand-divider {
-  height: 16px;
   width: 1px;
-  background: var(--gw-line);
-  margin: 0 4px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.15);
 }
 .gw-personal {
   font-size: 12px;
-  color: var(--gw-muted);
+  color: #94a3b8;
 }
 .gw-toolbar {
   display: flex;
@@ -1449,1121 +1782,245 @@ const styles = `
 .gw-adjust {
   display: flex;
   align-items: center;
-  gap: 8px;
-  border-radius: 9px;
-  padding: 8px 10px;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 .gw-adjust:hover {
-  background: var(--gw-hover);
+  background: rgba(255, 255, 255, 0.14);
 }
 .gw-icon-button {
   width: 34px;
   height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  flex: none;
-}
-.gw-icon-button:hover {
-  background: var(--gw-hover);
-}
-.gw-bell {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
   position: relative;
 }
 .gw-bell i {
   position: absolute;
-  right: 8px;
-  top: 6px;
-  background: var(--gw-accent);
-  width: 4px;
-  height: 4px;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
+  background: #06b6d4;
+  box-shadow: 0 0 8px #06b6d4;
 }
 .gw-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--gw-avatar);
-  display: grid;
-  place-items: center;
-  font:
-    600 12px Georgia,
-    serif;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(6, 182, 212, 0.2);
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  color: #38bdf8;
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .gw-stage {
   display: flex;
   gap: 16px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 .gw-rail {
-  border-radius: 23px;
-  width: 50px;
-  padding: 8px 5px;
+  width: 64px;
+  padding: 16px 8px;
+  border-radius: 24px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 50px;
-  flex: none;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
-.gw-rail button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
+@media (max-width: 768px) {
+  .gw-rail {
+    display: none;
+  }
 }
-.gw-rail button span {
+.gw-rail button, .gw-dock button {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.gw-rail button:hover, .gw-dock button:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.08);
+}
+.gw-rail button.is-active, .gw-dock button.is-active {
+  color: #38bdf8;
+  background: rgba(6, 182, 212, 0.2);
+  border-color: rgba(6, 182, 212, 0.4);
+  box-shadow: 0 0 16px -2px rgba(6, 182, 212, 0.3);
+}
+.gw-nav-label {
   display: none;
 }
-.gw-rail button[aria-current] {
-  background: var(--gw-rail-active);
-  box-shadow: 0 3px 8px var(--gw-soft-shadow);
-}
 .gw-main {
-  border-radius: 27px;
-  padding: 30px 30px 98px;
   flex: 1;
   min-width: 0;
+  border-radius: 28px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
 }
 .gw-view-heading {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 28px;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 .gw-greeting {
   font-size: 13px;
-  color: var(--gw-muted);
-  margin-bottom: 5px !important;
+  color: #94a3b8;
+  margin-bottom: 4px;
 }
 .gw-view-heading h1 {
-  font-size: clamp(23px, 2.3vw, 31px);
-  font-weight: 500;
-  letter-spacing: -0.035em;
-  line-height: 1.18;
-}
-.gw-date {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 12px;
-  color: var(--gw-muted);
-  white-space: nowrap;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #ffffff;
 }
 .gw-panel {
-  background: color-mix(
-    in srgb,
-    var(--gw-panel) calc((0.16 + var(--gw-opacity) * 0.5) * 100%),
-    transparent
-  );
-  border-radius: 17px;
-  box-shadow:
-    inset 0 1px 0
-      color-mix(
-        in srgb,
-        var(--gw-highlight) calc(var(--gw-edge) * 75%),
-        transparent
-      ),
-    0 8px 22px -20px var(--gw-panel-shadow);
-  padding: 21px;
-  min-width: 0;
-  position: relative;
+  background: rgba(13, 19, 31, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
 }
 .gw-panel-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-  color: var(--gw-muted);
-  font-size: 12px;
-}
-.gw-panel-title h2 {
-  font-size: 14px;
-  letter-spacing: -0.02em;
-  font-weight: 600;
-  color: var(--gw-ink);
-}
-.gw-panel-title > svg {
-  opacity: 0.65;
-}
-.gw-overview-grid {
-  display: grid;
-  grid-template-columns: 0.82fr 1.5fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-.gw-balance {
-  display: flex;
-  flex-direction: column;
-}
-.gw-balance-value {
-  font-size: clamp(29px, 3.15vw, 43px);
-  font-weight: 500;
-  letter-spacing: -0.04em;
-  line-height: 1.25;
-  white-space: nowrap;
-}
-.gw-balance-meta {
-  font-size: 11px;
-  color: var(--gw-muted);
-  margin-top: 10px !important;
-}
-.gw-positive {
-  color: var(--gw-accent);
-}
-.gw-balance-meta .gw-positive {
-  background: var(--gw-positive-surface);
-  border-radius: 5px;
-  padding: 3px 5px;
-  margin-right: 5px;
+  margin-bottom: 8px;
 }
 .gw-account {
-  margin-top: auto;
-  padding-top: 35px;
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12px;
 }
 .gw-account-icon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--gw-account-surface);
-}
-.gw-account > div {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(244, 63, 94, 0.15);
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 .gw-account strong {
-  font-weight: 500;
+  display: block;
   font-size: 12px;
+  color: #f1f5f9;
 }
 .gw-account span {
   font-size: 11px;
-  color: var(--gw-muted);
+  color: #94a3b8;
 }
-.gw-account > button {
+.gw-account button {
   margin-left: auto;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--gw-account-action);
-  display: grid;
-  place-items: center;
-}
-.gw-segment {
-  display: flex;
-  gap: 3px;
-  background: var(--gw-segment);
-  border-radius: 8px;
-  padding: 3px;
-  font-size: 10px;
-}
-.gw-segment button {
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-.gw-segment button[aria-pressed="true"] {
-  background: var(--gw-segment-active);
-  box-shadow: 0 2px 4px var(--gw-segment-shadow);
-  color: var(--gw-ink);
+  color: #38bdf8;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 .gw-chart-summary {
   display: flex;
-  gap: 34px;
-  margin-bottom: 18px;
-}
-.gw-chart-legend {
-  display: flex;
-  gap: 20px;
-  margin: -4px 0 14px;
-  font-size: 11px;
-  color: var(--gw-muted);
-}
-.gw-chart-legend span {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-.gw-chart-legend i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--gw-accent);
-}
-.gw-chart-legend span + span i {
-  background: var(--gw-muted);
-}
-.gw-chart-summary > div {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.gw-chart-summary span {
-  font-size: 10px;
-  color: var(--gw-muted);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.gw-chart-summary i {
-  width: 5px;
-  height: 5px;
-  background: var(--gw-accent);
-  border-radius: 50%;
-}
-.gw-chart-summary > div + div i {
-  background: var(--gw-muted);
-}
-.gw-chart-summary strong {
-  font-size: 21px;
-  font-weight: 500;
-  letter-spacing: -0.03em;
-}
-.gw-chart-wrap {
-  position: relative;
-  padding-left: 39px;
-  padding-top: 2px;
-}
-.gw-chart-wrap svg {
-  display: block;
-  width: 100%;
-  height: 126px;
-  overflow: visible;
-}
-.gw-chart-labels {
-  position: absolute;
-  left: 0;
-  top: 6px;
-  bottom: 22px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  font-size: 8px;
-  color: var(--gw-muted);
-}
-.gw-chart-months {
-  position: relative;
-  height: 24px;
-  font-size: 9px;
-  color: var(--gw-muted);
-  padding-top: 10px;
-}
-.gw-lower-grid {
-  display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  gap: 16px;
-}
-.gw-text-button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px !important;
-}
-.gw-text-button:hover {
-  color: var(--gw-accent);
-}
-.gw-transaction {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 11px 0;
-  border-top: 1px solid var(--gw-line);
-  min-width: 0;
-}
-.gw-transaction:first-child {
-  border-top: 0;
-  padding-top: 0;
-}
-.gw-transaction:last-child {
-  padding-bottom: 0;
-}
-.gw-transaction-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  background: var(--gw-transaction-surface);
-  flex: none;
-}
-.gw-transaction-icon.is-income {
-  background: var(--gw-income-surface);
-  color: var(--gw-accent);
-}
-.gw-transaction-name {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex: 1;
-}
-.gw-transaction-name strong {
-  font-size: 12px;
-  font-weight: 500;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.gw-transaction-name span {
-  font-size: 10px;
-  color: var(--gw-muted);
-  margin-top: 2px;
-}
-.gw-transaction > strong {
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-.gw-transaction-status {
-  font-size: 9px;
-  color: var(--gw-muted);
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-.gw-transaction-status.is-pending {
-  color: var(--gw-pending);
-}
-.gw-small-label {
-  font-size: 10px;
-}
-.gw-goal + .gw-goal {
-  margin-top: 22px;
-}
-.gw-goal-top {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-.gw-goal-top strong {
-  font-size: 12px;
-  font-weight: 500;
-  flex: 1;
-}
-.gw-goal-top > span:last-child {
-  font-size: 10px;
-  color: var(--gw-muted);
-}
-.gw-goal-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  background: var(--gw-goal-surface);
-  display: grid;
-  place-items: center;
-}
-.gw-goal-track {
-  height: 5px;
-  background: var(--gw-line);
-  margin: 11px 0 6px;
-  border-radius: 5px;
-  overflow: hidden;
-}
-.gw-goal-track i {
-  height: 100%;
-  display: block;
-  background: var(--gw-accent);
-  border-radius: 5px;
-}
-.gw-goal p {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  color: var(--gw-muted);
-}
-.gw-goal p strong {
-  font-weight: 500;
-  color: var(--gw-ink);
-}
-.gw-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: var(--gw-muted);
-  font-size: 9px;
-  margin-top: 22px;
-  gap: 16px;
-}
-.gw-footer > span:first-child {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.gw-footer i {
-  height: 4px;
-  width: 4px;
-  background: var(--gw-accent);
-  border-radius: 50%;
+  gap: 24px;
 }
 .gw-desktop-dock {
-  position: absolute;
-  bottom: 19px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-.gw-dock {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  border-radius: 30px;
-  padding: 5px;
-  white-space: nowrap;
-  background: var(--gw-dock);
-  backdrop-filter: blur(20px);
-}
-.gw-dock button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border-radius: 24px;
-  padding: 10px 17px;
-  font-size: 11px;
-  transition:
-    background 0.22s,
-    color 0.22s;
-}
-.gw-dock button svg {
-  width: 15px;
-}
-.gw-dock button[aria-current] {
-  background: var(--gw-dock-active);
-  color: var(--gw-dock-ink);
-  box-shadow: 0 3px 7px var(--gw-dock-shadow);
-}
-.gw-dock button:not([aria-current]):hover {
-  background: var(--gw-dock-hover);
-}
-.gw-mobile-nav {
   display: none;
 }
-.gw-button {
-  padding: 9px 13px;
-  border-radius: 9px;
+@media (max-width: 768px) {
+  .gw-desktop-dock {
+    display: flex;
+    justify-content: center;
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    z-index: 40;
+  }
+}
+.gw-dock {
+  padding: 8px 16px;
+  border-radius: 24px;
   display: flex;
   align-items: center;
-  gap: 7px;
-  background: var(--gw-button) !important;
-  color: var(--gw-button-ink) !important;
-  font-size: 11px !important;
-  white-space: nowrap;
-}
-.gw-button:hover {
-  filter: brightness(1.13);
-}
-.gw-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--gw-search);
-  border: 1px solid var(--gw-line);
-  border-radius: 8px;
-  padding: 7px 10px;
-}
-.gw-search input {
-  width: 165px;
-  background: none;
-  border: 0;
-  caret-color: var(--gw-accent);
-  font-size: 11px;
-}
-.gw-search input::placeholder {
-  color: var(--gw-muted);
-}
-.gw-search button {
-  padding: 0;
-  display: flex;
-}
-.gw-count {
-  margin-left: 6px;
-  font-size: 10px;
-  color: var(--gw-muted);
-}
-.gw-empty {
-  text-align: center;
-  padding: 70px 15px;
-  color: var(--gw-muted);
-  font-size: 12px;
-}
-.gw-empty svg {
-  margin-bottom: 12px;
-}
-.gw-empty h3 {
-  font-size: 15px;
-  color: var(--gw-ink);
-  margin-bottom: 6px;
-}
-.gw-empty button {
-  margin-top: 15px;
-  text-decoration: underline;
-}
-.gw-savings-intro {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 20px 10px 35px;
-}
-.gw-savings-orb {
-  width: 65px;
-  height: 65px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--gw-savings-orb);
-  box-shadow: inset 0 1px 0 var(--gw-strong-edge);
-}
-.gw-savings-intro p {
-  font-size: 12px;
-  color: var(--gw-muted);
-}
-.gw-savings-intro strong {
-  font-size: 40px;
-  letter-spacing: -0.04em;
-  font-weight: 500;
-}
-.gw-savings-intro > span:last-child {
-  margin-left: auto;
-  font-size: 13px;
-  color: var(--gw-muted);
-}
-.gw-view:has(.gw-savings-intro) .gw-goals {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 34px;
-}
-.gw-view:has(.gw-savings-intro) .gw-goal + .gw-goal {
-  margin-top: 0;
-}
-.gw-savings-note {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--gw-muted);
-  font-size: 12px;
-  padding: 24px 4px;
-}
-.gw-report-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 16px;
-}
-.gw-report-stats strong {
-  font-size: 28px;
-  font-weight: 500;
-  letter-spacing: -0.035em;
-  display: block;
-}
-.gw-report-stats section > span {
-  font-size: 10px;
-  color: var(--gw-muted);
-}
-.gw-report-stats .gw-panel-title {
-  margin-bottom: 15px;
-}
-.gw-reports-grid {
-  display: grid;
-  grid-template-columns: 1.6fr 1fr;
-  gap: 16px;
-}
-.gw-reports-grid .gw-chart-wrap svg {
-  height: 185px;
-}
-.gw-chart-footnote {
-  font-size: 9px;
-  color: var(--gw-muted);
-  margin-top: 15px !important;
-}
-.gw-category-list > div + div {
-  margin-top: 19px;
-}
-.gw-category-list > div > div {
-  display: flex;
-  gap: 7px;
-  align-items: center;
-  font-size: 11px;
-}
-.gw-category-list strong {
-  margin-left: auto;
-  font-weight: 500;
-}
-.gw-category-list svg {
-  width: 14px;
-}
-.gw-category-track {
-  display: block;
-  height: 4px;
-  border-radius: 3px;
-  background: var(--gw-line);
-  margin-top: 9px;
-}
-.gw-category-track i {
-  display: block;
-  height: 100%;
-  background: var(--gw-accent);
-  border-radius: 3px;
+  gap: 10px;
+  box-shadow: 0 20px 40px -10px rgba(0,0,0,0.8);
 }
 .gw-material {
-  position: absolute;
-  z-index: 20;
-  max-height: calc(100svh - 128px);
-  overflow: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--gw-scrollbar) transparent;
-  right: 10px;
-  top: 75px;
-  width: 300px;
-  border-radius: 22px;
-  padding: 22px;
-  background: var(--gw-popover);
-  box-shadow:
-    inset 0 1px 0 var(--gw-soft-edge),
-    0 24px 80px var(--gw-popover-shadow);
+  position: fixed;
+  top: 80px;
+  right: 28px;
+  width: 320px;
+  border-radius: 24px;
+  padding: 20px;
+  z-index: 50;
+  box-shadow: 0 24px 48px -12px rgba(0,0,0,0.8);
 }
-.gw-material-title {
+.gw-material-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 16px;
 }
-.gw-material-title > div {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-.gw-material h2 {
-  font-size: 17px;
-  font-weight: 500;
-  letter-spacing: -0.03em;
-}
-.gw-material-icon {
-  display: grid;
-  place-items: center;
-}
-.gw-material > p {
-  font-size: 11px;
-  color: var(--gw-muted);
-  margin: 7px 0 18px;
-}
-.gw-material-sample {
-  height: 87px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  border-radius: 13px;
-  margin-bottom: 17px;
-  background: color-mix(
-    in srgb,
-    var(--gw-tint) calc(var(--gw-opacity) * 100%),
-    transparent
-  );
-  backdrop-filter: blur(var(--gw-blur));
-  box-shadow:
-    inset 0 1px 0
-      color-mix(
-        in srgb,
-        var(--gw-highlight) calc(var(--gw-edge) * 100%),
-        transparent
-      ),
-    0 12px 20px -18px var(--gw-sample-shadow);
-  font-size: 12px;
-}
-.gw-presets {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 20px;
-}
-.gw-presets button {
-  flex: 1;
-  border: 1px solid var(--gw-line);
-  border-radius: 7px;
-  padding: 6px 0;
-  font-size: 11px;
-}
-.gw-presets button:hover {
-  background: var(--gw-control-hover);
-}
-.gw-range {
-  display: block;
-  margin: 17px 0;
-}
-.gw-range > span {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-}
-.gw-range output {
-  font-size: 10px;
-  color: var(--gw-muted);
-}
-.gw-range input {
-  width: 100%;
-  accent-color: var(--gw-accent);
-  height: 16px;
-  margin: 8px 0 0;
-  cursor: pointer;
-}
-.gw-tint {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
-  margin-top: 20px;
-}
-.gw-tint input {
-  height: 28px;
-  width: 42px;
-  padding: 2px;
-  background: none;
-  border: 1px solid var(--gw-line);
-  border-radius: 6px;
-  cursor: pointer;
-}
-.gw-reset {
-  width: 100%;
-  border: 1px solid var(--gw-line) !important;
-  border-radius: 8px;
-  padding: 8px;
-  margin-top: 22px;
-  font-size: 11px !important;
-}
-.gw-reset:hover {
-  background: var(--gw-control-hover);
+.gw-material-header h2 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f8fafc;
 }
 .gw-notifications {
-  position: absolute;
-  right: 25px;
-  top: 75px;
-  z-index: 21;
-  width: 280px;
-  border-radius: 16px;
-  padding: 22px;
-  background: var(--gw-notification);
-}
-.gw-notifications > div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.gw-notifications h2 {
-  font-size: 15px;
-  font-weight: 500;
-}
-.gw-notifications p {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--gw-muted);
+  position: fixed;
+  top: 80px;
+  right: 28px;
+  width: 320px;
+  border-radius: 24px;
+  padding: 20px;
+  z-index: 50;
 }
 .gw-toast {
   position: fixed;
-  left: 50%;
-  bottom: 25px;
-  transform: translateX(-50%);
-  z-index: 30;
+  bottom: 24px;
+  right: 24px;
+  padding: 10px 18px;
+  border-radius: 14px;
+  background: #0284c7;
+  color: #ffffff;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 13px 20px;
-  border-radius: 12px;
-  background: var(--gw-toast);
-  color: var(--gw-toast-ink);
-  box-shadow: 0 10px 30px var(--gw-toast-shadow);
+  gap: 8px;
   font-size: 12px;
-  white-space: nowrap;
-}
-.gw-sun {
-  display: none;
-}
-[data-theme="dark"] .gw-sun {
-  display: block;
-}
-[data-theme="dark"] .gw-moon {
-  display: none;
-}
-.gw-chart-months > span {
-  position: absolute;
-  white-space: nowrap;
-}
-.gw-chart-empty {
-  padding: 35px 15px;
-  min-height: 160px;
-}
-@supports not (backdrop-filter: blur(1px)) {
-  .gw-glass,
-  .gw-panel {
-    background: var(--gw-fallback);
-  }
-}
-@media (min-width: 1550px) {
-  .gw-root {
-    padding-top: 65px;
-  }
-  .gw-main {
-    padding-top: 36px;
-  }
-  .gw-chart-wrap svg {
-    height: 150px;
-  }
-  .gw-panel {
-    padding: 25px;
-  }
-  .gw-transaction {
-    padding: 14px 0;
-  }
-}
-@media (max-width: 1050px) {
-  .gw-root {
-    padding: 24px 18px;
-  }
-  .gw-main {
-    padding: 25px 23px 92px;
-  }
-  .gw-rail {
-    display: none;
-  }
-  .gw-balance-value {
-    font-size: 32px;
-  }
-  .gw-transaction-status {
-    display: none;
-  }
-  .gw-personal,
-  .gw-brand-divider {
-    display: none;
-  }
-  .gw-panel {
-    padding: 18px;
-  }
-  .gw-chart-summary {
-    gap: 20px;
-  }
-  .gw-chart-summary strong {
-    font-size: 19px;
-  }
-}
-@media (max-width: 700px) {
-  .gw-root {
-    padding: 12px 10px 24px;
-  }
-  .gw-topbar {
-    height: 56px;
-    padding: 0 12px;
-    border-radius: 17px;
-    margin-bottom: 12px;
-  }
-  .gw-toolbar {
-    gap: 3px;
-  }
-  .gw-brand {
-    gap: 7px;
-  }
-  .gw-brand strong {
-    font-size: 12px;
-  }
-  .gw-brand-icon {
-    width: 25px;
-    height: 25px;
-  }
-  .gw-bell,
-  .gw-avatar {
-    display: none !important;
-  }
-  .gw-adjust {
-    padding: 8px;
-    font-size: 11px !important;
-    gap: 5px;
-  }
-  .gw-main {
-    border-radius: 20px;
-    padding: 23px 15px;
-  }
-  .gw-view-heading {
-    gap: 8px;
-    align-items: flex-start;
-    margin-bottom: 20px;
-  }
-  .gw-view-heading h1 {
-    font-size: 25px;
-    max-width: 290px;
-    line-height: 1.12;
-  }
-  .gw-greeting {
-    font-size: 11px;
-  }
-  .gw-heading-action .gw-date {
-    display: none;
-  }
-  .gw-heading-action .gw-button {
-    padding: 8px 10px;
-    font-size: 10px !important;
-  }
-  .gw-mobile-nav {
-    display: block;
-    margin-bottom: 20px;
-  }
-  .gw-mobile-nav .gw-dock {
-    width: 100%;
-    padding: 4px;
-    border-radius: 12px;
-    justify-content: space-between;
-    background: var(--gw-mobile-dock);
-    box-shadow: none;
-  }
-  .gw-dock button {
-    font-size: 10px;
-    padding: 9px 10px;
-    border-radius: 9px;
-    gap: 5px;
-  }
-  .gw-dock button svg {
-    width: 13px;
-    height: 13px;
-  }
-  .gw-desktop-dock {
-    display: none;
-  }
-  .gw-overview-grid,
-  .gw-lower-grid,
-  .gw-reports-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .gw-overview-grid {
-    margin-bottom: 12px;
-  }
-  .gw-balance {
-    min-height: 221px;
-  }
-  .gw-balance-value {
-    font-size: 39px;
-  }
-  .gw-balance-meta {
-    font-size: 11px;
-  }
-  .gw-account {
-    padding-top: 23px;
-  }
-  .gw-panel {
-    border-radius: 15px;
-    padding: 18px;
-  }
-  .gw-chart-wrap svg {
-    height: 130px;
-  }
-  .gw-chart-summary strong {
-    font-size: 22px;
-  }
-  .gw-chart-summary {
-    gap: 35px;
-  }
-  .gw-panel-title {
-    gap: 8px;
-    margin-bottom: 18px;
-  }
-  .gw-footer {
-    font-size: 8px;
-    margin-top: 24px;
-  }
-  .gw-footer > span:last-child {
-    display: none;
-  }
-  .gw-material {
-    right: 4px;
-    top: 65px;
-    width: min(310px, calc(100% - 8px));
-    padding: 20px;
-    max-height: calc(100svh - 90px);
-    overflow: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--gw-scrollbar) transparent;
-  }
-  .gw-notifications {
-    right: 4px;
-    max-width: calc(100% - 8px);
-  }
-  .gw-transaction-name strong,
-  .gw-transaction > strong {
-    font-size: 11px;
-  }
-  .gw-search {
-    padding: 7px;
-    width: 100%;
-  }
-  .gw-search input {
-    width: 100%;
-    min-width: 0;
-  }
-  .gw-view:has(.gw-search) .gw-panel-title {
-    flex-wrap: wrap;
-  }
-  .gw-report-stats {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-  .gw-report-stats .gw-panel {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-  }
-  .gw-report-stats .gw-panel-title {
-    margin: 0;
-  }
-  .gw-report-stats .gw-panel-title svg {
-    display: none;
-  }
-  .gw-report-stats strong {
-    font-size: 26px;
-  }
-  .gw-report-stats section > span {
-    grid-column: 1/-1;
-    margin-top: 8px;
-  }
-  .gw-savings-intro {
-    gap: 12px;
-    padding: 10px 2px 26px;
-    flex-wrap: wrap;
-  }
-  .gw-savings-intro strong {
-    font-size: 34px;
-  }
-  .gw-savings-intro > span:last-child {
-    display: none;
-  }
-  .gw-savings-orb {
-    width: 52px;
-    height: 52px;
-  }
-  .gw-view:has(.gw-savings-intro) .gw-goals {
-    grid-template-columns: 1fr;
-    gap: 25px;
-  }
-  .gw-view:has(.gw-search) {
-    min-height: 370px;
-  }
-  .gw-toast {
-    max-width: calc(100% - 30px);
-    font-size: 11px;
-    white-space: normal;
-  }
-  .gw-chart-months {
-    font-size: 8px;
-  }
-}
-@media (max-height: 550px) {
-  .gw-material {
-    top: 70px;
-    max-height: calc(100svh - 110px);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .gw-root * {
-    scroll-behavior: auto !important;
-    transition: none !important;
-  }
+  font-weight: 600;
+  z-index: 100;
+  box-shadow: 0 12px 24px -4px rgba(2, 132, 199, 0.4);
 }
 `;
