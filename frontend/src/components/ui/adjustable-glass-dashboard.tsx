@@ -62,16 +62,6 @@ export type Incident = {
   description: string;
 };
 
-export type WhatIfFeature = {
-  name: string;
-  label: string;
-  min: number;
-  max: number;
-  step: number;
-  val: number;
-  unit: string;
-};
-
 export type WorkspaceTransaction = {
   id: string;
   name: string;
@@ -128,11 +118,64 @@ export interface GlassWorkspaceProps {
   style?: CSSProperties;
 }
 
+export const warmPalette: CSSProperties = {
+  "--gw-ink": "#f4f4ed",
+  "--gw-muted": "#d0c9bf",
+  "--gw-accent": "#91d5b0",
+  "--gw-line": "rgba(225, 237, 223, 0.15)",
+  "--gw-background": "#282a25",
+  "--gw-shade": "rgba(18, 16, 14, 0.48)",
+  "--gw-surface": "#262322",
+  "--gw-panel": "#2b2825",
+  "--gw-brand": "#e2eee0",
+  "--gw-brand-ink": "#183725",
+  "--gw-avatar": "#616e58",
+  "--gw-rail-active": "rgba(215, 229, 212, 0.17)",
+  "--gw-positive-surface": "#294f3a",
+  "--gw-account-surface": "rgba(89, 110, 83, 0.33)",
+  "--gw-account-action": "rgba(186, 199, 178, 0.13)",
+  "--gw-segment": "rgba(233, 246, 231, 0.07)",
+  "--gw-segment-active": "rgba(218, 232, 216, 0.21)",
+  "--gw-transaction-surface": "rgba(194, 191, 160, 0.13)",
+  "--gw-income-surface": "rgba(145, 213, 176, 0.14)",
+  "--gw-pending": "#e1c383",
+  "--gw-goal-surface": "rgba(198, 211, 190, 0.13)",
+  "--gw-dock": "rgba(21, 38, 27, 0.8)",
+  "--gw-dock-active": "#eef3e6",
+  "--gw-button": "#d8ebd7",
+  "--gw-button-ink": "#193320",
+  "--gw-search": "rgba(20, 38, 29, 0.47)",
+  "--gw-savings-orb": "rgba(183, 225, 181, 0.17)",
+  "--gw-popover": "rgba(21, 38, 30, 0.94)",
+  "--gw-notification": "rgba(21, 38, 30, 0.94)",
+  "--gw-fallback": "#1e2c22",
+  "--gw-mobile-dock": "rgba(21, 38, 27, 0.6)",
+  "--gw-shadow": "rgba(23, 41, 27, 0.28)",
+  "--gw-panel-shadow": "rgba(20, 37, 28, 0.27)",
+  "--gw-soft-shadow": "rgba(32, 41, 32, 0.07)",
+  "--gw-segment-shadow": "rgba(20, 37, 26, 0.06)",
+  "--gw-dock-shadow": "rgba(20, 37, 28, 0.07)",
+  "--gw-popover-shadow": "rgba(19, 32, 23, 0.2)",
+  "--gw-sample-shadow": "rgba(19, 51, 29, 0.5)",
+  "--gw-toast-shadow": "rgba(0, 0, 0, 0.13)",
+  "--gw-toast": "#243e2e",
+  "--gw-dock-ink": "#283e2e",
+  "--gw-selection": "rgba(105, 140, 114, 0.44)",
+  "--gw-scrollbar": "#8e9d88",
+  "--gw-hover": "rgba(255, 255, 255, 0.16)",
+  "--gw-dock-hover": "rgba(255, 255, 255, 0.19)",
+  "--gw-control-hover": "rgba(255, 255, 255, 0.21)",
+  "--gw-strong-edge": "rgba(255, 255, 255, 0.6)",
+  "--gw-soft-edge": "rgba(255, 255, 255, 0.53)",
+  "--gw-toast-ink": "#fff",
+  "--gw-highlight": "#fff",
+} as CSSProperties;
+
 const defaults: GlassSettings = {
-  blur: 20,
-  opacity: 0.35,
-  saturation: 1.25,
-  tint: "#101827",
+  blur: 22,
+  opacity: 0.3,
+  saturation: 1.2,
+  tint: "#eadbc7",
   edge: 0.6,
 };
 
@@ -252,7 +295,7 @@ export default function GlassWorkspace({
   glass = defaults,
   onGlassChange,
   theme = "dark",
-  useHostTheme = true,
+  useHostTheme = false,
   className = "",
   style,
 }: GlassWorkspaceProps) {
@@ -334,13 +377,13 @@ export default function GlassWorkspace({
 
   function applyGlassPreset(name: "frosted" | "clear" | "midnight" | "neon") {
     const presets = {
-      frosted: { blur: 20, opacity: 0.35, saturation: 1.25, edge: 0.6, tint: "#101827" },
-      clear: { blur: 10, opacity: 0.15, saturation: 1.1, edge: 0.8, tint: "#0a1120" },
-      midnight: { blur: 25, opacity: 0.85, saturation: 1.3, edge: 0.4, tint: "#05070e" },
-      neon: { blur: 16, opacity: 0.45, saturation: 1.8, edge: 0.9, tint: "#061e2b" },
+      frosted: { blur: 22, opacity: 0.3, saturation: 1.2, edge: 0.6, tint: "#eadbc7" },
+      clear: { blur: 10, opacity: 0.15, saturation: 1.1, edge: 0.8, tint: "#f2ebd9" },
+      midnight: { blur: 32, opacity: 0.86, saturation: 1.0, edge: 0.35, tint: "#1e1f1c" },
+      neon: { blur: 18, opacity: 0.4, saturation: 1.7, edge: 0.85, tint: "#c8dfcf" },
     };
     updateGlass(presets[name]);
-    setNotice(`Applied ${name.toUpperCase()} glass preset`);
+    setNotice(`Applied ${name.toUpperCase()} warm glass preset`);
   }
 
   function triggerIngestFlow() {
@@ -373,7 +416,6 @@ export default function GlassWorkspace({
     });
   }, [searchQuery, sevFilter]);
 
-  // Dynamic calculation for What-If sandbox
   const whatIfCalc = useMemo(() => {
     const score = Math.min(
       0.99,
@@ -397,7 +439,6 @@ export default function GlassWorkspace({
     return { score, label, isAbstained };
   }, [whatIfFeatures]);
 
-  // Navigation rendering
   const renderNav = (isRail = false) => (
     <nav className={isRail ? "gw-rail gw-glass" : "gw-dock gw-glass"}>
       {tabs.map((tab) => {
@@ -427,6 +468,7 @@ export default function GlassWorkspace({
       data-host-theme={useHostTheme}
       style={
         {
+          ...warmPalette,
           "--gw-blur": `${material.blur}px`,
           "--gw-opacity": material.opacity,
           "--gw-saturation": material.saturation,
@@ -438,19 +480,19 @@ export default function GlassWorkspace({
     >
       <style>{customStyles}</style>
 
-      {/* Photorealistic Smoked Glass Architectural Background */}
+      {/* Warm Smoked Architectural Photography Backdrop */}
       {backgroundImage && !backgroundFailed && (
         <img
           className="gw-room"
           src={backgroundImage}
-          alt="Architectural Backdrop"
+          alt="Warm Room Architectural Backdrop"
           onError={() => setBackgroundFailed(true)}
         />
       )}
       <div className="gw-room-shade" aria-hidden="true" />
 
       <div className="gw-workspace">
-        {/* Floating Topbar */}
+        {/* Warm Smoked Glass Topbar */}
         <header className="gw-topbar gw-glass">
           <div className="flex items-center gap-3">
             <a
@@ -462,19 +504,19 @@ export default function GlassWorkspace({
               }}
             >
               <span className="gw-brand-icon">
-                <ShieldCheck size={18} className="text-cyan-400" />
+                <ShieldCheck size={18} />
               </span>
               <strong>{brand}</strong>
               <span className="gw-brand-divider" />
-              <span className="gw-personal text-slate-300">Autonomous Cyber SOC</span>
+              <span className="gw-personal">Autonomous Cyber SOC</span>
             </a>
 
             <div className="hidden lg:flex items-center gap-2 text-xs font-mono">
-              <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 font-bold flex items-center gap-1.5 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="px-2 py-0.5 rounded-full bg-[var(--gw-positive-surface)] text-[var(--gw-accent)] border border-[var(--gw-line)] font-bold flex items-center gap-1.5 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--gw-accent)] animate-pulse" />
                 DRY-RUN SAFE
               </span>
-              <span className="px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800/40 text-cyan-300">
+              <span className="px-2 py-0.5 rounded bg-[var(--gw-segment-active)] border border-[var(--gw-line)] text-[var(--gw-muted)]">
                 SOC v2.2.0
               </span>
             </div>
@@ -486,19 +528,19 @@ export default function GlassWorkspace({
               href="http://127.0.0.1:8000"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-800/80 border border-slate-700/60 text-xs font-mono text-slate-300 hover:text-white transition"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[var(--gw-panel)] hover:bg-[var(--gw-hover)] border border-[var(--gw-line)] text-xs font-mono text-[var(--gw-muted)] hover:text-[var(--gw-ink)] transition"
               title="Open FastAPI Production SOC Dashboard (Port 8000)"
             >
-              <ExternalLink size={13} className="text-cyan-400" />
+              <ExternalLink size={13} className="text-[var(--gw-accent)]" />
               <span>FastAPI SOC</span>
-              <span className="text-[10px] text-slate-400">8000 &#8599;</span>
+              <span className="text-[10px] opacity-75">8000 &#8599;</span>
             </a>
 
             {/* Ingest Flow Action */}
             <button
               type="button"
               onClick={triggerIngestFlow}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold transition shadow-sm"
+              className="gw-button"
               title="Stream authentic live telemetry flow"
             >
               <Radio size={14} className="animate-pulse" />
@@ -566,8 +608,8 @@ export default function GlassWorkspace({
               </div>
 
               <div className="gw-heading-action">
-                <span className="gw-date font-mono text-xs text-slate-400 border border-slate-700/40 rounded-lg px-2.5 py-1 bg-slate-900/40">
-                  {periodLabel} · Bounded Selective Risk (&alpha; &le; 0.05)
+                <span className="gw-date font-mono text-xs border border-[var(--gw-line)] rounded-lg px-2.5 py-1 bg-[var(--gw-segment)]">
+                  {periodLabel} &middot; Bounded Selective Risk (&alpha; &le; 0.05)
                 </span>
               </div>
             </div>
@@ -582,26 +624,26 @@ export default function GlassWorkspace({
                   {/* 4 Core Threat Metric Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 gw-reveal">
                     {/* Incidents Tile */}
-                    <section className="gw-panel p-4 rounded-2xl flex flex-col justify-between border-l-4 border-l-cyan-400">
+                    <section className="gw-panel p-4 rounded-2xl flex flex-col justify-between border-l-4 border-l-[var(--gw-accent)]">
                       <div>
                         <div className="gw-panel-title">
-                          <span className="text-xs uppercase font-mono tracking-wider text-slate-400">Total Logged Incidents</span>
-                          <ShieldCheck size={17} className="text-cyan-400" />
+                          <span className="text-xs uppercase font-mono tracking-wider text-[var(--gw-muted)]">Total Logged Incidents</span>
+                          <ShieldCheck size={17} className="text-[var(--gw-accent)]" />
                         </div>
                         <div className="flex items-baseline justify-between mt-1">
-                          <strong className="text-3xl font-mono font-bold text-white">211</strong>
-                          <span className="text-xs font-mono text-cyan-300 font-semibold px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800/40">
+                          <strong className="text-3xl font-mono font-bold text-[var(--gw-ink)]">211</strong>
+                          <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-[var(--gw-segment-active)] border border-[var(--gw-line)] text-[var(--gw-accent)]">
                             100% Chained
                           </span>
                         </div>
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-3 pt-2 border-t border-slate-700/30 flex items-center justify-between">
+                      <div className="text-[11px] text-[var(--gw-muted)] mt-3 pt-2 border-t border-[var(--gw-line)] flex items-center justify-between">
                         <span>Canonical RFC 8785 Digest Active</span>
-                        <span className="text-emerald-400 font-mono">+8.2% vs base</span>
+                        <span className="text-[var(--gw-accent)] font-mono font-bold">+8.2% vs base</span>
                       </div>
                       <div className="gw-account mt-3">
                         <span className="gw-account-icon">
-                          <HeartPulse size={16} className="text-rose-400" />
+                          <HeartPulse size={16} className="text-[var(--gw-pending)]" />
                         </span>
                         <div>
                           <strong>Medical IoMT Network</strong>
@@ -614,59 +656,59 @@ export default function GlassWorkspace({
                     </section>
 
                     {/* Conformal Risk Tile */}
-                    <section className="gw-panel p-4 rounded-2xl flex flex-col justify-between border-l-4 border-l-emerald-400">
+                    <section className="gw-panel p-4 rounded-2xl flex flex-col justify-between border-l-4 border-l-[var(--gw-accent)]">
                       <div>
                         <div className="gw-panel-title">
-                          <span className="text-xs uppercase font-mono tracking-wider text-slate-400">Conformal Risk Limit (&alpha;)</span>
-                          <Crosshair size={17} className="text-emerald-400" />
+                          <span className="text-xs uppercase font-mono tracking-wider text-[var(--gw-muted)]">Conformal Risk Limit (&alpha;)</span>
+                          <Crosshair size={17} className="text-[var(--gw-accent)]" />
                         </div>
                         <div className="flex items-baseline justify-between mt-1">
-                          <strong className="text-3xl font-mono font-bold text-emerald-400">&le; 0.05</strong>
-                          <span className="text-xs font-mono text-emerald-300 font-semibold px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40">
+                          <strong className="text-3xl font-mono font-bold text-[var(--gw-accent)]">&le; 0.05</strong>
+                          <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-[var(--gw-segment-active)] border border-[var(--gw-line)] text-[var(--gw-accent)]">
                             &ge; 95% Coverage
                           </span>
                         </div>
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-3 pt-2 border-t border-slate-700/30">
+                      <div className="text-[11px] text-[var(--gw-muted)] mt-3 pt-2 border-t border-[var(--gw-line)]">
                         Selective-Risk Abstention Enforced (C9) &middot; &lambda; = 0.49
                       </div>
                     </section>
 
                     {/* High & Critical Threats Tile */}
-                    <section className="gw-panel p-4 rounded-2xl flex flex-col justify-between border-l-4 border-l-rose-500">
+                    <section className="gw-panel p-4 rounded-2xl flex flex-col justify-between border-l-4 border-l-[var(--gw-pending)]">
                       <div>
                         <div className="gw-panel-title">
-                          <span className="text-xs uppercase font-mono tracking-wider text-slate-400">High &amp; Critical Threats</span>
-                          <ShieldAlert size={17} className="text-rose-400" />
+                          <span className="text-xs uppercase font-mono tracking-wider text-[var(--gw-muted)]">High &amp; Critical Threats</span>
+                          <ShieldAlert size={17} className="text-[var(--gw-pending)]" />
                         </div>
                         <div className="flex items-baseline justify-between mt-1">
-                          <strong className="text-3xl font-mono font-bold text-rose-400">188</strong>
-                          <span className="text-xs font-mono text-rose-300 font-semibold px-2 py-0.5 rounded bg-rose-950/60 border border-rose-800/40">
+                          <strong className="text-3xl font-mono font-bold text-[var(--gw-pending)]">188</strong>
+                          <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-[var(--gw-segment-active)] border border-[var(--gw-line)] text-[var(--gw-pending)]">
                             Escalated
                           </span>
                         </div>
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-3 pt-2 border-t border-slate-700/30 flex items-center justify-between">
+                      <div className="text-[11px] text-[var(--gw-muted)] mt-3 pt-2 border-t border-[var(--gw-line)] flex items-center justify-between">
                         <span>Critic-Audited Severity</span>
-                        <span className="text-slate-300 font-mono">6 Crit / 182 High</span>
+                        <span className="text-[var(--gw-ink)] font-mono font-bold">6 Crit / 182 High</span>
                       </div>
                     </section>
 
                     {/* Medical IoMT Gate Tile */}
-                    <section className="gw-panel p-4 rounded-2xl flex flex-col justify-between border-l-4 border-l-amber-400">
+                    <section className="gw-panel p-4 rounded-2xl flex flex-col justify-between border-l-4 border-l-[var(--gw-accent)]">
                       <div>
                         <div className="gw-panel-title">
-                          <span className="text-xs uppercase font-mono tracking-wider text-slate-400">Medical IoMT Gate (C16)</span>
-                          <Lock size={17} className="text-amber-400" />
+                          <span className="text-xs uppercase font-mono tracking-wider text-[var(--gw-muted)]">Medical IoMT Gate (C16)</span>
+                          <Lock size={17} className="text-[var(--gw-accent)]" />
                         </div>
                         <div className="flex items-baseline justify-between mt-1">
-                          <strong className="text-2xl font-mono font-bold text-amber-300">DUAL-AUTH</strong>
-                          <span className="text-xs font-mono text-amber-300 font-semibold px-2 py-0.5 rounded bg-amber-950/60 border border-amber-800/40">
+                          <strong className="text-2xl font-mono font-bold text-[var(--gw-ink)]">DUAL-AUTH</strong>
+                          <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-[var(--gw-segment-active)] border border-[var(--gw-line)] text-[var(--gw-accent)]">
                             Zero Auto-Disrupt
                           </span>
                         </div>
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-3 pt-2 border-t border-slate-700/30">
+                      <div className="text-[11px] text-[var(--gw-muted)] mt-3 pt-2 border-t border-[var(--gw-line)]">
                         Clinical Engineer Separation of Duties &middot; Fail-Safe
                       </div>
                     </section>
@@ -676,16 +718,16 @@ export default function GlassWorkspace({
                   <div className="gw-panel p-5 rounded-2xl mt-5 gw-reveal">
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                       <div>
-                        <h2 className="text-base font-bold text-white flex items-center gap-2">
-                          <Activity size={18} className="text-cyan-400" />
+                        <h2 className="text-base font-bold text-[var(--gw-ink)] flex items-center gap-2">
+                          <Activity size={18} className="text-[var(--gw-accent)]" />
                           <span>Threat Telemetry &amp; Anomaly Ingestion Stream</span>
                         </h2>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-[var(--gw-muted)]">
                           Real-time stream velocity, anomaly confidence distribution, and conformal abstention thresholds.
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-900/60 border border-slate-700/50 text-xs font-mono">
+                      <div className="flex items-center gap-1 p-1 rounded-xl bg-[var(--gw-segment)] border border-[var(--gw-line)] text-xs font-mono">
                         {(["1h", "24h", "7d", "month"] as const).map((period) => (
                           <button
                             key={period}
@@ -693,8 +735,8 @@ export default function GlassWorkspace({
                             onClick={() => setChartPeriod(period)}
                             className={`px-3 py-1 rounded-lg uppercase transition ${
                               chartPeriod === period
-                                ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
-                                : "text-slate-400 hover:text-white"
+                                ? "bg-[var(--gw-segment-active)] text-[var(--gw-accent)] font-bold shadow-sm"
+                                : "text-[var(--gw-muted)] hover:text-[var(--gw-ink)]"
                             }`}
                           >
                             {period}
@@ -705,18 +747,18 @@ export default function GlassWorkspace({
 
                     <div className="gw-chart-summary mb-3">
                       <div>
-                        <span className="text-xs text-slate-400 flex items-center gap-1">
-                          <i className="w-2 h-2 rounded-full bg-cyan-400" />
+                        <span className="text-xs text-[var(--gw-muted)] flex items-center gap-1">
+                          <i className="w-2 h-2 rounded-full bg-[var(--gw-accent)]" />
                           Threat Ingestion Velocity
                         </span>
-                        <strong className="text-lg font-mono text-cyan-300">11,050 events/s</strong>
+                        <strong className="text-lg font-mono text-[var(--gw-accent)]">11,050 events/s</strong>
                       </div>
                       <div>
-                        <span className="text-xs text-slate-400 flex items-center gap-1">
-                          <i className="w-2 h-2 rounded-full bg-rose-400" />
+                        <span className="text-xs text-[var(--gw-muted)] flex items-center gap-1">
+                          <i className="w-2 h-2 rounded-full bg-[var(--gw-pending)]" />
                           Anomaly Detection Rate
                         </span>
-                        <strong className="text-lg font-mono text-rose-300">2.4% (Conformal Bounded)</strong>
+                        <strong className="text-lg font-mono text-[var(--gw-pending)]">2.4% (Conformal Bounded)</strong>
                       </div>
                     </div>
 
@@ -724,34 +766,34 @@ export default function GlassWorkspace({
                     <div className="gw-chart-area w-full h-44 relative mt-2">
                       <svg className="w-full h-full overflow-visible" viewBox="0 0 600 180" preserveAspectRatio="none">
                         <defs>
-                          <linearGradient id="cyanGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.35" />
-                            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.0" />
+                          <linearGradient id="warmGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#91d5b0" stopOpacity="0.35" />
+                            <stop offset="100%" stopColor="#91d5b0" stopOpacity="0.0" />
                           </linearGradient>
                         </defs>
                         <path
                           d="M0,130 Q100,140 180,85 T340,65 T480,40 T600,25 L600,180 L0,180 Z"
-                          fill="url(#cyanGrad)"
+                          fill="url(#warmGrad)"
                         />
                         <path
                           d="M0,130 Q100,140 180,85 T340,65 T480,40 T600,25"
                           fill="none"
-                          stroke="#06b6d4"
-                          strokeWidth="2.5"
+                          stroke="var(--gw-accent)"
+                          strokeWidth="2.6"
                         />
                         <path
                           d="M0,165 Q120,160 220,150 T420,140 T600,135"
                           fill="none"
-                          stroke="#f43f5e"
+                          stroke="var(--gw-pending)"
                           strokeWidth="1.5"
                           strokeDasharray="4 4"
                         />
-                        <circle cx="180" cy="85" r="4.5" fill="#06b6d4" />
-                        <circle cx="340" cy="65" r="4.5" fill="#06b6d4" />
-                        <circle cx="480" cy="40" r="4.5" fill="#06b6d4" />
-                        <circle cx="600" cy="25" r="4.5" fill="#06b6d4" />
+                        <circle cx="180" cy="85" r="4.5" fill="var(--gw-accent)" />
+                        <circle cx="340" cy="65" r="4.5" fill="var(--gw-accent)" />
+                        <circle cx="480" cy="40" r="4.5" fill="var(--gw-accent)" />
+                        <circle cx="600" cy="25" r="4.5" fill="var(--gw-accent)" />
                       </svg>
-                      <div className="flex justify-between text-[11px] font-mono text-slate-400 mt-2">
+                      <div className="flex justify-between text-[11px] font-mono text-[var(--gw-muted)] mt-2">
                         <span>Nov 01</span>
                         <span>Nov 06</span>
                         <span>Nov 11</span>
@@ -767,13 +809,13 @@ export default function GlassWorkspace({
                     {/* Live Triage Recent Activity */}
                     <section className="gw-panel p-5 rounded-2xl gw-reveal">
                       <div className="gw-panel-title mb-3">
-                        <h2 className="text-base font-bold text-white flex items-center gap-2">
-                          <ShieldAlert size={18} className="text-rose-400" />
+                        <h2 className="text-base font-bold text-[var(--gw-ink)] flex items-center gap-2">
+                          <ShieldAlert size={18} className="text-[var(--gw-pending)]" />
                           <span>Recent Threat Activity</span>
                         </h2>
                         <button
                           type="button"
-                          className="gw-text-button flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-mono"
+                          className="gw-text-button flex items-center gap-1 text-xs text-[var(--gw-accent)] hover:underline font-mono"
                           onClick={() => setView("incidents")}
                         >
                           View all 211
@@ -785,7 +827,7 @@ export default function GlassWorkspace({
                         {sampleIncidents.slice(0, 4).map((inc) => (
                           <div
                             key={inc.id}
-                            className="gw-transaction p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 transition"
+                            className="gw-transaction p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-[var(--gw-hover)] transition"
                             onClick={() => {
                               setSelectedIncident(inc);
                               setView("deepdive");
@@ -795,15 +837,15 @@ export default function GlassWorkspace({
                               <span
                                 className={`w-2.5 h-2.5 rounded-full ${
                                   inc.severity === "critical"
-                                    ? "bg-rose-500 animate-pulse"
+                                    ? "bg-[#d97768] animate-pulse"
                                     : inc.severity === "high"
-                                    ? "bg-amber-400"
-                                    : "bg-cyan-400"
+                                    ? "bg-[var(--gw-pending)]"
+                                    : "bg-[var(--gw-accent)]"
                                 }`}
                               />
                               <div>
-                                <strong className="text-sm text-white block">{inc.label}</strong>
-                                <span className="text-xs text-slate-400 font-mono">
+                                <strong className="text-sm text-[var(--gw-ink)] block">{inc.label}</strong>
+                                <span className="text-xs text-[var(--gw-muted)] font-mono">
                                   {inc.src_ip} &rarr; {inc.dst_ip} &middot; {inc.timestamp.slice(11)}
                                 </span>
                               </div>
@@ -811,15 +853,15 @@ export default function GlassWorkspace({
 
                             <div className="text-right font-mono text-xs">
                               <span
-                                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-[var(--gw-line)] ${
                                   inc.severity === "critical"
-                                    ? "bg-rose-950 text-rose-300 border border-rose-800"
-                                    : "bg-amber-950 text-amber-300 border border-amber-800"
+                                    ? "bg-[#3d231e] text-[#f2a296]"
+                                    : "bg-[var(--gw-account-surface)] text-[var(--gw-pending)]"
                                 }`}
                               >
                                 {inc.severity}
                               </span>
-                              <div className="text-[11px] text-emerald-400 mt-1">
+                              <div className="text-[11px] text-[var(--gw-accent)] mt-1">
                                 {(inc.confidence * 100).toFixed(1)}% conf
                               </div>
                             </div>
@@ -829,66 +871,66 @@ export default function GlassWorkspace({
                     </section>
 
                     {/* Dual-LLM Epistemic Verification Architecture (Section 12) */}
-                    <section className="gw-panel p-5 rounded-2xl gw-reveal border-l-4 border-l-cyan-400">
+                    <section className="gw-panel p-5 rounded-2xl gw-reveal border-l-4 border-l-[var(--gw-accent)]">
                       <div className="gw-panel-title mb-2">
                         <div className="flex items-center gap-2">
-                          <Bot size={18} className="text-cyan-400" />
-                          <h2 className="text-base font-bold text-white">
+                          <Bot size={18} className="text-[var(--gw-accent)]" />
+                          <h2 className="text-base font-bold text-[var(--gw-ink)]">
                             Dual-LLM Epistemic Verification (Sec 12)
                           </h2>
                         </div>
-                        <span className="px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-800 text-cyan-300 text-[10px] font-mono font-bold">
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--gw-segment-active)] border border-[var(--gw-line)] text-[var(--gw-accent)] text-[10px] font-mono font-bold">
                           Debate Loop Active
                         </span>
                       </div>
 
-                      <p className="text-xs text-slate-400 mb-4">
+                      <p className="text-xs text-[var(--gw-muted)] mb-4">
                         Independent model configurations with isolated reasoning and adversarial verification roles.
                       </p>
 
                       <div className="space-y-3">
                         {/* Agent 08: Analyst */}
-                        <div className="p-3.5 rounded-xl bg-slate-900/60 border border-cyan-900/40">
+                        <div className="p-3.5 rounded-xl bg-[var(--gw-surface)] border border-[var(--gw-line)]">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-bold font-mono text-cyan-300">
+                            <span className="text-xs font-bold font-mono text-[var(--gw-accent)]">
                               Agent 08: LLM Analyst
                             </span>
-                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded">
+                            <span className="text-[11px] font-mono text-[var(--gw-muted)] bg-[var(--gw-segment)] px-2 py-0.5 rounded">
                               llama3.1:8b
                             </span>
                           </div>
-                          <p className="text-xs text-slate-300 leading-relaxed">
+                          <p className="text-xs text-[var(--gw-ink)] leading-relaxed">
                             Synthesizes plain-language attack narrative. Every factual claim must cite valid RFC 6901 evidence pointers.
                           </p>
-                          <div className="text-[10px] font-mono text-emerald-400 mt-2 flex items-center gap-1">
+                          <div className="text-[10px] font-mono text-[var(--gw-accent)] mt-2 flex items-center gap-1">
                             <CheckCircle2 size={12} />
                             <span>Zero tool/shell permissions &middot; Read-only evidence citation</span>
                           </div>
                         </div>
 
                         {/* Agent 09: Critic */}
-                        <div className="p-3.5 rounded-xl bg-slate-900/60 border border-amber-900/40">
+                        <div className="p-3.5 rounded-xl bg-[var(--gw-surface)] border border-[var(--gw-line)]">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-bold font-mono text-amber-300">
+                            <span className="text-xs font-bold font-mono text-[var(--gw-pending)]">
                               Agent 09: Independent Critic
                             </span>
-                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded">
+                            <span className="text-[11px] font-mono text-[var(--gw-muted)] bg-[var(--gw-segment)] px-2 py-0.5 rounded">
                               llama3.1:8b (Independent)
                             </span>
                           </div>
-                          <p className="text-xs text-slate-300 leading-relaxed">
+                          <p className="text-xs text-[var(--gw-ink)] leading-relaxed">
                             Adversarial verification against Claim-Evidence Ledger (C1). Corrects exaggerated severity and flags ungrounded assertions.
                           </p>
-                          <div className="text-[10px] font-mono text-amber-400 mt-2 flex items-center gap-1">
+                          <div className="text-[10px] font-mono text-[var(--gw-pending)] mt-2 flex items-center gap-1">
                             <ShieldCheck size={12} />
                             <span>Mandatory Grounding Gate &middot; Reject &amp; Revise protocol active</span>
                           </div>
                         </div>
 
                         {/* Conformal Abstention Floor */}
-                        <div className="p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-800/40 flex items-center justify-between text-xs font-mono">
-                          <span className="text-slate-300">Conformal Abstention Floor:</span>
-                          <span className="text-emerald-400 font-bold">Active &middot; Fail-closed if s(x) &gt; &lambda;</span>
+                        <div className="p-2.5 rounded-xl bg-[var(--gw-segment)] border border-[var(--gw-line)] flex items-center justify-between text-xs font-mono">
+                          <span className="text-[var(--gw-muted)]">Conformal Abstention Floor:</span>
+                          <span className="text-[var(--gw-accent)] font-bold">Active &middot; Fail-closed if s(x) &gt; &lambda;</span>
                         </div>
                       </div>
                     </section>
@@ -903,20 +945,20 @@ export default function GlassWorkspace({
                 <section className="gw-panel p-6 rounded-2xl gw-reveal space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <h2 className="text-lg font-bold text-white">Live Incident Telemetry</h2>
-                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
+                      <h2 className="text-lg font-bold text-[var(--gw-ink)]">Live Incident Telemetry</h2>
+                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-[var(--gw-segment-active)] text-[var(--gw-accent)] border border-[var(--gw-line)]">
                         {filteredIncidents.length} Filtered / 211 Total
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <label className="gw-search flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-700 text-xs">
-                        <Search size={14} className="text-slate-400" />
+                      <label className="gw-search flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--gw-search)] border border-[var(--gw-line)] text-xs">
+                        <Search size={14} className="text-[var(--gw-muted)]" />
                         <input
                           placeholder="Search IP, alert ID, or attack..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="bg-transparent text-white outline-none font-mono"
+                          className="bg-transparent text-[var(--gw-ink)] outline-none font-mono"
                         />
                       </label>
 
@@ -928,8 +970,8 @@ export default function GlassWorkspace({
                             onClick={() => setSevFilter(sev)}
                             className={`px-2.5 py-1 rounded-lg uppercase ${
                               sevFilter === sev
-                                ? "bg-cyan-600 text-white font-bold"
-                                : "bg-slate-900/60 text-slate-400 hover:text-white border border-slate-700/50"
+                                ? "bg-[var(--gw-button)] text-[var(--gw-button-ink)] font-bold"
+                                : "bg-[var(--gw-segment)] text-[var(--gw-muted)] hover:text-[var(--gw-ink)] border border-[var(--gw-line)]"
                             }`}
                           >
                             {sev}
@@ -943,7 +985,7 @@ export default function GlassWorkspace({
                   <div className="overflow-x-auto">
                     <table className="w-full text-left font-mono text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-700/60 text-slate-400 text-[11px] uppercase">
+                        <tr className="border-b border-[var(--gw-line)] text-[var(--gw-muted)] text-[11px] uppercase">
                           <th className="py-2.5 px-3">Alert ID</th>
                           <th className="py-2.5 px-3">Timestamp</th>
                           <th className="py-2.5 px-3">Label</th>
@@ -956,30 +998,30 @@ export default function GlassWorkspace({
                           <th className="py-2.5 px-3 text-right">Action</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60 text-slate-200">
+                      <tbody className="divide-y divide-[var(--gw-line)] text-[var(--gw-ink)]">
                         {filteredIncidents.map((inc) => (
-                          <tr key={inc.id} className="hover:bg-white/5 transition">
-                            <td className="py-3 px-3 text-cyan-400 font-bold">{inc.id}</td>
-                            <td className="py-3 px-3 text-slate-400">{inc.timestamp.slice(11)}</td>
-                            <td className="py-3 px-3 font-semibold text-white">{inc.label}</td>
+                          <tr key={inc.id} className="hover:bg-[var(--gw-hover)] transition">
+                            <td className="py-3 px-3 text-[var(--gw-accent)] font-bold">{inc.id}</td>
+                            <td className="py-3 px-3 text-[var(--gw-muted)]">{inc.timestamp.slice(11)}</td>
+                            <td className="py-3 px-3 font-semibold text-[var(--gw-ink)]">{inc.label}</td>
                             <td className="py-3 px-3">
                               <span
-                                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-[var(--gw-line)] ${
                                   inc.severity === "critical"
-                                    ? "bg-rose-950 text-rose-300 border border-rose-800"
-                                    : "bg-amber-950 text-amber-300 border border-amber-800"
+                                    ? "bg-[#3d231e] text-[#f2a296]"
+                                    : "bg-[var(--gw-account-surface)] text-[var(--gw-pending)]"
                                 }`}
                               >
                                 {inc.severity}
                               </span>
                             </td>
-                            <td className="py-3 px-3 text-slate-300">
+                            <td className="py-3 px-3 text-[var(--gw-muted)]">
                               {inc.src_ip} &rarr; {inc.dst_ip}
                             </td>
-                            <td className="py-3 px-3 text-emerald-400">{(inc.confidence * 100).toFixed(1)}%</td>
-                            <td className="py-3 px-3 text-rose-300">{(inc.anomaly_score * 100).toFixed(1)}%</td>
-                            <td className="py-3 px-3 text-cyan-300 font-bold">{inc.trust_score.toFixed(2)}</td>
-                            <td className="py-3 px-3 text-slate-400">{inc.status}</td>
+                            <td className="py-3 px-3 text-[var(--gw-accent)]">{(inc.confidence * 100).toFixed(1)}%</td>
+                            <td className="py-3 px-3 text-[var(--gw-pending)]">{(inc.anomaly_score * 100).toFixed(1)}%</td>
+                            <td className="py-3 px-3 text-[var(--gw-accent)] font-bold">{inc.trust_score.toFixed(2)}</td>
+                            <td className="py-3 px-3 text-[var(--gw-muted)]">{inc.status}</td>
                             <td className="py-3 px-3 text-right">
                               <button
                                 type="button"
@@ -987,7 +1029,7 @@ export default function GlassWorkspace({
                                   setSelectedIncident(inc);
                                   setView("deepdive");
                                 }}
-                                className="px-2.5 py-1 rounded bg-cyan-950 hover:bg-cyan-900 border border-cyan-700 text-cyan-300 font-mono text-[11px] transition"
+                                className="px-2.5 py-1 rounded bg-[var(--gw-segment-active)] hover:bg-[var(--gw-hover)] border border-[var(--gw-line)] text-[var(--gw-accent)] font-mono text-[11px] transition"
                               >
                                 Deep Dive &rarr;
                               </button>
@@ -1005,34 +1047,34 @@ export default function GlassWorkspace({
               {/* ========================================================= */}
               {view === "deepdive" && (
                 <section className="gw-panel p-6 rounded-2xl gw-reveal space-y-6">
-                  <div className="flex flex-wrap items-center justify-between border-b border-slate-700/60 pb-4">
+                  <div className="flex flex-wrap items-center justify-between border-b border-[var(--gw-line)] pb-4">
                     <div>
-                      <span className="text-xs font-mono text-cyan-400">INVESTIGATION TARGET: {selectedIncident.id}</span>
-                      <h2 className="text-xl font-bold text-white mt-1">{selectedIncident.label}</h2>
-                      <p className="text-xs text-slate-400 mt-1">{selectedIncident.description}</p>
+                      <span className="text-xs font-mono text-[var(--gw-accent)]">INVESTIGATION TARGET: {selectedIncident.id}</span>
+                      <h2 className="text-xl font-bold text-[var(--gw-ink)] mt-1">{selectedIncident.label}</h2>
+                      <p className="text-xs text-[var(--gw-muted)] mt-1">{selectedIncident.description}</p>
                     </div>
 
                     <div className="flex items-center gap-3 font-mono text-xs">
-                      <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-700">
-                        <span className="text-slate-400 block text-[10px]">EXPLANATION TRUST</span>
-                        <strong className="text-emerald-400 text-base">{selectedIncident.trust_score.toFixed(2)} / 1.00</strong>
+                      <div className="p-2 rounded-xl bg-[var(--gw-surface)] border border-[var(--gw-line)]">
+                        <span className="text-[var(--gw-muted)] block text-[10px]">EXPLANATION TRUST</span>
+                        <strong className="text-[var(--gw-accent)] text-base">{selectedIncident.trust_score.toFixed(2)} / 1.00</strong>
                       </div>
-                      <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-700">
-                        <span className="text-slate-400 block text-[10px]">VERIFIER GROUNDING</span>
-                        <strong className="text-cyan-400 text-base">100% (4/4 CITED)</strong>
+                      <div className="p-2 rounded-xl bg-[var(--gw-surface)] border border-[var(--gw-line)]">
+                        <span className="text-[var(--gw-muted)] block text-[10px]">VERIFIER GROUNDING</span>
+                        <strong className="text-[var(--gw-accent)] text-base">100% (4/4 CITED)</strong>
                       </div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* TreeSHAP Local Attribution Bars */}
-                    <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-700/50 space-y-3 font-mono text-xs">
+                    <div className="p-4 rounded-xl bg-[var(--gw-surface)] border border-[var(--gw-line)] space-y-3 font-mono text-xs">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                          <Cpu size={16} className="text-cyan-400" />
+                        <h3 className="text-sm font-bold text-[var(--gw-ink)] flex items-center gap-2">
+                          <Cpu size={16} className="text-[var(--gw-accent)]" />
                           <span>TreeSHAP Feature Attributions (&phi;)</span>
                         </h3>
-                        <span className="text-[10px] text-cyan-300">&sum;&phi; + base = f(x) verified</span>
+                        <span className="text-[10px] text-[var(--gw-accent)]">&sum;&phi; + base = f(x) verified</span>
                       </div>
 
                       <div className="space-y-2.5 pt-2">
@@ -1045,14 +1087,14 @@ export default function GlassWorkspace({
                         ].map((row) => (
                           <div key={row.feat} className="space-y-1">
                             <div className="flex justify-between text-[11px]">
-                              <span className="text-slate-300">{row.feat} ({row.val})</span>
-                              <span className={row.phi >= 0 ? "text-cyan-400" : "text-rose-400"}>
+                              <span className="text-[var(--gw-muted)]">{row.feat} ({row.val})</span>
+                              <span className={row.phi >= 0 ? "text-[var(--gw-accent)] font-bold" : "text-[var(--gw-pending)] font-bold"}>
                                 {row.phi >= 0 ? "+" : ""}{row.phi.toFixed(2)}
                               </span>
                             </div>
-                            <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden relative">
+                            <div className="w-full h-2 rounded-full bg-[var(--gw-line)] overflow-hidden relative">
                               <div
-                                className={`h-full rounded-full ${row.phi >= 0 ? "bg-cyan-500" : "bg-rose-500"}`}
+                                className={`h-full rounded-full ${row.phi >= 0 ? "bg-[var(--gw-accent)]" : "bg-[var(--gw-pending)]"}`}
                                 style={{ width: `${Math.abs(row.phi) * 100}%` }}
                               />
                             </div>
@@ -1062,43 +1104,43 @@ export default function GlassWorkspace({
                     </div>
 
                     {/* Contrastive Counterfactual Explanation (C10) */}
-                    <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-700/50 space-y-3 font-mono text-xs">
+                    <div className="p-4 rounded-xl bg-[var(--gw-surface)] border border-[var(--gw-line)] space-y-3 font-mono text-xs">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                          <Sparkles size={16} className="text-amber-400" />
+                        <h3 className="text-sm font-bold text-[var(--gw-ink)] flex items-center gap-2">
+                          <Sparkles size={16} className="text-[var(--gw-pending)]" />
                           <span>Contrastive Counterfactual (C10)</span>
                         </h3>
-                        <span className="text-[10px] text-amber-300">Min Perturbation &rarr; Normal</span>
+                        <span className="text-[10px] text-[var(--gw-pending)]">Min Perturbation &rarr; Normal</span>
                       </div>
 
-                      <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                        Minimum feature adjustments required to flip the prediction from <span className="text-rose-400 font-bold">ssh_bruteforce</span> to <span className="text-emerald-400 font-bold">normal</span>:
+                      <p className="text-xs text-[var(--gw-muted)] leading-relaxed font-sans">
+                        Minimum feature adjustments required to flip prediction from <span className="text-[var(--gw-pending)] font-bold">ssh_bruteforce</span> to <span className="text-[var(--gw-accent)] font-bold">normal</span>:
                       </p>
 
-                      <div className="p-3 rounded-lg bg-black/40 border border-slate-700/60 space-y-1.5 text-xs">
+                      <div className="p-3 rounded-lg bg-[var(--gw-panel)] border border-[var(--gw-line)] space-y-1.5 text-xs">
                         <div className="flex justify-between">
-                          <span className="text-slate-400">failed_logins:</span>
-                          <span className="text-white font-bold">220 &rarr; &le; 3 attempts</span>
+                          <span className="text-[var(--gw-muted)]">failed_logins:</span>
+                          <span className="text-[var(--gw-ink)] font-bold">220 &rarr; &le; 3 attempts</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">conn_rate:</span>
-                          <span className="text-white font-bold">45.0 &rarr; &le; 8.5 conn/s</span>
+                          <span className="text-[var(--gw-muted)]">conn_rate:</span>
+                          <span className="text-[var(--gw-ink)] font-bold">45.0 &rarr; &le; 8.5 conn/s</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">L1 Perturbation Distance:</span>
-                          <span className="text-emerald-400 font-bold">0.312 (Optimal Feasible)</span>
+                          <span className="text-[var(--gw-muted)]">L1 Perturbation Distance:</span>
+                          <span className="text-[var(--gw-accent)] font-bold">0.312 (Optimal Feasible)</span>
                         </div>
                       </div>
 
                       {/* Claim-Evidence Ledger */}
-                      <div className="pt-2 border-t border-slate-700/50">
-                        <h4 className="text-xs font-bold text-slate-300 mb-2">Critic-Audited Claim-Evidence Ledger (C1):</h4>
+                      <div className="pt-2 border-t border-[var(--gw-line)]">
+                        <h4 className="text-xs font-bold text-[var(--gw-muted)] mb-2">Critic-Audited Claim-Evidence Ledger (C1):</h4>
                         <div className="space-y-1.5 text-[11px]">
-                          <div className="p-2 rounded bg-emerald-950/30 border border-emerald-800/40 text-emerald-300 flex items-center justify-between">
+                          <div className="p-2 rounded bg-[var(--gw-positive-surface)] border border-[var(--gw-line)] text-[var(--gw-accent)] flex items-center justify-between">
                             <span>&quot;Failed logins count reached 220 attempts&quot;</span>
                             <span className="font-bold">&check; /features/failed_logins</span>
                           </div>
-                          <div className="p-2 rounded bg-emerald-950/30 border border-emerald-800/40 text-emerald-300 flex items-center justify-between">
+                          <div className="p-2 rounded bg-[var(--gw-positive-surface)] border border-[var(--gw-line)] text-[var(--gw-accent)] flex items-center justify-between">
                             <span>&quot;Target host is 10.0.1.15&quot;</span>
                             <span className="font-bold">&check; /context/dst_ip</span>
                           </div>
@@ -1114,13 +1156,13 @@ export default function GlassWorkspace({
               {/* ========================================================= */}
               {view === "whatif" && (
                 <section className="gw-panel p-6 rounded-2xl gw-reveal space-y-6">
-                  <div className="flex flex-wrap items-center justify-between border-b border-slate-700/60 pb-4">
+                  <div className="flex flex-wrap items-center justify-between border-b border-[var(--gw-line)] pb-4">
                     <div>
-                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <Sliders size={20} className="text-cyan-400" />
+                      <h2 className="text-xl font-bold text-[var(--gw-ink)] flex items-center gap-2">
+                        <Sliders size={20} className="text-[var(--gw-accent)]" />
                         <span>Interactive Feature Perturbation Sandbox</span>
                       </h2>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-[var(--gw-muted)] mt-1">
                         Perturb network flow attributes to observe real-time model inferences and conformal abstention thresholds.
                       </p>
                     </div>
@@ -1139,7 +1181,7 @@ export default function GlassWorkspace({
                             beacon_regularity: 0.1,
                           })
                         }
-                        className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700"
+                        className="px-2.5 py-1 rounded bg-[var(--gw-segment)] hover:bg-[var(--gw-hover)] text-[var(--gw-muted)] border border-[var(--gw-line)]"
                       >
                         Normal
                       </button>
@@ -1155,7 +1197,7 @@ export default function GlassWorkspace({
                             beacon_regularity: 0.2,
                           })
                         }
-                        className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-rose-300 border border-slate-700"
+                        className="px-2.5 py-1 rounded bg-[var(--gw-segment)] hover:bg-[var(--gw-hover)] text-[var(--gw-pending)] border border-[var(--gw-line)]"
                       >
                         SSH Brute Force
                       </button>
@@ -1171,7 +1213,7 @@ export default function GlassWorkspace({
                             beacon_regularity: 0.3,
                           })
                         }
-                        className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700"
+                        className="px-2.5 py-1 rounded bg-[var(--gw-segment)] hover:bg-[var(--gw-hover)] text-[var(--gw-pending)] border border-[var(--gw-line)]"
                       >
                         Port Scan
                       </button>
@@ -1187,7 +1229,7 @@ export default function GlassWorkspace({
                             beacon_regularity: 0.25,
                           })
                         }
-                        className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-700"
+                        className="px-2.5 py-1 rounded bg-[var(--gw-segment)] hover:bg-[var(--gw-hover)] text-[var(--gw-accent)] border border-[var(--gw-line)]"
                       >
                         Exfiltration
                       </button>
@@ -1203,10 +1245,10 @@ export default function GlassWorkspace({
                         { key: "distinct_dst_ports", label: "Distinct Destination Ports", min: 1, max: 300, step: 1, unit: "ports" },
                         { key: "bytes_out_mb", label: "Egress Data Volume", min: 0, max: 500, step: 0.5, unit: "MB" },
                       ].map((feat) => (
-                        <div key={feat.key} className="space-y-1.5 p-3 rounded-xl bg-slate-900/40 border border-slate-700/50">
+                        <div key={feat.key} className="space-y-1.5 p-3 rounded-xl bg-[var(--gw-surface)] border border-[var(--gw-line)]">
                           <div className="flex justify-between">
-                            <span className="text-slate-300">{feat.label}</span>
-                            <span className="text-cyan-400 font-bold">
+                            <span className="text-[var(--gw-muted)]">{feat.label}</span>
+                            <span className="text-[var(--gw-accent)] font-bold">
                               {whatIfFeatures[feat.key]} {feat.unit}
                             </span>
                           </div>
@@ -1222,25 +1264,25 @@ export default function GlassWorkspace({
                                 [feat.key]: parseFloat(e.target.value),
                               })
                             }
-                            className="w-full accent-cyan-400 cursor-pointer"
+                            className="w-full accent-[var(--gw-accent)] cursor-pointer"
                           />
                         </div>
                       ))}
                     </div>
 
                     {/* Real-Time Prediction Output */}
-                    <div className="p-5 rounded-xl bg-slate-900/40 border border-slate-700/50 space-y-4 font-mono text-xs flex flex-col justify-between">
+                    <div className="p-5 rounded-xl bg-[var(--gw-surface)] border border-[var(--gw-line)] space-y-4 font-mono text-xs flex flex-col justify-between">
                       <div>
-                        <span className="text-xs uppercase font-mono tracking-wider text-slate-400 block mb-1">
+                        <span className="text-xs uppercase font-mono tracking-wider text-[var(--gw-muted)] block mb-1">
                           Simulated Prediction Outcome
                         </span>
                         <div className="flex items-center gap-2">
-                          <strong className="text-2xl font-bold text-white uppercase">{whatIfCalc.label}</strong>
+                          <strong className="text-2xl font-bold text-[var(--gw-ink)] uppercase">{whatIfCalc.label}</strong>
                           <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold border border-[var(--gw-line)] ${
                               whatIfCalc.label === "normal"
-                                ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
-                                : "bg-rose-950 text-rose-300 border border-rose-800"
+                                ? "bg-[var(--gw-positive-surface)] text-[var(--gw-accent)]"
+                                : "bg-[var(--gw-account-surface)] text-[var(--gw-pending)]"
                             }`}
                           >
                             {(whatIfCalc.score * 100).toFixed(1)}% score
@@ -1248,20 +1290,20 @@ export default function GlassWorkspace({
                         </div>
                       </div>
 
-                      <div className="p-3.5 rounded-xl bg-black/40 border border-slate-700 space-y-2">
+                      <div className="p-3.5 rounded-xl bg-[var(--gw-panel)] border border-[var(--gw-line)] space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-slate-400">Conformal Risk Status:</span>
-                          <span className={whatIfCalc.isAbstained ? "text-amber-400 font-bold" : "text-emerald-400 font-bold"}>
+                          <span className="text-[var(--gw-muted)]">Conformal Risk Status:</span>
+                          <span className={whatIfCalc.isAbstained ? "text-[var(--gw-pending)] font-bold" : "text-[var(--gw-accent)] font-bold"}>
                             {whatIfCalc.isAbstained ? "ABSTAIN (Fail-Closed Escalation)" : "CERTIFIED (Risk <= 0.05)"}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">Calibrated Cutoff (&lambda;):</span>
-                          <span className="text-slate-200">0.4900</span>
+                          <span className="text-[var(--gw-muted)]">Calibrated Cutoff (&lambda;):</span>
+                          <span className="text-[var(--gw-ink)]">0.4900</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">Policy Action:</span>
-                          <span className="text-cyan-400 font-bold">
+                          <span className="text-[var(--gw-muted)]">Policy Action:</span>
+                          <span className="text-[var(--gw-accent)] font-bold">
                             {whatIfCalc.label === "normal" ? "allow_traffic" : "propose_defensive_mitigation"}
                           </span>
                         </div>
@@ -1269,8 +1311,8 @@ export default function GlassWorkspace({
 
                       <button
                         type="button"
-                        onClick={() => setNotice("Sandbox state pushed to Live Triage queue")}
-                        className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition shadow-sm"
+                        onClick={() => setNotice("Sandbox scenario pushed to Live Triage queue")}
+                        className="gw-button w-full justify-center py-2.5 font-bold"
                       >
                         Push Scenario to Telemetry Engine &rarr;
                       </button>
@@ -1284,54 +1326,54 @@ export default function GlassWorkspace({
               {/* ========================================================= */}
               {view === "approvals" && (
                 <section className="gw-panel p-6 rounded-2xl gw-reveal space-y-6">
-                  <div className="flex items-center justify-between border-b border-slate-700/60 pb-4">
+                  <div className="flex items-center justify-between border-b border-[var(--gw-line)] pb-4">
                     <div>
-                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <HeartPulse size={20} className="text-rose-400" />
+                      <h2 className="text-xl font-bold text-[var(--gw-ink)] flex items-center gap-2">
+                        <HeartPulse size={20} className="text-[var(--gw-pending)]" />
                         <span>Medical IoMT Clinical Approval Gate (C16)</span>
                       </h2>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-[var(--gw-muted)] mt-1">
                         Hard safety invariants: Separation of duties requires dual authentication for critical life-support medical assets.
                       </p>
                     </div>
 
-                    <span className="px-3 py-1 rounded-full bg-rose-950/80 border border-rose-800 text-rose-300 font-mono text-xs font-bold">
+                    <span className="px-3 py-1 rounded-full bg-[var(--gw-segment-active)] border border-[var(--gw-line)] text-[var(--gw-pending)] font-mono text-xs font-bold">
                       Zero Auto-Disrupt Active
                     </span>
                   </div>
 
                   <form onSubmit={authorizeIoMTAction} className="max-w-xl mx-auto space-y-4 font-mono text-xs">
-                    <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-700/60 space-y-2">
-                      <div className="text-slate-400">Target Asset: <strong className="text-white">Alaris Infusion Pump 4829 (10.0.4.15)</strong></div>
-                      <div className="text-slate-400">Proposed Action: <strong className="text-amber-400">isolate_host</strong></div>
-                      <div className="text-slate-400">Asset Classification: <strong className="text-rose-400">CRITICAL_MEDICAL_IOMT</strong></div>
+                    <div className="p-4 rounded-xl bg-[var(--gw-surface)] border border-[var(--gw-line)] space-y-2">
+                      <div className="text-[var(--gw-muted)]">Target Asset: <strong className="text-[var(--gw-ink)]">Alaris Infusion Pump 4829 (10.0.4.15)</strong></div>
+                      <div className="text-[var(--gw-muted)]">Proposed Action: <strong className="text-[var(--gw-pending)]">isolate_host</strong></div>
+                      <div className="text-[var(--gw-muted)]">Asset Classification: <strong className="text-[var(--gw-pending)]">CRITICAL_MEDICAL_IOMT</strong></div>
                     </div>
 
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-slate-300 mb-1">Primary Security Approver (soc_lead):</label>
+                        <label className="block text-[var(--gw-muted)] mb-1">Primary Security Approver (soc_lead):</label>
                         <div className="grid grid-cols-2 gap-2">
                           <input
                             type="text"
                             value={approvalSecUser}
                             onChange={(e) => setApprovalSecUser(e.target.value)}
-                            className="px-3 py-2 rounded-lg bg-black/40 border border-slate-700 text-white"
+                            className="px-3 py-2 rounded-lg bg-[var(--gw-panel)] border border-[var(--gw-line)] text-[var(--gw-ink)]"
                           />
                           <input
                             type="password"
                             value={approvalSecToken}
                             onChange={(e) => setApprovalSecToken(e.target.value)}
-                            className="px-3 py-2 rounded-lg bg-black/40 border border-slate-700 text-white"
+                            className="px-3 py-2 rounded-lg bg-[var(--gw-panel)] border border-[var(--gw-line)] text-[var(--gw-ink)]"
                           />
                         </div>
                       </div>
 
-                      <div className="p-3.5 rounded-xl bg-rose-950/20 border border-rose-800/40 space-y-2">
-                        <div className="text-rose-400 font-bold flex items-center gap-1.5">
+                      <div className="p-3.5 rounded-xl bg-[var(--gw-account-surface)] border border-[var(--gw-line)] space-y-2">
+                        <div className="text-[var(--gw-pending)] font-bold flex items-center gap-1.5">
                           <AlertTriangle size={15} />
                           <span>Secondary Clinical Approver Required (C16)</span>
                         </div>
-                        <div className="text-[11px] text-slate-400">
+                        <div className="text-[11px] text-[var(--gw-muted)]">
                           Clinical Director or Biomedical Engineering credentials required:
                         </div>
                         <div className="grid grid-cols-2 gap-2">
@@ -1340,27 +1382,27 @@ export default function GlassWorkspace({
                             value={approvalClinUser}
                             onChange={(e) => setApprovalClinUser(e.target.value)}
                             placeholder="Clinical Approver ID"
-                            className="px-3 py-2 rounded-lg bg-black/40 border border-slate-700 text-white"
+                            className="px-3 py-2 rounded-lg bg-[var(--gw-panel)] border border-[var(--gw-line)] text-[var(--gw-ink)]"
                           />
                           <input
                             type="password"
                             value={approvalClinToken}
                             onChange={(e) => setApprovalClinToken(e.target.value)}
                             placeholder="Clinical Secret Token"
-                            className="px-3 py-2 rounded-lg bg-black/40 border border-slate-700 text-white"
+                            className="px-3 py-2 rounded-lg bg-[var(--gw-panel)] border border-[var(--gw-line)] text-[var(--gw-ink)]"
                           />
                         </div>
                       </div>
 
                       <button
                         type="submit"
-                        className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition shadow-sm mt-3"
+                        className="gw-button w-full justify-center py-3 font-bold mt-3"
                       >
                         Authorize Defensive Action (DRY-RUN ENFORCED) &rarr;
                       </button>
 
                       {approvalSuccess && (
-                        <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-800 text-emerald-400 text-center font-bold">
+                        <div className="p-3 rounded-xl bg-[var(--gw-positive-surface)] border border-[var(--gw-line)] text-[var(--gw-accent)] text-center font-bold">
                           &check; Action approved with dual signatures! Dry-run simulated successfully without patient impact.
                         </div>
                       )}
@@ -1374,13 +1416,13 @@ export default function GlassWorkspace({
               {/* ========================================================= */}
               {view === "agents" && (
                 <section className="gw-panel p-6 rounded-2xl gw-reveal space-y-5">
-                  <div className="flex flex-wrap items-center justify-between border-b border-slate-700/60 pb-4">
+                  <div className="flex flex-wrap items-center justify-between border-b border-[var(--gw-line)] pb-4">
                     <div>
-                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <Bot size={20} className="text-cyan-400" />
+                      <h2 className="text-xl font-bold text-[var(--gw-ink)] flex items-center gap-2">
+                        <Bot size={20} className="text-[var(--gw-accent)]" />
                         <span>Interactive 9-Agent Pipeline Trace Replay</span>
                       </h2>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-[var(--gw-muted)] mt-1">
                         Timeline execution graph showing sequential telemetry from Ingestion to RFC 8785 Cryptographic Audit.
                       </p>
                     </div>
@@ -1404,7 +1446,7 @@ export default function GlassWorkspace({
                             }, 500);
                           }
                         }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold"
+                        className="gw-button"
                       >
                         {isTracePlaying ? <Pause size={14} /> : <Play size={14} />}
                         <span>{isTracePlaying ? "Pause" : "Replay Pipeline"}</span>
@@ -1417,23 +1459,23 @@ export default function GlassWorkspace({
                     {traceSpans.slice(0, activeTraceStep).map((span, idx) => (
                       <div
                         key={span.id}
-                        className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-700/60 flex items-center justify-between hover:bg-slate-900/80 transition"
+                        className="p-3.5 rounded-xl bg-[var(--gw-surface)] border border-[var(--gw-line)] flex items-center justify-between hover:bg-[var(--gw-hover)] transition"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 rounded-full bg-cyan-950 border border-cyan-800 text-cyan-400 font-bold flex items-center justify-center text-[10px]">
+                          <span className="w-6 h-6 rounded-full bg-[var(--gw-brand)] text-[var(--gw-brand-ink)] font-bold flex items-center justify-center text-[10px]">
                             0{idx + 1}
                           </span>
                           <div>
-                            <strong className="text-white block">{span.name}</strong>
-                            <span className="text-[11px] text-slate-400">{span.detail}</span>
+                            <strong className="text-[var(--gw-ink)] block">{span.name}</strong>
+                            <span className="text-[11px] text-[var(--gw-muted)]">{span.detail}</span>
                           </div>
                         </div>
 
                         <div className="text-right">
-                          <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-bold text-[10px] border border-emerald-800">
+                          <span className="px-2 py-0.5 rounded bg-[var(--gw-positive-surface)] text-[var(--gw-accent)] font-bold text-[10px] border border-[var(--gw-line)]">
                             {span.status}
                           </span>
-                          <span className="text-[11px] text-slate-400 block mt-1">{span.duration}</span>
+                          <span className="text-[11px] text-[var(--gw-muted)] block mt-1">{span.duration}</span>
                         </div>
                       </div>
                     ))}
@@ -1446,13 +1488,13 @@ export default function GlassWorkspace({
               {/* ========================================================= */}
               {view === "audit" && (
                 <section className="gw-panel p-6 rounded-2xl gw-reveal space-y-6">
-                  <div className="flex flex-wrap items-center justify-between border-b border-slate-700/60 pb-4">
+                  <div className="flex flex-wrap items-center justify-between border-b border-[var(--gw-line)] pb-4">
                     <div>
-                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <FileCheck size={20} className="text-cyan-400" />
+                      <h2 className="text-xl font-bold text-[var(--gw-ink)] flex items-center gap-2">
+                        <FileCheck size={20} className="text-[var(--gw-accent)]" />
                         <span>Tamper-Evident RFC 8785 Audit Ledger</span>
                       </h2>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-[var(--gw-muted)] mt-1">
                         Cryptographic SHA-256 hash chaining under Canonical JSON RFC 8785 guarantees immutable forensics.
                       </p>
                     </div>
@@ -1460,19 +1502,19 @@ export default function GlassWorkspace({
                     <button
                       type="button"
                       onClick={verifyAuditChain}
-                      className="px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold transition shadow-sm"
+                      className="gw-button"
                     >
                       Verify Hash Chain Integrity
                     </button>
                   </div>
 
                   {auditVerified && (
-                    <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-700 text-xs font-mono space-y-1">
-                      <div className="flex items-center gap-2 text-emerald-300 font-bold text-sm">
+                    <div className="p-4 rounded-xl bg-[var(--gw-positive-surface)] border border-[var(--gw-line)] text-xs font-mono space-y-1">
+                      <div className="flex items-center gap-2 text-[var(--gw-accent)] font-bold text-sm">
                         <CheckCircle2 size={16} />
                         <span>Chain Status: Intact &amp; Cryptographically Certified</span>
                       </div>
-                      <div className="text-slate-300">
+                      <div className="text-[var(--gw-muted)]">
                         Verified 211 consecutive block entries &middot; 0 hash mismatches &middot; RFC 8785 Compliant
                       </div>
                     </div>
@@ -1484,15 +1526,15 @@ export default function GlassWorkspace({
                       { index: 210, time: "2026-11-18 14:18:21", agent: "agent_06_response", action: "propose_block_ip", hash: "e10a4b7f92c10a48d88e...", prev: "7fa2018c..." },
                       { index: 209, time: "2026-11-18 14:18:20", agent: "agent_09_verifier", action: "certify_grounding", hash: "7fa2018c44b910e53a29...", prev: "11c9408b..." },
                     ].map((blk) => (
-                      <div key={blk.index} className="p-3 rounded-xl bg-slate-900/40 border border-slate-700/50 flex flex-wrap items-center justify-between gap-2">
+                      <div key={blk.index} className="p-3 rounded-xl bg-[var(--gw-surface)] border border-[var(--gw-line)] flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-3">
-                          <span className="text-cyan-400 font-bold">#{blk.index}</span>
-                          <span className="text-slate-400">{blk.time}</span>
-                          <span className="text-white font-semibold">{blk.agent}</span>
-                          <span className="text-slate-300 text-[11px] bg-slate-800 px-2 py-0.5 rounded">{blk.action}</span>
+                          <span className="text-[var(--gw-accent)] font-bold">#{blk.index}</span>
+                          <span className="text-[var(--gw-muted)]">{blk.time}</span>
+                          <span className="text-[var(--gw-ink)] font-semibold">{blk.agent}</span>
+                          <span className="text-[var(--gw-muted)] text-[11px] bg-[var(--gw-segment)] px-2 py-0.5 rounded">{blk.action}</span>
                         </div>
-                        <div className="text-slate-400 text-[11px]">
-                          Hash: <span className="text-emerald-400">{blk.hash}</span>
+                        <div className="text-[var(--gw-muted)] text-[11px]">
+                          Hash: <span className="text-[var(--gw-accent)] font-bold">{blk.hash}</span>
                         </div>
                       </div>
                     ))}
@@ -1509,33 +1551,33 @@ export default function GlassWorkspace({
         {/* Notifications Drawer */}
         {alerts && (
           <aside className="gw-notifications gw-glass" aria-label="Notifications">
-            <div className="flex items-center justify-between border-b border-slate-700/60 pb-2 mb-3">
-              <h2 className="text-sm font-bold text-white">Live Threat Telemetry Feed</h2>
-              <button type="button" onClick={() => setAlerts(false)} className="text-slate-400 hover:text-white">
+            <div className="flex items-center justify-between border-b border-[var(--gw-line)] pb-2 mb-3">
+              <h2 className="text-sm font-bold text-[var(--gw-ink)]">Live Threat Telemetry Feed</h2>
+              <button type="button" onClick={() => setAlerts(false)} className="text-[var(--gw-muted)] hover:text-[var(--gw-ink)]">
                 <X size={16} />
               </button>
             </div>
             <div className="space-y-2 text-xs font-mono">
-              <div className="p-2 rounded bg-rose-950/40 border border-rose-800/40 text-rose-300">
+              <div className="p-2 rounded bg-[var(--gw-surface)] border border-[var(--gw-line)] text-[var(--gw-pending)]">
                 &bull; SSH Brute Force logged from 185.220.101.47 (14:18)
               </div>
-              <div className="p-2 rounded bg-amber-950/40 border border-amber-800/40 text-amber-300">
+              <div className="p-2 rounded bg-[var(--gw-surface)] border border-[var(--gw-line)] text-[var(--gw-accent)]">
                 &bull; SYN Port scan detected on 192.168.1.105 (14:12)
               </div>
-              <div className="p-2 rounded bg-emerald-950/40 border border-emerald-800/40 text-emerald-300">
+              <div className="p-2 rounded bg-[var(--gw-surface)] border border-[var(--gw-line)] text-[var(--gw-accent)]">
                 &bull; Conformal calibration verified with risk &le; 0.05
               </div>
             </div>
           </aside>
         )}
 
-        {/* Real-Time Glass Controls Drawer */}
+        {/* Real-Time Warm Glass Controls Drawer */}
         {settingsOpen && (
           <aside className="gw-material gw-glass" id={`${id}-material`} aria-label="Glass appearance">
             <div className="gw-material-header">
               <div className="flex items-center gap-2">
-                <Sliders size={16} className="text-cyan-400" />
-                <h2>Adjust Glass Controls</h2>
+                <Sliders size={16} className="text-[var(--gw-accent)]" />
+                <h2 className="text-[var(--gw-ink)] font-bold text-sm">Adjust Glass Controls</h2>
               </div>
               <button
                 type="button"
@@ -1549,35 +1591,35 @@ export default function GlassWorkspace({
 
             {/* Quick Presets */}
             <div className="gw-presets mb-3">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block mb-1">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-[var(--gw-muted)] block mb-1">
                 Glass Presets
               </span>
               <div className="grid grid-cols-2 gap-1.5 font-mono text-xs">
                 <button
                   type="button"
                   onClick={() => applyGlassPreset("frosted")}
-                  className="px-2 py-1.5 rounded bg-slate-900/60 hover:bg-slate-800 text-cyan-300 border border-slate-700/60 text-left"
+                  className="px-2 py-1.5 rounded bg-[var(--gw-surface)] hover:bg-[var(--gw-hover)] text-[var(--gw-accent)] border border-[var(--gw-line)] text-left"
                 >
-                  &#10052; Frosted Cyber
+                  &#10052; Frosted Warm
                 </button>
                 <button
                   type="button"
                   onClick={() => applyGlassPreset("clear")}
-                  className="px-2 py-1.5 rounded bg-slate-900/60 hover:bg-slate-800 text-slate-300 border border-slate-700/60 text-left"
+                  className="px-2 py-1.5 rounded bg-[var(--gw-surface)] hover:bg-[var(--gw-hover)] text-[var(--gw-muted)] border border-[var(--gw-line)] text-left"
                 >
                   &#9670; Minimal Glass
                 </button>
                 <button
                   type="button"
                   onClick={() => applyGlassPreset("midnight")}
-                  className="px-2 py-1.5 rounded bg-slate-900/60 hover:bg-slate-800 text-slate-300 border border-slate-700/60 text-left"
+                  className="px-2 py-1.5 rounded bg-[var(--gw-surface)] hover:bg-[var(--gw-hover)] text-[var(--gw-muted)] border border-[var(--gw-line)] text-left"
                 >
                   &#9672; Midnight Solid
                 </button>
                 <button
                   type="button"
                   onClick={() => applyGlassPreset("neon")}
-                  className="px-2 py-1.5 rounded bg-slate-900/60 hover:bg-slate-800 text-emerald-300 border border-slate-700/60 text-left"
+                  className="px-2 py-1.5 rounded bg-[var(--gw-surface)] hover:bg-[var(--gw-hover)] text-[var(--gw-accent)] border border-[var(--gw-line)] text-left"
                 >
                   &#9889; High Contrast
                 </button>
@@ -1587,9 +1629,9 @@ export default function GlassWorkspace({
             {/* Optical Sliders */}
             <div className="gw-sliders space-y-3 font-mono text-xs">
               <label>
-                <span className="flex justify-between text-slate-300 mb-1">
+                <span className="flex justify-between text-[var(--gw-muted)] mb-1">
                   <span>Backdrop Blur</span>
-                  <span className="text-cyan-400">{material.blur}px</span>
+                  <span className="text-[var(--gw-accent)]">{material.blur}px</span>
                 </span>
                 <input
                   type="range"
@@ -1597,14 +1639,14 @@ export default function GlassWorkspace({
                   max="40"
                   value={material.blur}
                   onChange={(e) => updateGlass({ blur: Number(e.target.value) })}
-                  className="w-full accent-cyan-400"
+                  className="w-full accent-[var(--gw-accent)]"
                 />
               </label>
 
               <label>
-                <span className="flex justify-between text-slate-300 mb-1">
+                <span className="flex justify-between text-[var(--gw-muted)] mb-1">
                   <span>Glass Opacity</span>
-                  <span className="text-cyan-400">{Math.round(material.opacity * 100)}%</span>
+                  <span className="text-[var(--gw-accent)]">{Math.round(material.opacity * 100)}%</span>
                 </span>
                 <input
                   type="range"
@@ -1612,14 +1654,14 @@ export default function GlassWorkspace({
                   max="95"
                   value={Math.round(material.opacity * 100)}
                   onChange={(e) => updateGlass({ opacity: Number(e.target.value) / 100 })}
-                  className="w-full accent-cyan-400"
+                  className="w-full accent-[var(--gw-accent)]"
                 />
               </label>
 
               <label>
-                <span className="flex justify-between text-slate-300 mb-1">
+                <span className="flex justify-between text-[var(--gw-muted)] mb-1">
                   <span>Color Saturation</span>
-                  <span className="text-cyan-400">{Math.round(material.saturation * 100)}%</span>
+                  <span className="text-[var(--gw-accent)]">{Math.round(material.saturation * 100)}%</span>
                 </span>
                 <input
                   type="range"
@@ -1627,14 +1669,14 @@ export default function GlassWorkspace({
                   max="250"
                   value={Math.round(material.saturation * 100)}
                   onChange={(e) => updateGlass({ saturation: Number(e.target.value) / 100 })}
-                  className="w-full accent-cyan-400"
+                  className="w-full accent-[var(--gw-accent)]"
                 />
               </label>
 
               <label>
-                <span className="flex justify-between text-slate-300 mb-1">
+                <span className="flex justify-between text-[var(--gw-muted)] mb-1">
                   <span>Edge Rim Light</span>
-                  <span className="text-cyan-400">{Math.round(material.edge * 100)}%</span>
+                  <span className="text-[var(--gw-accent)]">{Math.round(material.edge * 100)}%</span>
                 </span>
                 <input
                   type="range"
@@ -1642,34 +1684,34 @@ export default function GlassWorkspace({
                   max="100"
                   value={Math.round(material.edge * 100)}
                   onChange={(e) => updateGlass({ edge: Number(e.target.value) / 100 })}
-                  className="w-full accent-cyan-400"
+                  className="w-full accent-[var(--gw-accent)]"
                 />
               </label>
 
               <label>
-                <span className="flex justify-between text-slate-300 mb-1">
+                <span className="flex justify-between text-[var(--gw-muted)] mb-1">
                   <span>Tint Color</span>
-                  <span className="text-cyan-400">{material.tint}</span>
+                  <span className="text-[var(--gw-accent)]">{material.tint}</span>
                 </span>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
                     value={material.tint}
                     onChange={(e) => updateGlass({ tint: e.target.value })}
-                    className="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                    className="w-8 h-8 rounded border border-[var(--gw-line)] bg-transparent cursor-pointer"
                   />
                   <input
                     type="text"
                     value={material.tint}
                     onChange={(e) => updateGlass({ tint: e.target.value })}
-                    className="flex-1 px-2.5 py-1 rounded bg-black/40 border border-slate-700 text-white font-mono text-xs"
+                    className="flex-1 px-2.5 py-1 rounded bg-[var(--gw-surface)] border border-[var(--gw-line)] text-[var(--gw-ink)] font-mono text-xs"
                   />
                 </div>
               </label>
             </div>
 
             <button
-              className="gw-reset mt-4 w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-mono text-xs font-bold transition"
+              className="gw-reset mt-4 w-full py-2 rounded-xl bg-[var(--gw-surface)] hover:bg-[var(--gw-hover)] text-[var(--gw-muted)] border border-[var(--gw-line)] font-mono text-xs font-bold transition"
               type="button"
               onClick={() => updateGlass(normalize(glass))}
             >
@@ -1697,8 +1739,8 @@ const customStyles = `
   min-height: 100vh;
   overflow-x: hidden;
   padding: 24px 20px;
-  background: var(--gw-background, #070b12);
-  color: #f1f5f9;
+  background: var(--gw-background, #282a25);
+  color: var(--gw-ink, #f4f4ed);
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   letter-spacing: -0.01em;
   box-sizing: border-box;
@@ -1710,14 +1752,14 @@ const customStyles = `
   height: 100%;
   object-fit: cover;
   z-index: -2;
-  filter: brightness(0.65) contrast(1.1);
+  filter: brightness(0.72) contrast(1.05);
 }
 .gw-room-shade {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
-              radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
-              rgba(7, 11, 18, 0.72);
+  background: radial-gradient(circle at 15% 15%, rgba(234, 219, 199, 0.12) 0%, transparent 50%),
+              radial-gradient(circle at 85% 85%, rgba(145, 213, 176, 0.08) 0%, transparent 50%),
+              var(--gw-shade, rgba(18, 16, 14, 0.48));
   z-index: -1;
 }
 .gw-workspace {
@@ -1728,11 +1770,11 @@ const customStyles = `
   gap: 16px;
 }
 .gw-glass {
-  background: color-mix(in srgb, var(--gw-tint, #101827) calc(var(--gw-opacity, 0.35) * 100%), transparent);
-  backdrop-filter: blur(var(--gw-blur, 20px)) saturate(var(--gw-saturation, 1.25));
-  -webkit-backdrop-filter: blur(var(--gw-blur, 20px)) saturate(var(--gw-saturation, 1.25));
-  border: 1px solid rgba(255, 255, 255, calc(var(--gw-edge, 0.6) * 0.16));
-  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, calc(var(--gw-edge, 0.6) * 0.12));
+  background: color-mix(in srgb, var(--gw-tint, #eadbc7) calc(var(--gw-opacity, 0.3) * 100%), var(--gw-surface, #262322));
+  backdrop-filter: blur(var(--gw-blur, 22px)) saturate(var(--gw-saturation, 1.2));
+  -webkit-backdrop-filter: blur(var(--gw-blur, 22px)) saturate(var(--gw-saturation, 1.2));
+  border: 1px solid var(--gw-line, rgba(225, 237, 223, 0.15));
+  box-shadow: 0 16px 36px -12px var(--gw-shadow, rgba(23, 41, 27, 0.28)), inset 0 1px 0 rgba(255, 255, 255, calc(var(--gw-edge, 0.6) * 0.15));
 }
 .gw-topbar {
   padding: 12px 20px;
@@ -1753,8 +1795,8 @@ const customStyles = `
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: rgba(6, 182, 212, 0.15);
-  border: 1px solid rgba(6, 182, 212, 0.4);
+  background: var(--gw-brand, #e2eee0);
+  color: var(--gw-brand-ink, #183725);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1763,16 +1805,16 @@ const customStyles = `
   font-size: 16px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #fff;
+  color: var(--gw-ink, #f4f4ed);
 }
 .gw-brand-divider {
   width: 1px;
   height: 16px;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--gw-line, rgba(225, 237, 223, 0.15));
 }
 .gw-personal {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--gw-muted, #d0c9bf);
 }
 .gw-toolbar {
   display: flex;
@@ -1785,24 +1827,41 @@ const customStyles = `
   gap: 6px;
   padding: 6px 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #e2e8f0;
+  background: var(--gw-segment, rgba(233, 246, 231, 0.07));
+  border: 1px solid var(--gw-line, rgba(225, 237, 223, 0.15));
+  color: var(--gw-ink, #f4f4ed);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .gw-adjust:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--gw-hover, rgba(255, 255, 255, 0.16));
+}
+.gw-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: var(--gw-button, #d8ebd7);
+  color: var(--gw-button-ink, #193320);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: filter 0.15s ease;
+}
+.gw-button:hover {
+  filter: brightness(1.08);
 }
 .gw-icon-button {
   width: 34px;
   height: 34px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #cbd5e1;
+  background: var(--gw-segment, rgba(233, 246, 231, 0.07));
+  border: 1px solid var(--gw-line, rgba(225, 237, 223, 0.15));
+  color: var(--gw-muted, #d0c9bf);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1816,16 +1875,15 @@ const customStyles = `
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #06b6d4;
-  box-shadow: 0 0 8px #06b6d4;
+  background: var(--gw-accent, #91d5b0);
+  box-shadow: 0 0 8px var(--gw-accent, #91d5b0);
 }
 .gw-avatar {
   width: 34px;
   height: 34px;
   border-radius: 12px;
-  background: rgba(6, 182, 212, 0.2);
-  border: 1px solid rgba(6, 182, 212, 0.4);
-  color: #38bdf8;
+  background: var(--gw-avatar, #616e58);
+  color: var(--gw-ink, #f4f4ed);
   font-weight: 800;
   font-size: 13px;
   display: flex;
@@ -1859,7 +1917,7 @@ const customStyles = `
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: var(--gw-muted, #d0c9bf);
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
@@ -1867,14 +1925,14 @@ const customStyles = `
   position: relative;
 }
 .gw-rail button:hover, .gw-dock button:hover {
-  color: #f8fafc;
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--gw-ink, #f4f4ed);
+  background: var(--gw-hover, rgba(255, 255, 255, 0.16));
 }
 .gw-rail button.is-active, .gw-dock button.is-active {
-  color: #38bdf8;
-  background: rgba(6, 182, 212, 0.2);
-  border-color: rgba(6, 182, 212, 0.4);
-  box-shadow: 0 0 16px -2px rgba(6, 182, 212, 0.3);
+  color: var(--gw-accent, #91d5b0);
+  background: var(--gw-rail-active, rgba(215, 229, 212, 0.17));
+  border-color: var(--gw-line, rgba(225, 237, 223, 0.15));
+  box-shadow: 0 0 16px -2px rgba(145, 213, 176, 0.25);
 }
 .gw-nav-label {
   display: none;
@@ -1896,18 +1954,18 @@ const customStyles = `
 }
 .gw-greeting {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--gw-muted, #d0c9bf);
   margin-bottom: 4px;
 }
 .gw-view-heading h1 {
   font-size: 26px;
   font-weight: 800;
   letter-spacing: -0.025em;
-  color: #ffffff;
+  color: var(--gw-ink, #f4f4ed);
 }
 .gw-panel {
-  background: rgba(13, 19, 31, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--gw-panel, #2b2825) 75%, transparent);
+  border: 1px solid var(--gw-line, rgba(225, 237, 223, 0.15));
   border-radius: 20px;
 }
 .gw-panel-title {
@@ -1922,15 +1980,15 @@ const customStyles = `
   gap: 10px;
   padding: 10px 12px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--gw-account-surface, rgba(89, 110, 83, 0.33));
+  border: 1px solid var(--gw-line, rgba(225, 237, 223, 0.15));
   font-size: 12px;
 }
 .gw-account-icon {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: rgba(244, 63, 94, 0.15);
+  background: rgba(225, 195, 131, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1938,15 +1996,15 @@ const customStyles = `
 .gw-account strong {
   display: block;
   font-size: 12px;
-  color: #f1f5f9;
+  color: var(--gw-ink, #f4f4ed);
 }
 .gw-account span {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--gw-muted, #d0c9bf);
 }
 .gw-account button {
   margin-left: auto;
-  color: #38bdf8;
+  color: var(--gw-accent, #91d5b0);
   background: none;
   border: none;
   cursor: pointer;
@@ -1975,6 +2033,7 @@ const customStyles = `
   display: flex;
   align-items: center;
   gap: 10px;
+  background: var(--gw-dock, rgba(21, 38, 27, 0.8));
   box-shadow: 0 20px 40px -10px rgba(0,0,0,0.8);
 }
 .gw-material {
@@ -1985,6 +2044,7 @@ const customStyles = `
   border-radius: 24px;
   padding: 20px;
   z-index: 50;
+  background: var(--gw-popover, rgba(21, 38, 30, 0.94));
   box-shadow: 0 24px 48px -12px rgba(0,0,0,0.8);
 }
 .gw-material-header {
@@ -1992,11 +2052,6 @@ const customStyles = `
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
-}
-.gw-material-header h2 {
-  font-size: 14px;
-  font-weight: 700;
-  color: #f8fafc;
 }
 .gw-notifications {
   position: fixed;
@@ -2006,6 +2061,7 @@ const customStyles = `
   border-radius: 24px;
   padding: 20px;
   z-index: 50;
+  background: var(--gw-notification, rgba(21, 38, 30, 0.94));
 }
 .gw-toast {
   position: fixed;
@@ -2013,14 +2069,14 @@ const customStyles = `
   right: 24px;
   padding: 10px 18px;
   border-radius: 14px;
-  background: #0284c7;
-  color: #ffffff;
+  background: var(--gw-toast, #243e2e);
+  color: var(--gw-toast-ink, #fff);
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 12px;
   font-weight: 600;
   z-index: 100;
-  box-shadow: 0 12px 24px -4px rgba(2, 132, 199, 0.4);
+  box-shadow: 0 12px 24px -4px var(--gw-toast-shadow, rgba(0, 0, 0, 0.13));
 }
 `;

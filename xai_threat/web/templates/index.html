@@ -25,23 +25,23 @@
           },
           colors: {
             soc: {
-              base: '#070b12',
-              card: '#0d131f',
-              panel: '#121b2b',
-              border: '#1b263b',
-              borderHighlight: '#253552',
-              accent: '#06b6d4',
-              accentHover: '#0891b2',
-              emerald: '#10b981',
-              rose: '#f43f5e',
-              amber: '#f59e0b',
-              violet: '#8b5cf6',
+              base: '#282a25',
+              card: '#262322',
+              panel: '#2b2825',
+              border: 'rgba(225, 237, 223, 0.15)',
+              borderHighlight: 'rgba(225, 237, 223, 0.3)',
+              accent: '#91d5b0',
+              accentHover: '#7ac59c',
+              emerald: '#91d5b0',
+              rose: '#d97768',
+              amber: '#e1c383',
+              violet: '#ab8b68',
             }
           },
           boxShadow: {
-            'glow-cyan': '0 0 20px -3px rgba(6, 182, 212, 0.25)',
-            'glow-emerald': '0 0 20px -3px rgba(16, 185, 129, 0.25)',
-            'glow-rose': '0 0 20px -3px rgba(244, 63, 94, 0.25)',
+            'glow-cyan': '0 0 20px -3px rgba(145, 213, 176, 0.25)',
+            'glow-emerald': '0 0 20px -3px rgba(145, 213, 176, 0.25)',
+            'glow-rose': '0 0 20px -3px rgba(217, 119, 104, 0.25)',
           }
         }
       }
@@ -51,39 +51,51 @@
   <style>
     :root {
       color-scheme: dark;
-      accent-color: #06b6d4;
-      scrollbar-color: #253552 #070b12;
-      --gw-blur: 18px;
-      --gw-opacity: 0.85;
-      --gw-saturation: 1.25;
-      --gw-tint: #0d131f;
-      --gw-edge: 0.55;
+      accent-color: #91d5b0;
+      scrollbar-color: #596e53 #282a25;
+      --gw-ink: #f4f4ed;
+      --gw-muted: #d0c9bf;
+      --gw-accent: #91d5b0;
+      --gw-line: rgba(225, 237, 223, 0.15);
+      --gw-background: #282a25;
+      --gw-shade: rgba(18, 16, 14, 0.48);
+      --gw-surface: #262322;
+      --gw-panel: #2b2825;
+      --gw-brand: #e2eee0;
+      --gw-brand-ink: #183725;
+      --gw-avatar: #616e58;
+      --gw-pending: #e1c383;
+      --gw-blur: 22px;
+      --gw-opacity: 0.3;
+      --gw-saturation: 1.2;
+      --gw-tint: #eadbc7;
+      --gw-edge: 0.6;
     }
     body {
-      background-color: #070b12;
-      color: #e2e8f0;
+      background-color: #282a25;
+      color: #f4f4ed;
       background-image: 
-        radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.05) 0%, transparent 45%),
-        radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.05) 0%, transparent 45%),
-        radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.03) 0%, transparent 50%);
+        radial-gradient(circle at 15% 15%, rgba(234, 219, 199, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(145, 213, 176, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(18, 16, 14, 0.5) 0%, transparent 50%);
       background-attachment: fixed;
     }
     .glass-card {
-      background: color-mix(in srgb, var(--gw-tint) calc(var(--gw-opacity) * 100%), transparent);
+      background: color-mix(in srgb, var(--gw-tint) calc(var(--gw-opacity) * 100%), var(--gw-panel));
       backdrop-filter: blur(var(--gw-blur)) saturate(var(--gw-saturation));
       -webkit-backdrop-filter: blur(var(--gw-blur)) saturate(var(--gw-saturation));
-      border: 1px solid rgba(255, 255, 255, calc(var(--gw-edge) * 0.12));
+      border: 1px solid var(--gw-line);
       box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, calc(var(--gw-edge) * 0.1));
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
     .glass-card:hover {
-      border-color: rgba(6, 182, 212, calc(var(--gw-edge) * 0.45));
+      border-color: rgba(145, 213, 176, calc(var(--gw-edge) * 0.45));
     }
     .gw-dock {
-      background: color-mix(in srgb, var(--gw-tint) calc(var(--gw-opacity) * 95%), transparent);
+      background: color-mix(in srgb, var(--gw-tint) calc(var(--gw-opacity) * 90%), #15261b);
       backdrop-filter: blur(calc(var(--gw-blur) + 8px)) saturate(var(--gw-saturation));
       -webkit-backdrop-filter: blur(calc(var(--gw-blur) + 8px)) saturate(var(--gw-saturation));
-      border: 1px solid rgba(255, 255, 255, calc(var(--gw-edge) * 0.18));
+      border: 1px solid var(--gw-line);
       box-shadow: 0 20px 40px -15px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.15);
     }
     .custom-scroll::-webkit-scrollbar {
@@ -91,10 +103,10 @@
       height: 5px;
     }
     .custom-scroll::-webkit-scrollbar-track {
-      background: #070b12;
+      background: #282a25;
     }
     .custom-scroll::-webkit-scrollbar-thumb {
-      background: #253552;
+      background: #596e53;
       border-radius: 4px;
     }
     dialog::backdrop {
@@ -1690,18 +1702,18 @@
     // ADJUSTABLE GLASS SETTINGS
     // =========================================================================
     const glassSettings = {
-      blur: 18,
-      opacity: 0.85,
-      saturation: 1.25,
-      edge: 0.55,
-      tint: '#0d131f'
+      blur: 22,
+      opacity: 0.3,
+      saturation: 1.2,
+      edge: 0.6,
+      tint: '#eadbc7'
     };
 
     const glassPresets = {
-      frosted: { blur: 18, opacity: 0.85, saturation: 1.25, edge: 0.55, tint: '#0d131f' },
-      clear: { blur: 10, opacity: 0.45, saturation: 1.1, edge: 0.75, tint: '#0a101d' },
-      midnight: { blur: 25, opacity: 0.92, saturation: 1.3, edge: 0.4, tint: '#05070e' },
-      neon: { blur: 16, opacity: 0.75, saturation: 1.75, edge: 0.9, tint: '#061e2b' }
+      frosted: { blur: 22, opacity: 0.3, saturation: 1.2, edge: 0.6, tint: '#eadbc7' },
+      clear: { blur: 10, opacity: 0.15, saturation: 1.1, edge: 0.8, tint: '#f2ebd9' },
+      midnight: { blur: 32, opacity: 0.86, saturation: 1.0, edge: 0.35, tint: '#1e1f1c' },
+      neon: { blur: 18, opacity: 0.4, saturation: 1.7, edge: 0.85, tint: '#c8dfcf' }
     };
 
     function toggleGlassDrawer() {
