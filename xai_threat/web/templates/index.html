@@ -3,225 +3,353 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sentinel-XAI | Safety-Aware Multi-Agent Explainable AI Platform</title>
-  <!-- Tailwind CSS via CDN -->
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Sentinel-XAI: Advanced Safety-Aware Multi-Agent Explainable AI Platform for Autonomous Cyber Threat Detection">
+  <title>Sentinel-XAI | Multi-Agent Explainable AI Platform</title>
+
+  <!-- Tailwind CSS & Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['Fira Code', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+          },
           colors: {
-            brand: {
-              50: '#f0fdf4',
-              500: '#10b981',
-              900: '#064e3b',
-            },
             soc: {
-              bg: '#090d16',
-              surface: '#111827',
-              border: '#1f293d',
-              accent: '#38bdf8',
-              alert: '#f43f5e',
-              warning: '#f59e0b',
-              success: '#10b981',
+              base: '#070b12',
+              card: '#0d131f',
+              panel: '#121b2b',
+              border: '#1b263b',
+              borderHighlight: '#253552',
+              accent: '#06b6d4',
+              accentHover: '#0891b2',
+              emerald: '#10b981',
+              rose: '#f43f5e',
+              amber: '#f59e0b',
+              violet: '#8b5cf6',
             }
+          },
+          boxShadow: {
+            'glow-cyan': '0 0 20px -3px rgba(6, 182, 212, 0.25)',
+            'glow-emerald': '0 0 20px -3px rgba(16, 185, 129, 0.25)',
+            'glow-rose': '0 0 20px -3px rgba(244, 63, 94, 0.25)',
           }
         }
       }
     }
   </script>
+
   <style>
+    :root {
+      color-scheme: dark;
+      accent-color: #06b6d4;
+      scrollbar-color: #253552 #070b12;
+    }
     body {
-      background-color: #080c14;
+      background-color: #070b12;
       color: #e2e8f0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.04) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.04) 0%, transparent 40%);
+      background-attachment: fixed;
     }
-    .neon-glow-cyan {
-      box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+    .glass-card {
+      background: rgba(13, 19, 31, 0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid #1b263b;
     }
-    .neon-glow-emerald {
-      box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+    .glass-card:hover {
+      border-color: #253552;
     }
-    .glass-panel {
-      background: rgba(17, 24, 39, 0.75);
-      backdrop-filter: blur(12px);
-      border: 1px solid #1e293b;
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
     }
-    /* Scrollbar styling */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #070b12;
     }
-    ::-webkit-scrollbar-track {
-      background: #0f172a;
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #253552;
+      border-radius: 4px;
     }
-    ::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 3px;
+    dialog::backdrop {
+      background: rgba(4, 7, 13, 0.8);
+      backdrop-filter: blur(6px);
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-black">
 
-  <!-- TOP HEADER / NAV -->
-  <header class="glass-panel sticky top-0 z-50 border-b border-slate-800 px-6 py-3 flex items-center justify-between">
-    <div class="flex items-center space-x-4">
-      <div class="flex items-center space-x-2">
-        <span class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span class="text-xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">
-          SENTINEL-XAI
-        </span>
+<body class="min-h-screen flex flex-col font-sans antialiased text-slate-100 selection:bg-cyan-500 selection:text-black">
+
+  <!-- ===================================================================== -->
+  <!-- TOP NAVIGATION BAR                                                   -->
+  <!-- ===================================================================== -->
+  <header class="glass-card sticky top-0 z-40 border-b border-soc-border px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+    <!-- Brand & Platform Badges -->
+    <div class="flex items-center space-x-3.5">
+      <div class="relative flex items-center justify-center w-8 h-8 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 font-black shadow-glow-cyan">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 absolute top-1 right-1 animate-ping"></span>
+        <span class="text-xs font-mono">SX</span>
       </div>
-      <span class="text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-400 border border-cyan-800/50 font-semibold tracking-wide">
-        Multi-Agent SOC
-      </span>
-      <span id="headerModeBadge" class="text-xs uppercase px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 font-mono">
-        MODE: DRY-RUN (DEFENSIVE)
-      </span>
+      <div>
+        <div class="flex items-center space-x-2">
+          <span class="text-base font-extrabold tracking-tight text-white flex items-center">
+            SENTINEL-XAI <span class="text-cyan-400 font-mono text-xs ml-1.5 px-1 rounded bg-cyan-950/80 border border-cyan-800/40">CYBER-SOC</span>
+          </span>
+          <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-cyan-950/90 text-cyan-300 border border-cyan-800/60">
+            SOC v2.2.0
+          </span>
+        </div>
+        <div class="text-[11px] text-slate-400 font-mono tracking-tight">
+          Nine-Agent Explainable Threat Detection Platform
+        </div>
+      </div>
     </div>
 
-    <!-- TABS NAVIGATION -->
-    <nav class="flex items-center space-x-1 text-sm font-medium">
-      <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn px-3 py-1.5 rounded-md text-cyan-400 bg-slate-800/80 hover:text-white transition">Overview</button>
-      <button onclick="switchTab('incidents')" id="tab-incidents" class="tab-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition">Incidents</button>
-      <button onclick="switchTab('deepdive')" id="tab-deepdive" class="tab-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition">Live Deep Dive</button>
-      <button onclick="switchTab('whatif')" id="tab-whatif" class="tab-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition">What-If Sandbox</button>
-      <button onclick="switchTab('approvals')" id="tab-approvals" class="tab-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition">Approvals & IoMT</button>
-      <button onclick="switchTab('agents')" id="tab-agents" class="tab-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition">9 Agents Map</button>
-      <button onclick="switchTab('audit')" id="tab-audit" class="tab-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition">Audit Hash Chain</button>
+    <!-- Central Segmented Navigation Tabs -->
+    <nav class="flex items-center p-1 rounded-lg bg-soc-base border border-soc-border text-xs font-medium">
+      <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn px-3 py-1.5 rounded-md text-cyan-400 bg-soc-panel shadow-sm transition">
+        Command Center
+      </button>
+      <button onclick="switchTab('incidents')" id="tab-incidents" class="tab-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition">
+        Live Triage
+      </button>
+      <button onclick="switchTab('deepdive')" id="tab-deepdive" class="tab-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition">
+        XAI Deep Dive
+      </button>
+      <button onclick="switchTab('whatif')" id="tab-whatif" class="tab-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition">
+        What-If Sandbox
+      </button>
+      <button onclick="switchTab('approvals')" id="tab-approvals" class="tab-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition">
+        Approvals & IoMT
+      </button>
+      <button onclick="switchTab('agents')" id="tab-agents" class="tab-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition">
+        9 Agents Trace
+      </button>
+      <button onclick="switchTab('audit')" id="tab-audit" class="tab-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition">
+        Audit Ledger
+      </button>
     </nav>
 
-    <!-- RIGHT STATUS -->
-    <div class="flex items-center space-x-3 text-xs font-mono text-slate-400">
-      <div id="liveClock" class="text-slate-300">--:--:-- UTC</div>
-      <button onclick="refreshAll()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 transition">
-        ↻ Refresh
+    <!-- Operational State & Live Action Buttons -->
+    <div class="flex items-center space-x-3 text-xs font-mono">
+      <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-emerald-950/60 border border-emerald-800 text-emerald-400 font-semibold">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+        DRY-RUN SAFE
+      </span>
+
+      <button onclick="injectSampleFlow()" title="Stream authentic live telemetry flow" class="px-3 py-1.5 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white font-semibold transition flex items-center space-x-1.5 shadow-glow-cyan">
+        <span>+</span> <span>Ingest Flow</span>
+      </button>
+
+      <button onclick="refreshAll()" title="Refresh telemetry state" class="p-1.5 rounded-md bg-soc-panel hover:bg-slate-800 border border-soc-border text-slate-300 transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
       </button>
     </div>
   </header>
 
-  <!-- MAIN VIEW CONTAINER -->
-  <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+  <!-- ===================================================================== -->
+  <!-- MAIN WORKSPACE CONTAINER                                              -->
+  <!-- ===================================================================== -->
+  <main class="flex-1 max-w-7xl mx-auto w-full p-6 space-y-6">
 
-    <!-- 1. OVERVIEW TAB -->
+    <!-- ----------------------------------------------------------------- -->
+    <!-- 1. OVERVIEW / COMMAND CENTER                                      -->
+    <!-- ----------------------------------------------------------------- -->
     <section id="view-overview" class="space-y-6">
-      <!-- STAT METRIC TILES -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="glass-panel p-5 rounded-xl border border-slate-800 relative overflow-hidden">
-          <div class="text-xs uppercase font-mono tracking-wider text-slate-400">Total Processed Incidents</div>
-          <div id="statTotalIncidents" class="text-3xl font-bold text-white mt-1">--</div>
-          <div class="text-xs text-emerald-400 mt-2 flex items-center">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5"></span> 100% Cryptographically Logged
+      <!-- 4 Core Metric Tiles -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Incidents Tile -->
+        <div class="glass-card p-5 rounded-xl space-y-2 border-l-4 border-l-cyan-500">
+          <div class="text-[11px] uppercase tracking-wider text-slate-400 font-mono font-medium">
+            Total Logged Incidents
+          </div>
+          <div class="flex items-baseline justify-between">
+            <span id="statTotalIncidents" class="text-3xl font-bold font-mono text-white tracking-tight">--</span>
+            <span class="text-xs font-mono text-cyan-400">100% Chained</span>
+          </div>
+          <div class="text-[11px] text-slate-400 flex items-center space-x-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span>Canonical RFC 8785 Digest Active</span>
           </div>
         </div>
 
-        <div class="glass-panel p-5 rounded-xl border border-slate-800 relative overflow-hidden">
-          <div class="text-xs uppercase font-mono tracking-wider text-slate-400">Conformal Risk Limit (&alpha;)</div>
-          <div id="statConformalAlpha" class="text-3xl font-bold text-cyan-400 mt-1">&le; 0.05</div>
-          <div class="text-xs text-slate-400 mt-2 font-mono">
-            &ge; 95.0% Guaranteed Coverage
+        <!-- Conformal Risk Tile -->
+        <div class="glass-card p-5 rounded-xl space-y-2 border-l-4 border-l-emerald-500">
+          <div class="text-[11px] uppercase tracking-wider text-slate-400 font-mono font-medium">
+            Conformal Risk Limit (&alpha;)
+          </div>
+          <div class="flex items-baseline justify-between">
+            <span id="statConformalAlpha" class="text-3xl font-bold font-mono text-emerald-400 tracking-tight">&le; 0.05</span>
+            <span class="text-xs font-mono text-emerald-300">&ge; 95% Coverage</span>
+          </div>
+          <div class="text-[11px] text-slate-400">
+            Selective-Risk Abstention Enforced (C9)
           </div>
         </div>
 
-        <div class="glass-panel p-5 rounded-xl border border-slate-800 relative overflow-hidden">
-          <div class="text-xs uppercase font-mono tracking-wider text-slate-400">Active High/Critical Threats</div>
-          <div id="statHighThreats" class="text-3xl font-bold text-rose-400 mt-1">--</div>
-          <div class="text-xs text-rose-300/80 mt-2">
-            Priority Escalation Active
+        <!-- Threat Severity Tile -->
+        <div class="glass-card p-5 rounded-xl space-y-2 border-l-4 border-l-rose-500">
+          <div class="text-[11px] uppercase tracking-wider text-slate-400 font-mono font-medium">
+            High & Critical Threats
+          </div>
+          <div class="flex items-baseline justify-between">
+            <span id="statHighThreats" class="text-3xl font-bold font-mono text-rose-400 tracking-tight">--</span>
+            <span id="statThreatTrend" class="text-xs font-mono text-rose-300">Escalated</span>
+          </div>
+          <div class="text-[11px] text-slate-400">
+            Critic-Audited Severity Classification
           </div>
         </div>
 
-        <div class="glass-panel p-5 rounded-xl border border-slate-800 relative overflow-hidden">
-          <div class="text-xs uppercase font-mono tracking-wider text-slate-400">Response Mode & Safety Gate</div>
-          <div class="text-2xl font-bold text-emerald-400 mt-1">DRY-RUN ONLY</div>
-          <div class="text-xs text-amber-400 mt-2 font-mono">
-            External Effect: False (Safe)
+        <!-- IoMT Safety Tile -->
+        <div class="glass-card p-5 rounded-xl space-y-2 border-l-4 border-l-amber-500">
+          <div class="text-[11px] uppercase tracking-wider text-slate-400 font-mono font-medium">
+            Medical IoMT Gate (C16)
+          </div>
+          <div class="flex items-baseline justify-between">
+            <span class="text-2xl font-bold font-mono text-amber-400 tracking-tight">DUAL-AUTH</span>
+            <span class="text-xs font-mono text-amber-300">Zero Auto-Disrupt</span>
+          </div>
+          <div class="text-[11px] text-slate-400">
+            Clinical Engineer Separation of Duties
           </div>
         </div>
       </div>
 
-      <!-- CHARTS & SUMMARY ROW -->
+      <!-- Visual Analytics & Dual-LLM Overview -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Severity Chart -->
-        <div class="glass-panel p-5 rounded-xl border border-slate-800 space-y-4">
-          <h3 class="text-sm font-semibold tracking-wide text-slate-200 uppercase font-mono flex items-center justify-between">
-            <span>Incident Severity Distribution</span>
-            <span class="text-xs text-slate-400">Verified by Critic</span>
-          </h3>
+        <!-- Severity Chart Card -->
+        <div class="glass-card p-5 rounded-xl space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs uppercase font-mono font-bold text-slate-200 tracking-wider">
+              Severity Distribution
+            </h3>
+            <span class="text-[10px] font-mono text-slate-400">Critic Verified</span>
+          </div>
           <div class="h-56 relative flex items-center justify-center">
             <canvas id="severityChart"></canvas>
           </div>
         </div>
 
-        <!-- System Architecture & LLM Dual Config -->
-        <div class="glass-panel p-5 rounded-xl border border-slate-800 space-y-4 lg:col-span-2">
-          <h3 class="text-sm font-semibold tracking-wide text-slate-200 uppercase font-mono">
-            Dual-LLM Configuration & Epistemic Boundaries
-          </h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div class="p-4 rounded-lg bg-slate-900/60 border border-slate-800 space-y-2">
-              <div class="font-bold text-cyan-400 text-sm">Agent 08: Tier-2 SOC Analyst</div>
-              <div class="text-slate-300">Model: <span id="analystModelText" class="font-mono text-white">llama3.1:8b</span></div>
-              <div class="text-slate-400">Role: Proposes atomic claims (C1) grounded in evidence pointers. Explains SHAP feature attributions and evaluates alternative hypotheses.</div>
-              <div class="text-emerald-400 text-[11px] font-mono">Permissions: Read-only evidence tag</div>
+        <!-- Architecture & Dual-LLM Operational Status -->
+        <div class="glass-card p-5 rounded-xl space-y-4 lg:col-span-2 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between border-b border-soc-border pb-3">
+              <div>
+                <h3 class="text-xs uppercase font-mono font-bold text-slate-200 tracking-wider">
+                  Dual-LLM Epistemic Verification Architecture (Section 12)
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">
+                  Independent model configurations with isolated reasoning and adversarial verification roles.
+                </p>
+              </div>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-soc-panel text-slate-300 border border-soc-border">
+                Debate Loop Active
+              </span>
             </div>
 
-            <div class="p-4 rounded-lg bg-slate-900/60 border border-slate-800 space-y-2">
-              <div class="font-bold text-amber-400 text-sm">Agent 09: Independent LLM Verifier</div>
-              <div class="text-slate-300">Model: <span id="verifierModelText" class="font-mono text-white">llama3.1:8b (Independent Role)</span></div>
-              <div class="text-slate-400">Role: Adversarial claim verification against RFC 6901 ledger. Corrects exaggerated severity and rejects ungrounded or contradictory assertions.</div>
-              <div class="text-rose-400 text-[11px] font-mono">Permissions: Gate-keeper approval</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+              <!-- Agent 08 Analyst Card -->
+              <div class="p-4 rounded-lg bg-soc-base/80 border border-soc-border space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-cyan-400">Agent 08: LLM Analyst</span>
+                  <span class="text-[10px] text-slate-400 px-1.5 py-0.5 rounded bg-soc-panel">Narrative</span>
+                </div>
+                <div class="text-slate-300 text-[11px]">
+                  Model: <span id="analystModelText" class="text-white font-semibold">llama3.1:8b</span>
+                </div>
+                <p class="text-slate-400 text-[11px] leading-relaxed">
+                  Synthesizes plain-language narrative. Every claim must cite valid RFC 6901 evidence pointers.
+                </p>
+                <div class="text-[10px] text-emerald-400 font-semibold">
+                  &#10003; Zero tool/shell permissions
+                </div>
+              </div>
+
+              <!-- Agent 09 Verifier Card -->
+              <div class="p-4 rounded-lg bg-soc-base/80 border border-soc-border space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-amber-400">Agent 09: Independent Critic</span>
+                  <span class="text-[10px] text-slate-400 px-1.5 py-0.5 rounded bg-soc-panel">Audit</span>
+                </div>
+                <div class="text-slate-300 text-[11px]">
+                  Model: <span id="verifierModelText" class="text-white font-semibold">llama3.1:8b (Independent)</span>
+                </div>
+                <p class="text-slate-400 text-[11px] leading-relaxed">
+                  Adversarial verification against Claim-Evidence Ledger (C1). Corrects exaggerated severity.
+                </p>
+                <div class="text-[10px] text-cyan-400 font-semibold">
+                  &#10003; Mandatory Grounding Gate
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="p-3.5 rounded-lg bg-slate-900/40 border border-slate-800/80 flex items-center justify-between text-xs font-mono">
+          <!-- Bottom Status Banner -->
+          <div class="p-3 rounded-lg bg-cyan-950/20 border border-cyan-900/40 text-xs font-mono flex items-center justify-between text-cyan-300">
             <div class="flex items-center space-x-2">
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span class="text-slate-300">Medical IoMT Safety Safeguards (C16):</span>
-              <span class="text-emerald-400 font-semibold">Active & Enforced</span>
+              <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+              <span>Conformal Abstention Floor: <strong class="text-white">Active</strong></span>
             </div>
-            <div class="text-slate-400">Dual Clinical Authorization Required</div>
+            <span class="text-slate-400 text-[11px]">Fail-closed to SOC Analyst when $s(x) > \hat{\lambda}$</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 2. INCIDENTS TRIAGE TAB -->
+    <!-- ----------------------------------------------------------------- -->
+    <!-- 2. INCIDENT TRIAGE QUEUE                                          -->
+    <!-- ----------------------------------------------------------------- -->
     <section id="view-incidents" class="space-y-4 hidden">
-      <div class="glass-panel p-5 rounded-xl border border-slate-800 space-y-4">
-        <div class="flex items-center justify-between">
+      <div class="glass-card p-5 rounded-xl space-y-4">
+        <!-- Header & Filter Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-soc-border">
           <div>
-            <h2 class="text-base font-bold text-white tracking-wide">Incident Triage Queue</h2>
-            <p class="text-xs text-slate-400">Streamed from tamper-evident audit ledger (RFC 8785 canonical hash chain)</p>
+            <h2 class="text-sm font-bold uppercase font-mono text-white tracking-wide">
+              Live Threat Ingestion & Triage Queue
+            </h2>
+            <p class="text-xs text-slate-400">
+              Verified incidents recorded in the tamper-evident cryptographic hash chain.
+            </p>
           </div>
-          <div class="flex items-center space-x-2">
-            <button onclick="injectSampleFlow()" class="px-3 py-1.5 text-xs bg-cyan-600 hover:bg-cyan-500 text-white rounded font-medium transition">
+          <!-- Quick Filter Buttons -->
+          <div class="flex items-center space-x-2 text-xs font-mono">
+            <input type="text" id="incidentSearchInput" oninput="filterIncidents()" placeholder="Search alert, IP, class..." class="px-3 py-1.5 rounded-md bg-soc-base border border-soc-border text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+            <button onclick="injectSampleFlow()" class="px-3 py-1.5 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white font-semibold transition">
               + Ingest Authentic Flow
             </button>
           </div>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-slate-900/80 text-slate-400 uppercase font-mono border-b border-slate-800">
+        <!-- Incidents Table -->
+        <div class="overflow-x-auto custom-scroll">
+          <table class="w-full text-left text-xs font-mono">
+            <thead class="bg-soc-base text-slate-400 uppercase text-[11px] border-b border-soc-border">
               <tr>
                 <th class="py-3 px-3">Alert ID</th>
-                <th class="py-3 px-3">Timestamp</th>
-                <th class="py-3 px-3">Class Label</th>
+                <th class="py-3 px-3">Time (UTC)</th>
+                <th class="py-3 px-3">Threat Class</th>
                 <th class="py-3 px-3">Severity</th>
-                <th class="py-3 px-3">ML Conf</th>
+                <th class="py-3 px-3">ML Prob</th>
                 <th class="py-3 px-3">Anomaly</th>
-                <th class="py-3 px-3">Trust Score (ETS)</th>
-                <th class="py-3 px-3">Status</th>
-                <th class="py-3 px-3 text-right">Action</th>
+                <th class="py-3 px-3">Trust (ETS)</th>
+                <th class="py-3 px-3">Pipeline Status</th>
+                <th class="py-3 px-3 text-right">Inspection</th>
               </tr>
             </thead>
-            <tbody id="incidentsTableBody" class="divide-y divide-slate-800/60 font-mono">
+            <tbody id="incidentsTableBody" class="divide-y divide-soc-border/60">
               <tr>
-                <td colspan="9" class="text-center py-6 text-slate-500">Loading incidents...</td>
+                <td colspan="9" class="text-center py-8 text-slate-500">Loading live incident ledger...</td>
               </tr>
             </tbody>
           </table>
@@ -229,142 +357,203 @@
       </div>
     </section>
 
-    <!-- 3. LIVE INCIDENT DEEP DIVE TAB -->
+    <!-- ----------------------------------------------------------------- -->
+    <!-- 3. LIVE INCIDENT DEEP DIVE (XAI, LEDGER, DEBATE)                  -->
+    <!-- ----------------------------------------------------------------- -->
     <section id="view-deepdive" class="space-y-6 hidden">
-      <!-- ALERT HEADER -->
-      <div class="glass-panel p-5 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4">
-        <div>
+      <!-- Incident Detail Header Banner -->
+      <div class="glass-card p-5 rounded-xl flex flex-wrap items-center justify-between gap-4 border-l-4 border-l-cyan-500">
+        <div class="space-y-1">
           <div class="flex items-center space-x-3">
-            <h2 id="deepAlertId" class="text-lg font-bold text-white font-mono">ALRT-SAMPLE</h2>
-            <span id="deepSeverityBadge" class="text-xs font-mono uppercase px-2.5 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-800 font-bold">HIGH</span>
-            <span id="deepStatusBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">awaiting_human_approval</span>
+            <h2 id="deepAlertId" class="text-xl font-bold font-mono text-white tracking-tight">ALRT-SAMPLE</h2>
+            <span id="deepSeverityBadge" class="text-xs font-mono font-bold uppercase px-2.5 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-800">
+              HIGH
+            </span>
+            <span id="deepStatusBadge" class="text-xs font-mono px-2.5 py-0.5 rounded bg-soc-panel text-slate-300 border border-soc-border">
+              awaiting_human_approval
+            </span>
+            <span id="deepIoMTBadge" class="hidden text-xs font-mono font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800">
+              CRITICAL IoMT ASSET
+            </span>
           </div>
-          <p id="deepTimestamp" class="text-xs text-slate-400 mt-1 font-mono">Timestamp: --</p>
+          <div id="deepTimestamp" class="text-xs text-slate-400 font-mono">Timestamp: --</div>
         </div>
 
-        <div class="flex items-center space-x-4 text-xs font-mono">
+        <!-- Telemetry Summary Badges -->
+        <div class="flex items-center space-x-6 text-xs font-mono">
           <div class="text-right">
-            <div class="text-slate-400">Explanation Trust (ETS)</div>
-            <div id="deepTrustScore" class="text-emerald-400 text-base font-bold">--</div>
+            <div class="text-slate-400 text-[11px]">Explanation Trust Score (ETS)</div>
+            <div id="deepTrustScore" class="text-xl font-bold text-emerald-400">0.85</div>
           </div>
           <div class="text-right">
-            <div class="text-slate-400">ML Confidence</div>
-            <div id="deepConfidence" class="text-cyan-400 text-base font-bold">--</div>
+            <div class="text-slate-400 text-[11px]">XGBoost Confidence</div>
+            <div id="deepConfidence" class="text-xl font-bold text-cyan-400">99.8%</div>
+          </div>
+          <div class="text-right">
+            <div class="text-slate-400 text-[11px]">Anomaly Percentile</div>
+            <div id="deepAnomalyScore" class="text-xl font-bold text-amber-400">100%</div>
           </div>
         </div>
       </div>
 
-      <!-- 2-COL DETAILS -->
+      <!-- 2-Column Split: Left = SHAP/XAI, Right = Narrative & Verifier Debate -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- SHAP Attributions Chart -->
-        <div class="glass-panel p-5 rounded-xl border border-slate-800 space-y-4">
+        <!-- TreeSHAP Attribution Card -->
+        <div class="glass-card p-5 rounded-xl space-y-4">
           <div class="flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-slate-200 uppercase font-mono">Feature Attributions (TreeSHAP)</h3>
-            <span id="shapReconBadge" class="text-[11px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">
-              sum(&phi;) + base = f(x) verified
+            <div>
+              <h3 class="text-xs uppercase font-mono font-bold text-slate-200 tracking-wider">
+                Feature Attributions (TreeSHAP)
+              </h3>
+              <p class="text-[11px] text-slate-400">Quantified local contribution ($\phi$) to predicted threat class</p>
+            </div>
+            <span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/80">
+              &sum;&phi; + Base = f(x) Verified
             </span>
           </div>
+
           <div class="h-64 relative">
             <canvas id="shapChart"></canvas>
           </div>
-          <!-- Contrastive Counterfactual box -->
-          <div id="counterfactualBox" class="p-3.5 rounded-lg bg-cyan-950/30 border border-cyan-800/40 text-xs text-slate-300 space-y-1">
-            <div class="font-bold text-cyan-400 flex items-center space-x-1.5">
+
+          <!-- Counterfactual Guidance Card (C10) -->
+          <div class="p-3.5 rounded-lg bg-soc-base border border-cyan-900/50 space-y-1.5">
+            <div class="text-xs font-bold font-mono text-cyan-400 flex items-center space-x-1.5">
               <span>&#9889; Contrastive Counterfactual Explanation (C10)</span>
             </div>
-            <p id="counterfactualText" class="text-slate-300 italic">Computing minimal contrastive path...</p>
+            <p id="counterfactualText" class="text-xs text-slate-300 italic font-mono leading-relaxed">
+              Evaluating minimal perturbation path to flip threat class to benign...
+            </p>
           </div>
         </div>
 
-        <!-- Analyst Narrative & Dual-LLM Debate -->
-        <div class="glass-panel p-5 rounded-xl border border-slate-800 space-y-4">
-          <h3 class="text-sm font-semibold text-slate-200 uppercase font-mono">Analyst Incident Narrative</h3>
-          <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-800 text-xs text-slate-200 space-y-2">
-            <div class="font-semibold text-slate-300">Summary:</div>
-            <p id="deepSummaryText" class="text-slate-300 leading-relaxed font-sans">--</p>
-            <div class="pt-2 flex flex-wrap gap-1.5" id="deepTechniquesList">
-              <!-- badges -->
+        <!-- Dual-LLM Incident Narrative & Debate Transcript -->
+        <div class="glass-card p-5 rounded-xl space-y-4 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between border-b border-soc-border pb-3">
+              <h3 class="text-xs uppercase font-mono font-bold text-slate-200 tracking-wider">
+                Agent 08 Analyst Incident Narrative
+              </h3>
+              <span id="deepRoundsCount" class="text-[10px] font-mono text-slate-400">Round 0</span>
+            </div>
+
+            <!-- Narrative Body -->
+            <div class="p-4 rounded-lg bg-soc-base border border-soc-border text-xs leading-relaxed space-y-3 font-mono">
+              <p id="deepSummaryText" class="text-slate-200">Generating narrative...</p>
+              <div class="pt-2 border-t border-soc-border/60">
+                <div class="text-[11px] text-slate-400 font-bold mb-1">Asserted MITRE ATT&CK Techniques:</div>
+                <div id="deepTechniquesList" class="flex flex-wrap gap-1.5"></div>
+              </div>
             </div>
           </div>
 
-          <!-- Critic Verdict Box -->
-          <div class="p-3.5 rounded-lg bg-slate-900/60 border border-slate-800 text-xs space-y-2">
+          <!-- Critic Audit Verdict Box -->
+          <div class="p-3.5 rounded-lg bg-soc-base border border-amber-900/50 space-y-2 font-mono text-xs">
             <div class="flex items-center justify-between">
-              <span class="font-bold text-amber-400">Agent 09 Verifier Audit Verdict</span>
-              <span id="deepCriticApproved" class="px-2 py-0.5 rounded text-[11px] font-mono bg-emerald-950 text-emerald-400">APPROVED</span>
+              <span class="font-bold text-amber-400 flex items-center space-x-1.5">
+                <span>&#128737; Agent 09 Independent Verifier Audit Verdict</span>
+              </span>
+              <span id="deepCriticApproved" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">
+                APPROVED
+              </span>
             </div>
-            <div id="deepCriticFeedback" class="text-slate-400">All claims successfully grounded in evidence ledger.</div>
+            <p id="deepCriticFeedback" class="text-[11px] text-slate-300">
+              All narrative claims deterministically resolved against RFC 6901 evidence ledger snapshot.
+            </p>
           </div>
         </div>
       </div>
 
-      <!-- RFC 6901 CLAIM-EVIDENCE LEDGER TABLE -->
-      <div class="glass-panel p-5 rounded-xl border border-slate-800 space-y-3">
+      <!-- Typed Claim-Evidence Ledger (C1) Table -->
+      <div class="glass-card p-5 rounded-xl space-y-3">
         <div class="flex items-center justify-between">
-          <h3 class="text-sm font-semibold text-slate-200 uppercase font-mono">
-            Deterministic Claim-Evidence Ledger (C1)
-          </h3>
-          <span id="deepLedgerStats" class="text-xs font-mono text-cyan-400">Supported: -- / -- (100%)</span>
+          <div>
+            <h3 class="text-xs uppercase font-mono font-bold text-slate-200 tracking-wider">
+              Deterministic Claim-Evidence Ledger (Contribution C1)
+            </h3>
+            <p class="text-xs text-slate-400">Machine-checked pointer verification resolving RFC 6901 paths against snapshot</p>
+          </div>
+          <span id="deepLedgerStats" class="text-xs font-mono text-cyan-400">Supported: -- / --</span>
         </div>
-        <div class="overflow-x-auto">
+
+        <div class="overflow-x-auto custom-scroll">
           <table class="w-full text-left text-xs font-mono">
-            <thead class="bg-slate-900 text-slate-400 uppercase border-b border-slate-800">
+            <thead class="bg-soc-base text-slate-400 uppercase text-[11px] border-b border-soc-border">
               <tr>
                 <th class="py-2.5 px-3">Claim ID</th>
+                <th class="py-2.5 px-3">Category</th>
                 <th class="py-2.5 px-3">Statement</th>
                 <th class="py-2.5 px-3">RFC 6901 Pointer</th>
-                <th class="py-2.5 px-3">Resolved Value</th>
+                <th class="py-2.5 px-3">Resolved Evidence Value</th>
                 <th class="py-2.5 px-3">Status</th>
                 <th class="py-2.5 px-3">Verifier Notes</th>
               </tr>
             </thead>
-            <tbody id="deepLedgerBody" class="divide-y divide-slate-800/60">
+            <tbody id="deepLedgerBody" class="divide-y divide-soc-border/60">
               <tr>
-                <td colspan="6" class="text-center py-4 text-slate-500">No ledger claims loaded.</td>
+                <td colspan="7" class="text-center py-4 text-slate-500">No atomic claims loaded.</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- 9-AGENT EXECUTION TRACE MONITOR -->
-      <div class="glass-panel p-5 rounded-xl border border-slate-800 space-y-3">
-        <h3 class="text-sm font-semibold text-slate-200 uppercase font-mono">
-          9-Agent Distributed Pipeline Execution Trace
-        </h3>
+      <!-- 9-Agent Distributed Pipeline Execution Trace -->
+      <div class="glass-card p-5 rounded-xl space-y-4">
+        <div>
+          <h3 class="text-xs uppercase font-mono font-bold text-slate-200 tracking-wider">
+            Nine-Agent Distributed Pipeline Execution Trace
+          </h3>
+          <p class="text-xs text-slate-400">Measured execution latency and transition boundaries per agent</p>
+        </div>
+
         <div id="deepTracesList" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <!-- Populated dynamically -->
+          <!-- Populated dynamically by JS -->
         </div>
       </div>
     </section>
 
-    <!-- 4. WHAT-IF HYPOTHESES SANDBOX TAB -->
+    <!-- ----------------------------------------------------------------- -->
+    <!-- 4. WHAT-IF HYPOTHESIS SANDBOX                                      -->
+    <!-- ----------------------------------------------------------------- -->
     <section id="view-whatif" class="space-y-6 hidden">
-      <div class="glass-panel p-5 rounded-xl border border-slate-800 space-y-4">
-        <div class="flex items-center justify-between">
+      <div class="glass-card p-5 rounded-xl space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-soc-border">
           <div>
-            <h2 class="text-base font-bold text-white tracking-wide">What-If Hypothesis Analysis Sandbox</h2>
+            <h2 class="text-sm font-bold uppercase font-mono text-white tracking-wide">
+              Isolated What-If Hypothesis Analysis Sandbox (Section 16)
+            </h2>
             <p class="text-xs text-slate-400">
               Evaluate hypothetical counterfactual perturbations in memory. Source evidence and operational state remain strictly immutable.
             </p>
           </div>
-          <span class="text-xs font-mono px-3 py-1 bg-amber-950/60 text-amber-400 border border-amber-800 rounded">
+          <span class="text-xs font-mono font-bold px-3 py-1 bg-amber-950/60 text-amber-400 border border-amber-800 rounded">
             SANDBOX_ISOLATED
           </span>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Feature Sliders / Controls -->
-          <div class="space-y-4 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-            <h3 class="text-xs font-bold uppercase font-mono text-slate-300">Feature Inputs (Interactive Sandbox)</h3>
+        <!-- Presets Bar -->
+        <div class="flex items-center space-x-2 text-xs font-mono">
+          <span class="text-slate-400">Presets:</span>
+          <button onclick="applyWhatIfPreset('normal')" class="px-2.5 py-1 rounded bg-soc-panel hover:bg-slate-800 border border-soc-border text-slate-200 transition">Normal Baseline</button>
+          <button onclick="applyWhatIfPreset('bruteforce')" class="px-2.5 py-1 rounded bg-soc-panel hover:bg-slate-800 border border-soc-border text-slate-200 transition">SSH Brute-Force</button>
+          <button onclick="applyWhatIfPreset('portscan')" class="px-2.5 py-1 rounded bg-soc-panel hover:bg-slate-800 border border-soc-border text-slate-200 transition">Port Scan</button>
+          <button onclick="applyWhatIfPreset('exfil')" class="px-2.5 py-1 rounded bg-soc-panel hover:bg-slate-800 border border-soc-border text-slate-200 transition">Data Exfiltration</button>
+          <button onclick="applyWhatIfPreset('c2')" class="px-2.5 py-1 rounded bg-soc-panel hover:bg-slate-800 border border-soc-border text-slate-200 transition">C2 Beaconing</button>
+        </div>
 
-            <div class="space-y-3 text-xs font-mono">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Interactive Feature Sliders -->
+          <div class="space-y-4 bg-soc-base p-4 rounded-xl border border-soc-border">
+            <h3 class="text-xs font-bold uppercase font-mono text-slate-300">Feature Inputs (Interactive)</h3>
+
+            <div class="space-y-3.5 text-xs font-mono">
               <div>
                 <div class="flex justify-between text-slate-300 mb-1">
                   <span>failed_logins:</span>
                   <span id="val_failed_logins" class="text-cyan-400 font-bold">140</span>
                 </div>
-                <input type="range" id="slider_failed_logins" min="0" max="400" value="140" oninput="updateWhatIfValue('failed_logins', this.value)" class="w-full accent-cyan-400">
+                <input type="range" id="slider_failed_logins" min="0" max="400" value="140" oninput="updateWhatIfValue('failed_logins', this.value)" class="w-full">
               </div>
 
               <div>
@@ -372,7 +561,7 @@
                   <span>conn_rate (conns/min):</span>
                   <span id="val_conn_rate" class="text-cyan-400 font-bold">35</span>
                 </div>
-                <input type="range" id="slider_conn_rate" min="1" max="150" value="35" oninput="updateWhatIfValue('conn_rate', this.value)" class="w-full accent-cyan-400">
+                <input type="range" id="slider_conn_rate" min="1" max="150" value="35" oninput="updateWhatIfValue('conn_rate', this.value)" class="w-full">
               </div>
 
               <div>
@@ -380,7 +569,7 @@
                   <span>distinct_dst_ports:</span>
                   <span id="val_distinct_dst_ports" class="text-cyan-400 font-bold">2</span>
                 </div>
-                <input type="range" id="slider_distinct_dst_ports" min="1" max="500" value="2" oninput="updateWhatIfValue('distinct_dst_ports', this.value)" class="w-full accent-cyan-400">
+                <input type="range" id="slider_distinct_dst_ports" min="1" max="500" value="2" oninput="updateWhatIfValue('distinct_dst_ports', this.value)" class="w-full">
               </div>
 
               <div>
@@ -388,7 +577,7 @@
                   <span>bytes_out_mb:</span>
                   <span id="val_bytes_out_mb" class="text-cyan-400 font-bold">0.8</span>
                 </div>
-                <input type="range" id="slider_bytes_out_mb" min="0" max="500" step="0.5" value="0.8" oninput="updateWhatIfValue('bytes_out_mb', this.value)" class="w-full accent-cyan-400">
+                <input type="range" id="slider_bytes_out_mb" min="0" max="500" step="0.5" value="0.8" oninput="updateWhatIfValue('bytes_out_mb', this.value)" class="w-full">
               </div>
 
               <div>
@@ -396,7 +585,7 @@
                   <span>dns_query_entropy:</span>
                   <span id="val_dns_query_entropy" class="text-cyan-400 font-bold">2.5</span>
                 </div>
-                <input type="range" id="slider_dns_query_entropy" min="0" max="5.0" step="0.1" value="2.5" oninput="updateWhatIfValue('dns_query_entropy', this.value)" class="w-full accent-cyan-400">
+                <input type="range" id="slider_dns_query_entropy" min="0" max="5.0" step="0.1" value="2.5" oninput="updateWhatIfValue('dns_query_entropy', this.value)" class="w-full">
               </div>
 
               <div>
@@ -404,139 +593,104 @@
                   <span>beacon_regularity (0..1):</span>
                   <span id="val_beacon_regularity" class="text-cyan-400 font-bold">0.15</span>
                 </div>
-                <input type="range" id="slider_beacon_regularity" min="0" max="1.0" step="0.05" value="0.15" oninput="updateWhatIfValue('beacon_regularity', this.value)" class="w-full accent-cyan-400">
+                <input type="range" id="slider_beacon_regularity" min="0" max="1.0" step="0.05" value="0.15" oninput="updateWhatIfValue('beacon_regularity', this.value)" class="w-full">
               </div>
             </div>
 
-            <button onclick="executeWhatIf()" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded font-mono text-xs font-bold transition">
+            <button onclick="executeWhatIf()" class="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded font-mono text-xs font-bold transition shadow-glow-cyan">
               Evaluate What-If Perturbation &rarr;
             </button>
           </div>
 
-          <!-- Sandbox Prediction Comparison Outcome -->
-          <div class="space-y-4 bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
-            <div class="space-y-3">
-              <h3 class="text-xs font-bold uppercase font-mono text-slate-300">Hypothetical Model Decision Shift</h3>
+          <!-- Comparison Outcome -->
+          <div class="space-y-4 bg-soc-base p-4 rounded-xl border border-soc-border flex flex-col justify-between">
+            <div class="space-y-4">
+              <h3 class="text-xs font-bold uppercase font-mono text-slate-300">Hypothetical Model Shift</h3>
 
               <div class="grid grid-cols-2 gap-3 text-xs font-mono">
-                <div class="p-3 bg-slate-950/80 rounded border border-slate-800 space-y-1">
-                  <div class="text-slate-400">Original Label</div>
+                <div class="p-3 bg-soc-panel/70 rounded border border-soc-border space-y-1">
+                  <div class="text-slate-400">Original Baseline</div>
                   <div id="whatifOriginalLabel" class="text-sm font-bold text-rose-400">ssh_bruteforce</div>
                   <div id="whatifOriginalConf" class="text-slate-400">Confidence: 98.4%</div>
                 </div>
 
-                <div class="p-3 bg-slate-950/80 rounded border border-slate-800 space-y-1">
-                  <div class="text-slate-400">New Predicted Label</div>
+                <div class="p-3 bg-soc-panel/70 rounded border border-soc-border space-y-1">
+                  <div class="text-slate-400">New Predicted Class</div>
                   <div id="whatifNewLabel" class="text-sm font-bold text-cyan-400">--</div>
                   <div id="whatifNewConf" class="text-slate-400">Confidence: --</div>
                 </div>
               </div>
 
-              <div class="p-3 rounded bg-slate-950/60 border border-slate-800 text-xs font-mono space-y-1.5">
-                <div class="text-slate-300 font-bold">Top Attribution Delta:</div>
+              <!-- Top Attribution Changes -->
+              <div class="p-3.5 rounded bg-soc-panel/50 border border-soc-border text-xs font-mono space-y-2">
+                <div class="text-slate-300 font-bold text-[11px]">Top Attribution Shifts (&Delta;&phi;):</div>
                 <div id="whatifAttributionDeltas" class="text-slate-400 text-[11px] space-y-1">
-                  <!-- Populated by JS -->
+                  <div>Adjust sliders above to evaluate shift.</div>
                 </div>
               </div>
             </div>
 
-            <div class="p-3 rounded bg-amber-950/30 border border-amber-800/40 text-[11px] text-amber-300 font-mono">
-              Disclaimer: Evaluated strictly in isolated model sandbox. Base audit ledger and original network flow remain completely unchanged.
+            <div class="p-3 rounded bg-amber-950/20 border border-amber-800/40 text-[11px] text-amber-300 font-mono">
+              Disclaimer: Evaluated in isolated model sandbox. Base audit ledger and telemetry remain strictly unmodified.
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 5. APPROVALS & IOMT TAB -->
+    <!-- ----------------------------------------------------------------- -->
+    <!-- 5. APPROVALS QUEUE & IOMT CLINICAL GATE                           -->
+    <!-- ----------------------------------------------------------------- -->
     <section id="view-approvals" class="space-y-6 hidden">
-      <div class="glass-panel p-5 rounded-xl border border-slate-800 space-y-4">
-        <div class="flex items-center justify-between">
+      <div class="glass-card p-5 rounded-xl space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-soc-border">
           <div>
-            <h2 class="text-base font-bold text-white tracking-wide">Human-in-the-Loop & IoMT Clinical Safety Gates</h2>
+            <h2 class="text-sm font-bold uppercase font-mono text-white tracking-wide">
+              Human-in-the-Loop & Medical IoMT Safety Gates (C16)
+            </h2>
             <p class="text-xs text-slate-400">
-              High-impact actions (isolation, blocking) require cryptographic approval token. Critical IoMT assets enforce dual-role separation of duties (C16).
+              Disruptive actions require transactional HMAC authorization. Medical assets enforce dual-role Separation of Duties.
             </p>
           </div>
-          <span class="text-xs font-mono px-3 py-1 bg-emerald-950 text-emerald-400 border border-emerald-800 rounded">
+          <span class="text-xs font-mono font-bold px-3 py-1 bg-emerald-950 text-emerald-400 border border-emerald-800 rounded">
             DRY-RUN RESPONSE READY
           </span>
         </div>
 
-        <!-- Pending Items Table -->
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto custom-scroll">
           <table class="w-full text-left text-xs font-mono">
-            <thead class="bg-slate-900 text-slate-400 uppercase border-b border-slate-800">
+            <thead class="bg-soc-base text-slate-400 uppercase text-[11px] border-b border-soc-border">
               <tr>
                 <th class="py-2.5 px-3">Alert ID</th>
-                <th class="py-2.5 px-3">Action Type</th>
-                <th class="py-2.5 px-3">Target Host/IP</th>
-                <th class="py-2.5 px-3">Asset Type</th>
+                <th class="py-2.5 px-3">Disruptive Action</th>
+                <th class="py-2.5 px-3">Target Asset</th>
+                <th class="py-2.5 px-3">Asset Classification</th>
                 <th class="py-2.5 px-3">Hold Reason</th>
                 <th class="py-2.5 px-3 text-right">Authorize</th>
               </tr>
             </thead>
-            <tbody id="pendingActionsBody" class="divide-y divide-slate-800/60">
+            <tbody id="pendingActionsBody" class="divide-y divide-soc-border/60">
               <tr>
-                <td colspan="6" class="text-center py-4 text-slate-500">No actions currently pending approval.</td>
+                <td colspan="6" class="text-center py-4 text-slate-500">No actions currently pending authorization.</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-
-      <!-- Action Approval Modal / Panel -->
-      <div id="approvalActionPanel" class="glass-panel p-5 rounded-xl border border-cyan-800/60 space-y-4 hidden">
-        <div class="flex items-center justify-between">
-          <h3 class="text-sm font-bold text-cyan-400 font-mono uppercase">Authorize High-Impact Defensive Action</h3>
-          <button onclick="closeApprovalPanel()" class="text-slate-400 hover:text-white">&times; Cancel</button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
-          <div class="space-y-2 p-3 bg-slate-900/60 rounded border border-slate-800">
-            <div class="text-slate-400">Target: <span id="apprTarget" class="text-white font-bold">185.220.101.47</span></div>
-            <div class="text-slate-400">Action: <span id="apprAction" class="text-amber-400 font-bold">block_ip</span></div>
-            <div class="text-slate-400">Proposal ID: <span id="apprProposalId" class="text-slate-300">PROP-01</span></div>
-            <div class="text-slate-400">Asset Identity: <span id="apprAssetType" class="text-cyan-300">ENTERPRISE_WORKSTATION</span></div>
-          </div>
-
-          <div class="space-y-3">
-            <div>
-              <label class="block text-slate-300 mb-1">SOC Security Approver ID & Secret:</label>
-              <div class="grid grid-cols-2 gap-2">
-                <input id="apprUserId" type="text" value="soc_lead_chamith" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-slate-200">
-                <input id="apprUserKey" type="password" value="sec_lead_secret_token_123" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-slate-200">
-              </div>
-            </div>
-
-            <!-- IoMT Secondary Field (Conditional) -->
-            <div id="iomtClinicalFields" class="p-3 bg-rose-950/20 border border-rose-800/40 rounded space-y-2">
-              <div class="text-rose-400 font-bold flex items-center space-x-1.5">
-                <span>&#9888; Medical IoMT Device Detected (Separation of Duties Enforced)</span>
-              </div>
-              <div class="text-[11px] text-slate-400">Requires independent Clinical Engineer or Medical Director credentials:</div>
-              <div class="grid grid-cols-2 gap-2">
-                <input id="apprClinId" type="text" value="dr_sarah_clinical" placeholder="Clinical User ID" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-slate-200">
-                <input id="apprClinKey" type="password" value="clin_eng_secret_token_789" placeholder="Clinical Secret Key" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-slate-200">
-              </div>
-            </div>
-
-            <button onclick="submitApproval()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold font-mono transition">
-              Authorize & Execute (Dry-Run Only) &rarr;
-            </button>
-          </div>
-        </div>
-      </div>
     </section>
 
-    <!-- 6. 9 AGENTS MAP TAB -->
+    <!-- ----------------------------------------------------------------- -->
+    <!-- 6. NINE-AGENT PIPELINE MAP                                        -->
+    <!-- ----------------------------------------------------------------- -->
     <section id="view-agents" class="space-y-6 hidden">
-      <div class="glass-panel p-5 rounded-xl border border-slate-800 space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-base font-bold text-white tracking-wide">Sentinel-XAI Nine-Agent Architecture Map</h2>
-            <p class="text-xs text-slate-400">Deterministic Pipeline: 01 &rarr; 02 &rarr; 03 &rarr; 04 &rarr; 05 &rarr; 08 &harr; 09 &rarr; 06 (Observed by Agent 07)</p>
-          </div>
+      <div class="glass-card p-5 rounded-xl space-y-4">
+        <div class="pb-3 border-b border-soc-border">
+          <h2 class="text-sm font-bold uppercase font-mono text-white tracking-wide">
+            Sentinel-XAI Nine-Agent Pipeline Architecture
+          </h2>
+          <p class="text-xs text-slate-400">
+            Deterministic Sequence: 01 &rarr; 02 &rarr; 03 &rarr; 04 &rarr; 05 &rarr; 08 &harr; 09 &rarr; 06 (Observed by Agent 07)
+          </p>
         </div>
 
         <div id="agentsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
@@ -545,23 +699,29 @@
       </div>
     </section>
 
-    <!-- 7. AUDIT HASH CHAIN TAB -->
+    <!-- ----------------------------------------------------------------- -->
+    <!-- 7. AUDIT LEDGER & HASH CHAIN INSPECTOR                           -->
+    <!-- ----------------------------------------------------------------- -->
     <section id="view-audit" class="space-y-6 hidden">
-      <div class="glass-panel p-5 rounded-xl border border-slate-800 space-y-4">
-        <div class="flex items-center justify-between">
+      <div class="glass-card p-5 rounded-xl space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-soc-border">
           <div>
-            <h2 class="text-base font-bold text-white tracking-wide">Cryptographic Audit Trail (RFC 8785 / SHA-256)</h2>
-            <p class="text-xs text-slate-400">Each entry stores SHA-256 digest of previous record. Detects insertion, deletion, reordering, and tampering.</p>
+            <h2 class="text-sm font-bold uppercase font-mono text-white tracking-wide">
+              Cryptographic Audit Chain (RFC 8785 / SHA-256)
+            </h2>
+            <p class="text-xs text-slate-400">
+              Backward hash-pointers guarantee tamper detection against deletion, reordering, and modification.
+            </p>
           </div>
-          <button onclick="verifyAuditTrail()" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded font-mono text-xs font-bold transition">
+          <button onclick="verifyAuditTrail()" class="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded font-mono text-xs font-bold transition shadow-glow-cyan">
             Verify Hash Chain Integrity
           </button>
         </div>
 
-        <div id="auditStatusBanner" class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-mono space-y-2">
+        <div id="auditStatusBanner" class="p-4 rounded-xl bg-soc-base border border-soc-border text-xs font-mono space-y-2">
           <div class="flex items-center space-x-2">
             <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
-            <span id="auditResultText" class="text-emerald-400 font-bold text-sm">Chain Status: Intact (Cryptographically Verified)</span>
+            <span id="auditResultText" class="text-emerald-400 font-bold text-sm">Chain Status: Intact & Cryptographically Verified</span>
           </div>
           <div id="auditDetailsText" class="text-slate-400">Verified entries: -- | Canonicalization: RFC8785-v1.0</div>
           <div class="text-[11px] text-slate-500 break-all">Latest Block Digest: <span id="auditLatestHash" class="text-slate-400">--</span></div>
@@ -571,15 +731,61 @@
 
   </main>
 
-  <!-- JAVASCRIPT SOC LOGIC -->
+  <!-- ===================================================================== -->
+  <!-- NATIVE MODAL DIALOG: APPROVAL AUTHORIZATION                           -->
+  <!-- ===================================================================== -->
+  <dialog id="approvalDialog" class="p-0 rounded-2xl glass-card border border-cyan-800 shadow-2xl text-slate-100 max-w-lg w-full">
+    <div class="p-6 space-y-4 font-mono text-xs">
+      <div class="flex items-center justify-between border-b border-soc-border pb-3">
+        <h3 class="text-sm font-bold text-cyan-400 uppercase">Authorize Defensive Action</h3>
+        <button onclick="document.getElementById('approvalDialog').close()" class="text-slate-400 hover:text-white text-lg">&times;</button>
+      </div>
+
+      <div class="p-3 bg-soc-base rounded border border-soc-border space-y-1.5">
+        <div class="text-slate-400">Action: <span id="modalAction" class="text-amber-400 font-bold">block_ip</span></div>
+        <div class="text-slate-400">Target Host/IP: <span id="modalTarget" class="text-white font-bold">185.220.101.47</span></div>
+        <div class="text-slate-400">Proposal ID: <span id="modalProposalId" class="text-slate-300">PROP-01</span></div>
+        <div class="text-slate-400">Asset Type: <span id="modalAssetType" class="text-cyan-300">ENTERPRISE_WORKSTATION</span></div>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-slate-300 mb-1">Primary Security Approver (soc_lead):</label>
+          <div class="grid grid-cols-2 gap-2">
+            <input id="modalUserId" type="text" value="soc_lead_chamith" class="px-2.5 py-1.5 bg-soc-base border border-soc-border rounded text-slate-200">
+            <input id="modalUserKey" type="password" value="sec_lead_secret_token_123" class="px-2.5 py-1.5 bg-soc-base border border-soc-border rounded text-slate-200">
+          </div>
+        </div>
+
+        <!-- IoMT Clinical Approver Fields -->
+        <div id="modalIomtFields" class="p-3 bg-rose-950/20 border border-rose-800/40 rounded space-y-2">
+          <div class="text-rose-400 font-bold flex items-center space-x-1.5">
+            <span>&#9888; Medical IoMT Device (Separation of Duties Enforced)</span>
+          </div>
+          <div class="text-[11px] text-slate-400">Secondary Clinical Engineer or Medical Director credentials required:</div>
+          <div class="grid grid-cols-2 gap-2">
+            <input id="modalClinId" type="text" value="dr_sarah_clinical" placeholder="Clinical User ID" class="px-2.5 py-1.5 bg-soc-base border border-soc-border rounded text-slate-200">
+            <input id="modalClinKey" type="password" value="clin_eng_secret_token_789" placeholder="Clinical Key" class="px-2.5 py-1.5 bg-soc-base border border-soc-border rounded text-slate-200">
+          </div>
+        </div>
+
+        <button onclick="submitModalApproval()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold transition shadow-glow-emerald">
+          Authorize & Execute (Dry-Run Only) &rarr;
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ===================================================================== -->
+  <!-- CLIENT JAVASCRIPT SOC ENGINE                                         -->
+  <!-- ===================================================================== -->
   <script>
     let activeTab = 'overview';
     let severityChartInstance = null;
     let shapChartInstance = null;
-    let currentIncident = null;
+    let cachedIncidents = [];
     let selectedPendingItem = null;
 
-    // What-if active state
     let whatIfState = {
       base: {
         failed_logins: 140.0,
@@ -594,22 +800,15 @@
       mods: {}
     };
 
-    function updateTime() {
-      const now = new Date();
-      document.getElementById('liveClock').innerText = now.toUTCString().slice(17, 25) + ' UTC';
-    }
-    setInterval(updateTime, 1000);
-    updateTime();
-
     function switchTab(tabId) {
       document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('text-cyan-400', 'bg-slate-800/80');
+        btn.classList.remove('text-cyan-400', 'bg-soc-panel', 'shadow-sm');
         btn.classList.add('text-slate-400');
       });
       const activeBtn = document.getElementById('tab-' + tabId);
       if (activeBtn) {
         activeBtn.classList.remove('text-slate-400');
-        activeBtn.classList.add('text-cyan-400', 'bg-slate-800/80');
+        activeBtn.classList.add('text-cyan-400', 'bg-soc-panel', 'shadow-sm');
       }
 
       ['overview', 'incidents', 'deepdive', 'whatif', 'approvals', 'agents', 'audit'].forEach(id => {
@@ -633,7 +832,8 @@
         const res = await fetch('/api/overview');
         const data = await res.json();
         document.getElementById('statTotalIncidents').innerText = data.total_incidents;
-        document.getElementById('statHighThreats').innerText = (data.severity_breakdown.high || 0) + (data.severity_breakdown.critical || 0);
+        const highCount = (data.severity_breakdown.high || 0) + (data.severity_breakdown.critical || 0);
+        document.getElementById('statHighThreats').innerText = highCount;
 
         if (data.llm_configuration) {
           document.getElementById('analystModelText').innerText = data.llm_configuration.analyst_model;
@@ -663,8 +863,8 @@
               severities.low || 0
             ],
             backgroundColor: ['#e11d48', '#f43f5e', '#f59e0b', '#10b981'],
-            borderColor: '#0f172a',
-            borderWidth: 2
+            borderColor: '#0d131f',
+            borderWidth: 3
           }]
         },
         options: {
@@ -673,7 +873,7 @@
           plugins: {
             legend: {
               position: 'right',
-              labels: { color: '#94a3b8', font: { family: 'monospace', size: 11 } }
+              labels: { color: '#94a3b8', font: { family: 'Fira Code', size: 10 } }
             }
           }
         }
@@ -682,44 +882,61 @@
 
     async function loadIncidents() {
       try {
-        const res = await fetch('/api/incidents?limit=25');
+        const res = await fetch('/api/incidents?limit=50');
         const data = await res.json();
-        const tbody = document.getElementById('incidentsTableBody');
-        if (!data.incidents || data.incidents.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-500">No recorded incidents in audit log.</td></tr>`;
-          return;
-        }
-
-        tbody.innerHTML = data.incidents.map(inc => {
-          const sevColor = inc.severity === 'high' || inc.severity === 'critical' ? 'text-rose-400' : (inc.severity === 'medium' ? 'text-amber-400' : 'text-emerald-400');
-          return `
-            <tr class="hover:bg-slate-900/40 transition">
-              <td class="py-2.5 px-3 font-bold text-white">${inc.alert_id}</td>
-              <td class="py-2.5 px-3 text-slate-400 text-[11px]">${inc.timestamp ? inc.timestamp.slice(11, 19) : '--'}</td>
-              <td class="py-2.5 px-3 text-cyan-400 font-semibold">${inc.label}</td>
-              <td class="py-2.5 px-3 ${sevColor} uppercase font-bold">${inc.severity}</td>
-              <td class="py-2.5 px-3 text-slate-300">${(inc.confidence * 100).toFixed(1)}%</td>
-              <td class="py-2.5 px-3 text-slate-400">${(inc.anomaly_score * 100).toFixed(0)}%</td>
-              <td class="py-2.5 px-3 text-emerald-400 font-bold">${inc.trust_score.toFixed(2)}</td>
-              <td class="py-2.5 px-3 text-slate-400 text-[11px]">${inc.status}</td>
-              <td class="py-2.5 px-3 text-right">
-                <button onclick="inspectIncident('${inc.alert_id}')" class="px-2.5 py-1 bg-cyan-950 hover:bg-cyan-900 text-cyan-400 border border-cyan-800 rounded text-[11px] transition">
-                  Deep Dive &rarr;
-                </button>
-              </td>
-            </tr>
-          `;
-        }).join('');
+        cachedIncidents = data.incidents || [];
+        renderIncidentsTable(cachedIncidents);
       } catch (err) {
         console.error('Error loading incidents:', err);
       }
+    }
+
+    function renderIncidentsTable(items) {
+      const tbody = document.getElementById('incidentsTableBody');
+      if (!items || items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-500">No recorded incidents found in audit ledger.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = items.map(inc => {
+        const sevColor = inc.severity === 'high' || inc.severity === 'critical' ? 'text-rose-400 bg-rose-950/60 border-rose-800' : (inc.severity === 'medium' ? 'text-amber-400 bg-amber-950/60 border-amber-800' : 'text-emerald-400 bg-emerald-950/60 border-emerald-800');
+        return `
+          <tr class="hover:bg-soc-panel/50 transition">
+            <td class="py-2.5 px-3 font-bold text-white">${inc.alert_id}</td>
+            <td class="py-2.5 px-3 text-slate-400 text-[11px]">${inc.timestamp ? inc.timestamp.slice(11, 19) : '--'}</td>
+            <td class="py-2.5 px-3 text-cyan-400 font-semibold">${inc.label}</td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${sevColor}">${inc.severity}</span>
+            </td>
+            <td class="py-2.5 px-3 text-slate-300">${(inc.confidence * 100).toFixed(1)}%</td>
+            <td class="py-2.5 px-3 text-slate-400">${(inc.anomaly_score * 100).toFixed(0)}%</td>
+            <td class="py-2.5 px-3 text-emerald-400 font-bold">${inc.trust_score.toFixed(2)}</td>
+            <td class="py-2.5 px-3 text-slate-400 text-[11px]">${inc.status}</td>
+            <td class="py-2.5 px-3 text-right">
+              <button onclick="inspectIncident('${inc.alert_id}')" class="px-2.5 py-1 bg-soc-panel hover:bg-cyan-950 text-cyan-400 border border-soc-border hover:border-cyan-800 rounded text-[11px] transition">
+                Deep Dive &rarr;
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterIncidents() {
+      const q = document.getElementById('incidentSearchInput').value.toLowerCase();
+      const filtered = cachedIncidents.filter(inc => 
+        inc.alert_id.toLowerCase().includes(q) ||
+        inc.label.toLowerCase().includes(q) ||
+        inc.severity.toLowerCase().includes(q) ||
+        (inc.src_ip && inc.src_ip.includes(q))
+      );
+      renderIncidentsTable(filtered);
     }
 
     async function inspectIncident(alertId) {
       try {
         const res = await fetch('/api/incidents/' + alertId);
         const data = await res.json();
-        currentIncident = data;
         switchTab('deepdive');
         populateDeepDive(data);
       } catch (err) {
@@ -734,24 +951,35 @@
       const sev = inc.final_severity || 'low';
       const sevEl = document.getElementById('deepSeverityBadge');
       sevEl.innerText = sev.toUpperCase();
-      sevEl.className = `text-xs font-mono uppercase px-2.5 py-0.5 rounded font-bold ${
-        sev === 'high' || sev === 'critical' ? 'bg-rose-950 text-rose-400 border border-rose-800' : 'bg-amber-950 text-amber-400 border border-amber-800'
+      sevEl.className = `text-xs font-mono font-bold uppercase px-2.5 py-0.5 rounded border ${
+        sev === 'high' || sev === 'critical' ? 'bg-rose-950 text-rose-400 border-rose-800' : 'bg-amber-950 text-amber-400 border-amber-800'
       }`;
 
       document.getElementById('deepStatusBadge').innerText = inc.status || 'unknown';
       document.getElementById('deepTrustScore').innerText = (inc.trust_score || 0).toFixed(2);
       const conf = inc.evidence?.detection?.confidence || 0;
       document.getElementById('deepConfidence').innerText = (conf * 100).toFixed(1) + '%';
+      const anom = inc.evidence?.detection?.anomaly_score || 0;
+      document.getElementById('deepAnomalyScore').innerText = (anom * 100).toFixed(0) + '%';
 
-      // Summary & Techniques
+      // IoMT asset tag
+      const isIomt = inc.evidence?.asset?.is_iomt;
+      const iomtBadge = document.getElementById('deepIoMTBadge');
+      if (isIomt) {
+        iomtBadge.classList.remove('hidden');
+      } else {
+        iomtBadge.classList.add('hidden');
+      }
+
+      // Narrative & Techniques
       document.getElementById('deepSummaryText').innerText = inc.report?.summary || 'No narrative generated.';
       const techEl = document.getElementById('deepTechniquesList');
       const techs = inc.report?.mitre_techniques || [];
-      techEl.innerHTML = techs.length ? techs.map(t => `<span class="px-2 py-0.5 rounded bg-slate-800 text-cyan-400 font-mono text-[10px] border border-slate-700">${t}</span>`).join('') : '<span class="text-slate-500 text-[11px]">No specific technique asserted</span>';
+      techEl.innerHTML = techs.length ? techs.map(t => `<span class="px-2 py-0.5 rounded bg-soc-panel text-cyan-400 font-mono text-[10px] border border-soc-border">${t}</span>`).join('') : '<span class="text-slate-500 text-[11px]">No specific technique asserted</span>';
 
       // Critic
       document.getElementById('deepCriticApproved').innerText = inc.verdict?.approved ? 'APPROVED' : 'REJECTED';
-      document.getElementById('deepCriticFeedback').innerText = inc.verdict?.feedback_for_analyst || 'Claims mathematically supported by evidence snapshot.';
+      document.getElementById('deepCriticFeedback').innerText = inc.verdict?.feedback_for_analyst || 'Claims mathematically grounded in evidence ledger snapshot.';
 
       // Counterfactual
       const cf = inc.evidence?.detection?.contrastive_explanation;
@@ -771,17 +999,18 @@
       if (ledger && ledger.claims && ledger.claims.length) {
         document.getElementById('deepLedgerStats').innerText = `Supported: ${ledger.supported_claims} / ${ledger.total_claims} (${(ledger.supported_ratio * 100).toFixed(0)}%)`;
         tbody.innerHTML = ledger.claims.map(c => `
-          <tr class="hover:bg-slate-900/40">
+          <tr class="hover:bg-soc-panel/50">
             <td class="py-2 px-3 text-cyan-400 font-bold">${c.claim_id}</td>
+            <td class="py-2 px-3 text-slate-400 text-[10px] uppercase">${c.claim_type || 'observed_fact'}</td>
             <td class="py-2 px-3 text-slate-200">${c.statement}</td>
             <td class="py-2 px-3 text-slate-400 text-[11px]">${(c.evidence_keys || []).join(', ')}</td>
             <td class="py-2 px-3 text-slate-300 text-[11px]">${JSON.stringify(c.resolved_values || {})}</td>
-            <td class="py-2 px-3"><span class="px-2 py-0.5 rounded text-[10px] ${c.verification_status === 'SUPPORTED' ? 'bg-emerald-950 text-emerald-400' : 'bg-rose-950 text-rose-400'}">${c.verification_status}</span></td>
+            <td class="py-2 px-3"><span class="px-2 py-0.5 rounded text-[10px] ${c.verification_status === 'SUPPORTED' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-rose-950 text-rose-400 border border-rose-800'}">${c.verification_status}</span></td>
             <td class="py-2 px-3 text-slate-400 text-[11px]">${c.verifier_notes || '--'}</td>
           </tr>
         `).join('');
       } else {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-slate-500">No atomic claims registered.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-slate-500">No atomic claims registered.</td></tr>`;
       }
 
       // 9 Agent traces
@@ -789,12 +1018,12 @@
       const traces = inc.agent_traces || [];
       if (traces.length) {
         tracesList.innerHTML = traces.map(t => `
-          <div class="p-3 bg-slate-900/70 border border-slate-800 rounded-lg space-y-1">
+          <div class="p-3 bg-soc-base border border-soc-border rounded-lg space-y-1">
             <div class="flex items-center justify-between">
               <span class="font-bold text-cyan-400 text-[11px]">${t.agent_id}</span>
-              <span class="text-[10px] text-emerald-400">${t.duration_ms}ms</span>
+              <span class="text-[10px] text-emerald-400 font-mono">${t.duration_ms}ms</span>
             </div>
-            <div class="text-[10px] text-slate-300">${t.agent_name}</div>
+            <div class="text-[10px] text-slate-300 font-medium">${t.agent_name}</div>
             <div class="text-[9px] text-slate-500 font-mono truncate">Status: ${t.status}</div>
           </div>
         `).join('');
@@ -818,9 +1047,9 @@
           datasets: [{
             label: 'SHAP Contribution (\u03c6)',
             data: values,
-            backgroundColor: values.map(v => v >= 0 ? 'rgba(56, 189, 248, 0.7)' : 'rgba(244, 63, 94, 0.7)'),
-            borderColor: values.map(v => v >= 0 ? '#38bdf8' : '#f43f5e'),
-            borderWidth: 1
+            backgroundColor: values.map(v => v >= 0 ? 'rgba(6, 182, 212, 0.75)' : 'rgba(244, 63, 94, 0.75)'),
+            borderColor: values.map(v => v >= 0 ? '#06b6d4' : '#f43f5e'),
+            borderWidth: 1.5
           }]
         },
         options: {
@@ -829,12 +1058,12 @@
           maintainAspectRatio: false,
           scales: {
             x: {
-              grid: { color: '#1e293b' },
-              ticks: { color: '#94a3b8', font: { family: 'monospace' } }
+              grid: { color: '#1b263b' },
+              ticks: { color: '#94a3b8', font: { family: 'Fira Code' } }
             },
             y: {
-              grid: { color: '#1e293b' },
-              ticks: { color: '#e2e8f0', font: { family: 'monospace', size: 10 } }
+              grid: { color: '#1b263b' },
+              ticks: { color: '#e2e8f0', font: { family: 'Fira Code', size: 10 } }
             }
           },
           plugins: {
@@ -847,6 +1076,26 @@
     function updateWhatIfValue(feat, val) {
       document.getElementById('val_' + feat).innerText = val;
       whatIfState.mods[feat] = parseFloat(val);
+    }
+
+    function applyWhatIfPreset(type) {
+      const presets = {
+        normal: { failed_logins: 0, conn_rate: 2, distinct_dst_ports: 3, bytes_out_mb: 0.5, dns_query_entropy: 2.6, beacon_regularity: 0.1 },
+        bruteforce: { failed_logins: 220, conn_rate: 45, distinct_dst_ports: 1, bytes_out_mb: 0.2, dns_query_entropy: 2.4, beacon_regularity: 0.2 },
+        portscan: { failed_logins: 2, conn_rate: 90, distinct_dst_ports: 250, bytes_out_mb: 0.1, dns_query_entropy: 2.5, beacon_regularity: 0.3 },
+        exfil: { failed_logins: 1, conn_rate: 15, distinct_dst_ports: 2, bytes_out_mb: 350.0, dns_query_entropy: 2.9, beacon_regularity: 0.25 },
+        c2: { failed_logins: 0, conn_rate: 5, distinct_dst_ports: 1, bytes_out_mb: 0.1, dns_query_entropy: 4.2, beacon_regularity: 0.95 },
+      };
+      const p = presets[type];
+      if (!p) return;
+      Object.keys(p).forEach(k => {
+        const slider = document.getElementById('slider_' + k);
+        if (slider) {
+          slider.value = p[k];
+          updateWhatIfValue(k, p[k]);
+        }
+      });
+      executeWhatIf();
     }
 
     async function executeWhatIf() {
@@ -869,9 +1118,9 @@
         const deltasEl = document.getElementById('whatifAttributionDeltas');
         if (result.top_attribution_changes && result.top_attribution_changes.length) {
           deltasEl.innerHTML = result.top_attribution_changes.slice(0, 4).map(c => `
-            <div class="flex justify-between border-b border-slate-900 pb-0.5">
+            <div class="flex justify-between border-b border-soc-border pb-1">
               <span>${c.feature}:</span>
-              <span class="${c.delta > 0 ? 'text-cyan-400' : 'text-rose-400'}">${c.delta > 0 ? '+' : ''}${c.delta.toFixed(3)}</span>
+              <span class="${c.delta > 0 ? 'text-cyan-400' : 'text-rose-400'} font-bold">${c.delta > 0 ? '+' : ''}${c.delta.toFixed(3)}</span>
             </div>
           `).join('');
         } else {
@@ -888,69 +1137,65 @@
         const data = await res.json();
         const tbody = document.getElementById('pendingActionsBody');
         if (!data.items || data.items.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-slate-500">No actions pending approval.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-500">No actions currently pending authorization.</td></tr>`;
           return;
         }
 
+        window._pendingActionsData = data.items;
         tbody.innerHTML = data.items.map((item, idx) => `
-          <tr class="hover:bg-slate-900/40">
+          <tr class="hover:bg-soc-panel/50">
             <td class="py-2.5 px-3 font-bold text-white">${item.alert_id || 'ALRT-HOLD'}</td>
             <td class="py-2.5 px-3 text-amber-400 font-bold">${item.action}</td>
             <td class="py-2.5 px-3 text-slate-200">${item.target}</td>
             <td class="py-2.5 px-3 text-cyan-400">${item.asset_type || 'UNKNOWN'}</td>
             <td class="py-2.5 px-3 text-slate-400 text-[11px]">${item.reason || item.reason_code}</td>
             <td class="py-2.5 px-3 text-right">
-              <button onclick="openApprovalPanel(${idx})" class="px-2.5 py-1 bg-emerald-950 hover:bg-emerald-900 text-emerald-400 border border-emerald-800 rounded transition">
+              <button onclick="openApprovalModal(${idx})" class="px-2.5 py-1 bg-soc-panel hover:bg-emerald-950 text-emerald-400 border border-soc-border hover:border-emerald-800 rounded font-semibold transition">
                 Authorize &rarr;
               </button>
             </td>
           </tr>
         `).join('');
-
-        window._pendingActionsData = data.items;
       } catch (err) {
         console.error('Error loading pending actions:', err);
       }
     }
 
-    function openApprovalPanel(idx) {
+    function openApprovalModal(idx) {
       const item = (window._pendingActionsData || [])[idx];
       if (!item) return;
       selectedPendingItem = item;
 
-      document.getElementById('apprTarget').innerText = item.target;
-      document.getElementById('apprAction').innerText = item.action;
-      document.getElementById('apprProposalId').innerText = item.proposal_id || ('PROP-' + idx);
+      document.getElementById('modalTarget').innerText = item.target;
+      document.getElementById('modalAction').innerText = item.action;
+      document.getElementById('modalProposalId').innerText = item.proposal_id || ('PROP-' + idx);
       const isIomt = (item.asset_type || '').includes('IOMT') || (item.reason || '').includes('IoMT');
-      document.getElementById('apprAssetType').innerText = item.asset_type || (isIomt ? 'IOMT_MEDICAL_DEVICE' : 'ENTERPRISE_WORKSTATION');
+      document.getElementById('modalAssetType').innerText = item.asset_type || (isIomt ? 'IOMT_MEDICAL_DEVICE' : 'ENTERPRISE_WORKSTATION');
 
-      const clinEl = document.getElementById('iomtClinicalFields');
+      const clinEl = document.getElementById('modalIomtFields');
       if (isIomt) {
         clinEl.classList.remove('hidden');
       } else {
         clinEl.classList.add('hidden');
       }
 
-      document.getElementById('approvalActionPanel').classList.remove('hidden');
+      const dialog = document.getElementById('approvalDialog');
+      if (dialog) dialog.showModal();
     }
 
-    function closeApprovalPanel() {
-      document.getElementById('approvalActionPanel').classList.add('hidden');
-    }
-
-    async function submitApproval() {
+    async function submitModalApproval() {
       if (!selectedPendingItem) return;
-      const isIomt = !document.getElementById('iomtClinicalFields').classList.contains('hidden');
+      const isIomt = !document.getElementById('modalIomtFields').classList.contains('hidden');
 
       const body = {
         proposal_id: selectedPendingItem.proposal_id || 'PROP-01',
         alert_id: selectedPendingItem.alert_id || 'ALRT-01',
         action: selectedPendingItem.action,
         target: selectedPendingItem.target,
-        user_id: document.getElementById('apprUserId').value,
-        user_key: document.getElementById('apprUserKey').value,
-        clinical_user_id: isIomt ? document.getElementById('apprClinId').value : null,
-        clinical_user_key: isIomt ? document.getElementById('apprClinKey').value : null,
+        user_id: document.getElementById('modalUserId').value,
+        user_key: document.getElementById('modalUserKey').value,
+        clinical_user_id: isIomt ? document.getElementById('modalClinId').value : null,
+        clinical_user_key: isIomt ? document.getElementById('modalClinKey').value : null,
         is_iomt: isIomt,
         parameters: {}
       };
@@ -963,14 +1208,14 @@
         });
         const result = await res.json();
         if (res.ok) {
-          alert(`Action authorized successfully!\n\nApproval Token: ${result.approval_token}\nExecution Mode: ${result.execution_mode} (External Effect: False)\n\n${result.disclaimer}`);
-          closeApprovalPanel();
+          alert(`Defensive action authorized successfully!\n\nApproval Token: ${result.approval_token}\nMode: ${result.execution_mode} (External Effect: False)\n\n${result.disclaimer}`);
+          document.getElementById('approvalDialog').close();
           loadPending();
         } else {
           alert('Approval rejected: ' + (result.detail || 'Authorization failed.'));
         }
       } catch (err) {
-        alert('Network error submitting approval: ' + err);
+        alert('Error submitting approval: ' + err);
       }
     }
 
@@ -980,16 +1225,16 @@
         const data = await res.json();
         const grid = document.getElementById('agentsGrid');
         grid.innerHTML = data.agents.map(a => `
-          <div class="glass-panel p-4 rounded-xl border border-slate-800 space-y-2">
+          <div class="glass-card p-4 rounded-xl space-y-2 border border-soc-border hover:border-cyan-800 transition">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-cyan-400">${a.agent_id}</span>
-              <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 text-[10px] border border-emerald-800">${a.status}</span>
+              <span class="text-xs font-bold text-cyan-400 font-mono">${a.agent_id}</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 text-[10px] font-mono border border-emerald-800">${a.status}</span>
             </div>
             <div class="text-sm font-bold text-white">${a.name}</div>
             <p class="text-slate-400 text-[11px] leading-relaxed">${a.role}</p>
             <div class="text-slate-500 text-[10px] pt-1">Model: ${a.model_type}</div>
-            <div class="text-[10px] text-slate-400 pt-1 border-t border-slate-800/80">
-              <div class="font-bold text-slate-300">Safeguards:</div>
+            <div class="text-[10px] text-slate-400 pt-2 border-t border-soc-border">
+              <div class="font-bold text-slate-300">Invariants:</div>
               <ul class="list-disc list-inside text-slate-400 space-y-0.5">
                 ${a.safeguards.map(s => `<li>${s}</li>`).join('')}
               </ul>
@@ -1049,7 +1294,7 @@
       loadPending();
     }
 
-    // Initial load
+    // Initialize on page load
     loadOverview();
     loadIncidents();
   </script>
