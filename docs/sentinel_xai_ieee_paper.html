@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sentinel-XAI: A Safety-Aware Multi-Agent Explainable AI Platform for Autonomous Cyber Threat Detection</title>
+<style>
+  @page {
+    size: letter;
+    margin-top: 18mm;
+    margin-bottom: 22mm;
+    margin-left: 14mm;
+    margin-right: 14mm;
+  }
+  
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    font-family: "Times New Roman", Times, "Nimbus Roman No9 L", serif;
+    font-size: 9.5pt;
+    line-height: 1.18;
+    color: #000;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  /* Two Column Container */
+  .two-column {
+    column-count: 2;
+    column-gap: 16pt;
+    column-fill: balance;
+    text-align: justify;
+    text-justify: inter-word;
+  }
+
+  /* Header / Title block spans full width */
+  .header-block {
+    text-align: center;
+    margin-bottom: 12pt;
+  }
+
+  .paper-title {
+    font-size: 19pt;
+    font-weight: bold;
+    line-height: 1.15;
+    margin-bottom: 10pt;
+    letter-spacing: -0.2pt;
+  }
+
+  .author-row {
+    display: flex;
+    justify-content: center;
+    gap: 36pt;
+    margin-bottom: 12pt;
+  }
+
+  .author-card {
+    text-align: center;
+    font-size: 8.8pt;
+    line-height: 1.25;
+  }
+
+  .author-name {
+    font-size: 10pt;
+    font-weight: bold;
+  }
+
+  .author-inst {
+    font-style: italic;
+  }
+
+  /* Abstract & Keywords */
+  .abstract-box {
+    margin-bottom: 8pt;
+    font-size: 8.8pt;
+    line-height: 1.22;
+  }
+
+  .abstract-title {
+    font-weight: bold;
+    font-style: italic;
+  }
+
+  .keywords-box {
+    margin-bottom: 10pt;
+    font-size: 8.8pt;
+    line-height: 1.22;
+  }
+
+  .keywords-title {
+    font-weight: bold;
+    font-style: italic;
+  }
+
+  /* Section Headings */
+  h2.sec-heading {
+    font-size: 9.5pt;
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+    margin-top: 9pt;
+    margin-bottom: 4pt;
+    letter-spacing: 0.5pt;
+    break-after: avoid;
+  }
+
+  h3.subsec-heading {
+    font-size: 9.5pt;
+    font-weight: bold;
+    font-style: italic;
+    text-align: left;
+    margin-top: 6pt;
+    margin-bottom: 2pt;
+    break-after: avoid;
+  }
+
+  p {
+    margin-top: 0;
+    margin-bottom: 4pt;
+    text-indent: 1em;
+  }
+
+  p.noindent {
+    text-indent: 0;
+  }
+
+  /* Equations */
+  .equation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5pt 0;
+    padding: 0 4pt;
+    font-style: italic;
+    break-inside: avoid;
+  }
+
+  .equation .math {
+    margin: 0 auto;
+    font-family: "Cambria Math", "Times New Roman", serif;
+  }
+
+  .equation .eq-num {
+    font-style: normal;
+    font-family: "Times New Roman", serif;
+  }
+
+  /* Tables */
+  .table-container {
+    margin: 8pt 0;
+    text-align: center;
+    break-inside: avoid;
+  }
+
+  .full-width-table {
+    column-span: all;
+    margin: 10pt 0;
+  }
+
+  .table-title {
+    font-size: 8pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 1pt;
+    letter-spacing: 0.5pt;
+  }
+
+  .table-subcaption {
+    font-size: 7.8pt;
+    font-style: italic;
+    margin-bottom: 4pt;
+  }
+
+  table.ieee-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.8pt;
+    line-height: 1.2;
+    margin: 0 auto;
+  }
+
+  table.ieee-table th {
+    border-top: 1pt solid #000;
+    border-bottom: 0.5pt solid #000;
+    padding: 3pt 3pt;
+    text-align: left;
+    font-weight: bold;
+  }
+
+  table.ieee-table td {
+    padding: 2.5pt 3pt;
+    border-bottom: 0.25pt solid #ddd;
+    text-align: left;
+  }
+
+  table.ieee-table tr.last-row td {
+    border-bottom: 1pt solid #000;
+  }
+
+  table.ieee-table td.center, table.ieee-table th.center {
+    text-align: center;
+  }
+
+  table.ieee-table td.right, table.ieee-table th.right {
+    text-align: right;
+  }
+
+  .table-note {
+    font-size: 7pt;
+    font-style: italic;
+    text-align: left;
+    margin-top: 2pt;
+    line-height: 1.15;
+  }
+
+  /* Algorithm Box */
+  .algorithm-box {
+    border-top: 1pt solid #000;
+    border-bottom: 1pt solid #000;
+    padding: 4pt 0;
+    margin: 8pt 0;
+    font-size: 8pt;
+    line-height: 1.25;
+    break-inside: avoid;
+  }
+
+  .algorithm-title {
+    font-weight: bold;
+    border-bottom: 0.5pt solid #000;
+    padding-bottom: 2pt;
+    margin-bottom: 3pt;
+  }
+
+  .algorithm-body {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 7.5pt;
+    line-height: 1.2;
+  }
+
+  .alg-line {
+    display: flex;
+  }
+
+  .alg-num {
+    width: 16pt;
+    color: #444;
+    text-align: right;
+    margin-right: 6pt;
+    user-select: none;
+  }
+
+  .alg-indent-1 { padding-left: 10pt; }
+  .alg-indent-2 { padding-left: 20pt; }
+  .alg-indent-3 { padding-left: 30pt; }
+
+  /* Architecture Box / Diagram */
+  .arch-diagram {
+    border: 0.5pt solid #000;
+    padding: 6pt;
+    margin: 8pt 0;
+    font-size: 7.8pt;
+    background: #fbfbfb;
+    text-align: center;
+    break-inside: avoid;
+  }
+
+  .arch-step {
+    border: 0.5pt solid #555;
+    background: #fff;
+    padding: 2.5pt 4pt;
+    margin: 2pt auto;
+    width: 90%;
+    font-weight: bold;
+  }
+
+  .arch-arrow {
+    font-size: 9pt;
+    line-height: 1;
+    color: #333;
+  }
+
+  /* References */
+  .ref-list {
+    font-size: 7.8pt;
+    line-height: 1.18;
+    margin-top: 4pt;
+  }
+
+  .ref-item {
+    display: flex;
+    margin-bottom: 3pt;
+    text-align: justify;
+  }
+
+  .ref-num {
+    min-width: 18pt;
+    font-weight: normal;
+  }
+
+  .ref-body {
+    flex-grow: 1;
+  }
+
+  /* Spans and Highlights */
+  .bold { font-weight: bold; }
+  .italic { font-style: italic; }
+  .sc { font-variant: small-caps; }
+  .math-inline { font-style: italic; font-family: "Cambria Math", "Times New Roman", serif; }
+</style>
+</head>
+<body>
+
+<div class="header-block">
+  <div class="paper-title">Sentinel-XAI: A Safety-Aware Multi-Agent Explainable AI Platform for Autonomous Cyber Threat Detection</div>
+  
+  <div class="author-row">
+    <div class="author-card">
+      <div class="author-name">Laddu Chamith Shaminda De Silva</div>
+      <div class="author-inst">Department of Computing</div>
+      <div class="author-inst">Informatics Institute of Technology</div>
+      <div>Colombo, Sri Lanka</div>
+      <div>chamith.20230638@iit.ac.lk</div>
+    </div>
+    <div class="author-card">
+      <div class="author-name">Academic Research Mentorship</div>
+      <div class="author-inst">School of Computer Science and Engineering</div>
+      <div class="author-inst">University of Westminster</div>
+      <div>London, United Kingdom</div>
+      <div>w2083586@my.westminster.ac.uk</div>
+    </div>
+  </div>
+</div>
+
+<div class="two-column">
+
+  <div class="abstract-box">
+    <span class="abstract-title">Abstract</span>—Autonomous cyber threat response systems powered by black-box machine learning classifiers or unconstrained Large Language Model (LLM) agents pose severe operational risks, including catastrophic action hallucination, ungrounded threat severity escalation, and unverified service disruptions to life-critical Internet of Medical Things (IoMT) infrastructure. To address these vulnerabilities, this paper introduces <span class="bold">Sentinel-XAI</span>, a safety-aware multi-agent Explainable Artificial Intelligence (XAI) framework engineered for robust cyber defense. Sentinel-XAI orchestrates nine modular autonomous agents governed by formal contract invariants (<span class="math-inline">C<sub>1</sub>–C<sub>16</sub></span>), integrating an explainability triad (TreeSHAP, LIME, and actionable contrastive counterfactual perturbation), finite-sample conformal selective risk control (<span class="math-inline">α ≤ 0.05</span> with Clopper-Pearson Binomial Upper Confidence Bounds), and a dual-LLM adversarial verification debate protocol anchored by an RFC 6901 Claim-Evidence Ledger and RFC 8785 Canonical JSON digests. For healthcare infrastructure, an IoMT Separation of Duties gate (<span class="math-inline">C<sub>16</sub></span>) prevents autonomous disruption on clinical devices, mandating dual-role clinician authorization. Empirical evaluation across four intrusion benchmarks (NSL-KDD, CIC-IDS2017, UNSW-NB15, and CICIoMT2024) demonstrates that Sentinel-XAI completely eliminates narrative hallucinations (reducing ungrounded assertions from 20.0% in single-LLM pipelines to 0.0% under cross-model debate), bounds empirical triage risk to <span class="math-inline">≤ 0.10%</span> under a 5.0% target limit, achieves a Composite Explanation Trust Score (ETS) of 0.8709, and successfully detects out-of-distribution covariate shifts on medical network telemetry.
+  </div>
+
+  <div class="keywords-box">
+    <span class="keywords-title">Keywords</span>—Explainable AI, Multi-Agent Systems, Autonomous Cyber Defense, Conformal Prediction, Dual-LLM Verification, Internet of Medical Things, TreeSHAP, Auditable AI.
+  </div>
+
+  <h2 class="sec-heading">I. Introduction</h2>
+  <p class="noindent">Modern Security Operations Centers (SOCs) operate under acute cognitive strain. High-bandwidth enterprise perimeters generate tens of thousands of network flow alerts daily, over 80% of which are benign noise or unactionable false positives [1]. While deep learning and ensemble classifiers (e.g., XGBoost, Deep Neural Networks) achieve impressive offline classification accuracy in Intrusion Detection Systems (IDS), their black-box nature creates an insurmountable trust barrier for human analysts [2]. Tier-1 analysts cannot verify whether a classified anomaly represents an Advanced Persistent Threat (APT) or an innocuous network configuration shift, leading to alert fatigue and delayed incident containment.</p>
+
+  <p>To automate triage, recent industrial efforts have deployed Large Language Model (LLM) agents powered by reasoning frameworks such as ReAct or Chain-of-Thought (CoT) [3], [4]. However, deploying generative models directly into autonomous response pipelines introduces catastrophic failure modes:</p>
+  <p class="noindent">1) <span class="italic">Narrative Hallucination and Evidence Fabrication:</span> LLM agents routinely invent non-existent Indicators of Compromise (IOCs), extrapolate lateral movement without supporting packet telemetry, or exaggerate benign anomalies into critical emergencies [5].</p>
+  <p class="noindent">2) <span class="italic">Unguarded Autonomous Disruption in Life-Critical Networks:</span> In clinical healthcare environments operating Internet of Medical Things (IoMT) devices (e.g., smart infusion pumps, bedside patient telemetry monitors), naive automated mitigation policies that isolate hosts can terminate life-support telemetry, directly endangering patient lives [6].</p>
+  <p class="noindent">3) <span class="italic">Uncalibrated Heuristic Triage:</span> Conventional systems employ arbitrary confidence thresholds (e.g., softmax score <span class="math-inline">≥ 0.80</span>), lacking finite-sample statistical risk guarantees when facing non-stationary cyber traffic distributions [7], [8].</p>
+
+  <p>To resolve these challenges, we present <span class="bold">Sentinel-XAI</span>, a safety-aware multi-agent platform for autonomous threat detection, verifiable explanation, and policy-governed mitigation. Sentinel-XAI abandons unconstrained monolithic agents in favor of nine specialized, role-isolated agents bound by formal pre- and post-condition contracts (<span class="math-inline">C<sub>1</sub></span> through <span class="math-inline">C<sub>16</sub></span>). The primary contributions of this work are:</p>
+  <p class="noindent">• <span class="bold">Deterministic RFC 6901 Claim-Evidence Ledger and Dual-LLM Verification Debate (<span class="math-inline">C<sub>1</sub>, C<sub>2</sub></span>):</span> An epistemic verification protocol where an independent Critic agent audits every natural-language assertion synthesized by an Analyst agent against an immutable RFC 8785 canonical evidence digest, eliminating narrative hallucinations.</p>
+  <p class="noindent">• <span class="bold">Finite-Sample Conformal Selective Risk Control (<span class="math-inline">C<sub>9</sub></span>):</span> An empirical selective classification calibrator utilizing exact one-sided Clopper-Pearson Binomial Upper Confidence Bounds (UCB) with Bonferroni correction, provably guaranteeing that automated triage risk remains bounded beneath a user-specified threshold (<span class="math-inline">α ≤ 0.05</span>).</p>
+  <p class="noindent">• <span class="bold">Clinical IoMT Separation of Duties Gate (<span class="math-inline">C<sub>16</sub></span>):</span> A deterministic policy rule enforcing strict patient-safety preservation: any disruptive remediation targeting registered medical devices is halted and converted into a dual-authorization workflow requiring clinical engineering sign-off.</p>
+  <p class="noindent">• <span class="bold">Explanation Triad and Composite Trust Metric (<span class="math-inline">C<sub>10</sub>, C<sub>13</sub></span>):</span> Integration of TreeSHAP local attributions, LIME surrogate consistency, and actionable contrastive counterfactual search, aggregated into a Composite Explanation Trust Score (ETS).</p>
+  <p class="noindent">• <span class="bold">Cryptographic Audit Chaining (<span class="math-inline">C<sub>4</sub></span>):</span> An immutable SHA-256 hash-chained ledger storing canonical JSON representations of every flow, feature attribution, LLM debate transcript, and human feedback event.</p>
+
+  <h3 class="subsec-heading">A. Illustrative Practical Scenario</h3>
+  <p class="noindent">Consider an operational hospital network where a smart infusion pump (<span class="math-inline">infusion-pump-01</span>, IP: <span class="math-inline">10.0.4.15</span>) is compromised by a malicious payload exhibiting covert Command-and-Control (C2) beaconing and DNS tunneling. The network telemetry presents elevated DNS query entropy (4.25 vs. normal 2.61) and periodic beacon regularity.</p>
+  <p>In a conventional autonomous SOC system, a high detection probability (<span class="math-inline">p = 0.999</span>) triggers an immediate network quarantine action (<span class="math-inline">isolate_host</span>). While stopping the network breach, this action terminates the pump's drug delivery monitoring stream, directly risking patient morbidity. Conversely, in Sentinel-XAI:</p>
+  <p class="noindent">1) Agent 02 classifies the flow as <span class="math-inline">c2_beaconing</span> with confidence 0.999; Agent 03 attributes the decision to <span class="math-inline">dns_query_entropy</span> via TreeSHAP.</p>
+  <p class="noindent">2) Agent 05 confirms selective risk eligibility (<span class="math-inline">s(x) ≤ λ̂</span>).</p>
+  <p class="noindent">3) Agent 08 (Analyst) drafts an incident narrative. Agent 09 (Critic) audits the claims against the deterministic evidence ledger, verifying that the cited IOCs exist in the flow.</p>
+  <p class="noindent">4) Agent 06 (Response Orchestrator) intercepts the proposed mitigation. Recognizing <span class="math-inline">infusion-pump-01</span> as a critical IoMT asset via the device registry, Hard Safety Gate <span class="math-inline">C<sub>16</sub></span> automatically permits non-disruptive actions (<span class="math-inline">collect_forensics, open_ticket</span>) but halts <span class="math-inline">isolate_host</span>, holding it in an approval store requiring joint clinical engineer and SOC analyst authorization.</p>
+
+  <h2 class="sec-heading">II. Related Work &amp; Research Positioning</h2>
+  <h3 class="subsec-heading">A. Intrusion Detection and Machine Learning</h3>
+  <p class="noindent">Intrusion Detection Systems (IDS) have evolved from signature-based rule matchers (e.g., Snort) to anomaly-based machine learning classifiers [1]. Tree-based ensembles such as XGBoost, Random Forests, and LightGBM consistently demonstrate superior tabular performance on network flow benchmarks such as NSL-KDD [9], CIC-IDS2017 [10], and UNSW-NB15 [11]. However, high nominal test accuracy frequently degrades under out-of-distribution network traffic, and raw classifier scores provide zero insight into which protocol fields drove the classification.</p>
+
+  <h3 class="subsec-heading">B. Explainable Artificial Intelligence (XAI) in Cybersecurity</h3>
+  <p class="noindent">Local attribution methods, predominantly SHAP (SHapley Additive exPlanations) [12] and LIME (Local Interpretable Model-agnostic Explanations) [13], have been applied to expose feature contributions in cyber threat models. TreeSHAP provides mathematically sound, polynomial-time Shapley values for tree ensembles based on game-theoretic axioms. However, standalone feature attribution suffers from what we define as the <span class="italic">Explanation-Action Gap</span>: knowing that a flow has high <span class="math-inline">failed_logins</span> does not tell an engineer what minimal, valid network configuration changes would restore normal status, nor does it guarantee that downstream remediation scripts will parse the explanation safely. Counterfactual explanations address this by identifying the minimum feature perturbation required to flip the prediction to benign [2].</p>
+
+  <h3 class="subsec-heading">C. Multi-Agent LLM Systems and Epistemic Verification</h3>
+  <p class="noindent">The emergence of generative LLMs has led to multi-agent security frameworks where language models synthesize alerts, query threat feeds, and recommend playbooks [5]. However, ungrounded LLMs are prone to hallucination, sycophancy, and prompt injection vulnerabilities. Prior studies demonstrate that multi-agent debate and cross-model verification can mitigate hallucinations by forcing agents to cross-examine claims [14]. However, existing debate schemes rely on free-form natural language consensus, which remains vulnerable to mutual reinforcement of false premises. Sentinel-XAI overcomes this by enforcing a machine-verifiable, deterministic Claim-Evidence Ledger (<span class="math-inline">C<sub>1</sub></span>) based on RFC 6901 JSON pointers and RFC 8785 Canonical JSON digests.</p>
+
+  <h3 class="subsec-heading">D. Conformal Prediction and Selective Classification</h3>
+  <p class="noindent">Selective classification allows a model to abstain from predicting when uncertainty is high [7]. Conformal prediction provides a distribution-free, finite-sample statistical framework to calibrate prediction sets and guarantee bounded risk under exchangeability [8]. While conformal methods have been explored in computer vision and clinical prognosis, their application to multi-agent autonomous SOC triage with rigorous finite-sample error control has remained unaddressed. Table I establishes the research positioning of Sentinel-XAI relative to existing paradigms.</p>
+
+</div>
+
+<div class="full-width-table">
+  <div class="table-title">TABLE I</div>
+  <div class="table-subcaption">Contextual Comparison and Research Positioning</div>
+  <table class="ieee-table">
+    <thead>
+      <tr>
+        <th>Architectural Dimension</th>
+        <th>Traditional ML IDS</th>
+        <th>Standalone XAI (SHAP)</th>
+        <th>Autonomous LLM Agents</th>
+        <th>Sentinel-XAI (Ours)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Detection Engine</td>
+        <td>XGBoost / Deep Nets</td>
+        <td>XGBoost / Random Forest</td>
+        <td>Unconstrained Prompting</td>
+        <td>Multi-Model Ensemble (XGB+IF)</td>
+      </tr>
+      <tr>
+        <td>Explainability Triad</td>
+        <td>None (Black-Box)</td>
+        <td>Feature Importance Only</td>
+        <td>Unverified Narrative</td>
+        <td>TreeSHAP + LIME + Contrastive (C<sub>10</sub>)</td>
+      </tr>
+      <tr>
+        <td>Counterfactual Actionability</td>
+        <td>Absent</td>
+        <td>Absent</td>
+        <td>Unreliable Guessing</td>
+        <td>L<sub>1</sub>-Optimized Perturbation (C<sub>10</sub>)</td>
+      </tr>
+      <tr>
+        <td>Provable Selective Risk Control</td>
+        <td>None (Heuristic Score)</td>
+        <td>None</td>
+        <td>None</td>
+        <td>Clopper-Pearson UCB (α ≤ 0.05, C<sub>9</sub>)</td>
+      </tr>
+      <tr>
+        <td>Narrative Grounding Protocol</td>
+        <td>Not Applicable</td>
+        <td>Not Applicable</td>
+        <td>Unchecked (Hallucinations)</td>
+        <td>Deterministic RFC 6901 Ledger (C<sub>1</sub>)</td>
+      </tr>
+      <tr>
+        <td>Adversarial Epistemic Verification</td>
+        <td>Absent</td>
+        <td>Absent</td>
+        <td>Unchecked Self-Consistency</td>
+        <td>Cross-Model Verifier Debate (C<sub>2</sub>)</td>
+      </tr>
+      <tr>
+        <td>Life-Critical IoMT Safeguards</td>
+        <td>Manual Only</td>
+        <td>Absent</td>
+        <td>Dangerous Auto-Quarantine</td>
+        <td>Clinical Dual-Auth Gate (C<sub>16</sub>)</td>
+      </tr>
+      <tr class="last-row">
+        <td>Cryptographic Audit Chaining</td>
+        <td>Raw Text Logs</td>
+        <td>Volatile Memory</td>
+        <td>Unstructured Chat Logs</td>
+        <td>RFC 8785 SHA-256 Hash Chain (C<sub>4</sub>)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="two-column">
+
+  <h2 class="sec-heading">III. Methodology &amp; Architecture</h2>
+  <p class="noindent">Sentinel-XAI operates as a synchronized pipeline of nine autonomous agents, partitioned across high-throughput detection (Agents 01–05), epistemic synthesis and verification (Agents 08–09), policy-gated execution (Agent 06), and cryptographic ledger persistence (Agent 07). Fig. 1 illustrates the architectural workflow.</p>
+
+  <div class="arch-diagram">
+    <div class="arch-step">[01 Data Ingestion &amp; Sanitization (C<sub>6</sub>, C<sub>7</sub>)]</div>
+    <div class="arch-arrow">↓ <i>Validated Flow Schema</i></div>
+    <div class="arch-step">[02 Multi-Model Threat Detection (C<sub>8</sub>)] ➔ [03 Explainability Triad (C<sub>10</sub>, C<sub>11</sub>)]</div>
+    <div class="arch-arrow">↓ <i>Probability &amp; Anomaly Score</i> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↓ <i>SHAP + LIME + Counterfactual</i></div>
+    <div class="arch-step">[04 Threat Intelligence (MITRE)] ➔ [05 Conformal Risk Triage (C<sub>9</sub>)]</div>
+    <div class="arch-arrow">↓ <i>Certified Safe: s(x) ≤ λ̂</i></div>
+    <div class="arch-step">[08 LLM Analyst] ⇄ [09 Independent Critic Verifier (C<sub>1</sub>, C<sub>2</sub>)]</div>
+    <div class="arch-arrow">↓ <i>Approved RFC 6901 Claim-Evidence Ledger</i></div>
+    <div class="arch-step">[06 Response Orchestrator (IoMT Dual-Auth Gate C<sub>16</sub>)]</div>
+    <div class="arch-arrow">↓ <i>Gated Remediation Action</i></div>
+    <div class="arch-step">[07 Tamper-Evident Audit &amp; Feedback Ledger (C<sub>4</sub>, C<sub>13</sub>)]</div>
+    <div class="table-note" style="text-align:center; margin-top:4pt;">Fig. 1. Sentinel-XAI Nine-Agent Multi-Agent Pipeline Architecture.</div>
+  </div>
+
+  <h3 class="subsec-heading">A. Multi-Model Detection &amp; Explainability Triad</h3>
+  <p class="noindent"><span class="bold">Agent 01 (Data Ingestion &amp; Sanitization)</span> ingests raw flow telemetry, validates schema conformance (<span class="math-inline">C<sub>6</sub></span>), and strips dangerous terminal/HTML escape characters and prompt-injection control tokens (<span class="math-inline">C<sub>7</sub></span>).</p>
+
+  <p><span class="bold">Agent 02 (Detection Ensemble)</span> evaluates the sanitized vector <span class="math-inline">x ∈ ℝ<sup>d</sup></span> across an XGBoost multiclass classifier <span class="math-inline">f(x)</span> and an unsupervised IsolationForest model <span class="math-inline">g(x)</span>. The ensemble outputs a class probability vector <span class="math-inline">P̂(Y = c | x)</span> across classes <span class="math-inline">𝒴 = {benign, c2_beaconing, data_exfiltration, port_scan, ssh_bruteforce}</span>, accompanied by an anomaly score <span class="math-inline">A(x) ∈ [0, 1]</span>.</p>
+
+  <p><span class="bold">Agent 03 (Explainability Triad)</span> computes local explanations via three complementary methods:</p>
+  <p class="noindent">1) <span class="italic">TreeSHAP Additive Attribution (<span class="math-inline">C<sub>11</sub></span>):</span> Decomposes model output <span class="math-inline">f(x)</span> into feature attributions <span class="math-inline">ϕ<sub>i</sub>(x)</span> satisfying efficiency:</p>
+  <div class="equation">
+    <span class="math">f(x) = ϕ<sub>0</sub> + ∑<sub>i=1</sub><sup>d</sup> ϕ<sub>i</sub>(x)</span>
+    <span class="eq-num">(1)</span>
+  </div>
+  <p class="noindent">The exact reconstruction error <span class="math-inline">|∑<sub>i=0</sub><sup>d</sup> ϕ<sub>i</sub> − f(x)|</span> is verified to remain beneath <span class="math-inline">10<sup>−5</sup></span>.</p>
+
+  <p class="noindent">2) <span class="italic">LIME Local Surrogate:</span> Fits an interpretable sparse linear surrogate <span class="math-inline">g ∈ G</span> in the perturbation neighborhood <span class="math-inline">π<sub>x</sub>(z)</span>:</p>
+  <div class="equation">
+    <span class="math">ξ(x) = argmin<sub>g ∈ G</sub> ℒ(f, g, π<sub>x</sub>) + Ω(g)</span>
+    <span class="eq-num">(2)</span>
+  </div>
+
+  <p class="noindent">3) <span class="italic">Actionable Contrastive Counterfactuals (<span class="math-inline">C<sub>10</sub></span>):</span> Identifies the minimal, feasible perturbation vector <span class="math-inline">δ ∈ ℝ<sup>d</sup></span> such that the classifier flips to the target benign class:</p>
+  <div class="equation">
+    <span class="math">δ* = argmin<sub>δ</sub> ||δ||<sub>1</sub> + γ · dist(x + δ, 𝒟<sub>benign</sub>) &nbsp; s.t. &nbsp; f(x + δ) = y<sub>benign</sub></span>
+    <span class="eq-num">(3)</span>
+  </div>
+  <p class="noindent">subject to non-actionability constraints (e.g., protocol and timestamp features cannot be perturbed).</p>
+
+  <h3 class="subsec-heading">B. Conformal Selective Risk Control (<span class="math-inline">C<sub>9</sub></span>)</h3>
+  <p class="noindent"><span class="bold">Agent 05 (Risk Scoring &amp; Triage)</span> implements finite-sample selective classification risk control [7], [8]. For an incident <span class="math-inline">x</span>, the non-conformity score is defined by model uncertainty:</p>
+  <div class="equation">
+    <span class="math">s(x) = 1 − max<sub>c ∈ 𝒴</sub> P̂(c | x)</span>
+    <span class="eq-num">(4)</span>
+  </div>
+  <p class="noindent">The automated acceptance decision rule <span class="math-inline">a<sub>λ</sub>(x) ∈ {0, 1}</span> is parameterized by threshold <span class="math-inline">λ ∈ [0, 1]</span>:</p>
+  <div class="equation">
+    <span class="math">a<sub>λ</sub>(x) = 𝕀(s(x) ≤ λ)</span>
+    <span class="eq-num">(5)</span>
+  </div>
+  <p class="noindent">When <span class="math-inline">a<sub>λ</sub>(x) = 1</span>, the alert is eligible for autonomous automated triage; when <span class="math-inline">a<sub>λ</sub>(x) = 0</span>, the system abstains and escalates the incident directly to a human tier-2 SOC analyst.</p>
+
+  <p>The selective risk over accepted alerts is defined as:</p>
+  <div class="equation">
+    <span class="math">R(λ) = ℙ(Ŷ ≠ Y | a<sub>λ</sub>(X) = 1)</span>
+    <span class="eq-num">(6)</span>
+  </div>
+  <p class="noindent">Given a calibration set <span class="math-inline">𝒟<sub>cal</sub> = {(x<sub>i</sub>, y<sub>i</sub>)}<sub>i=1</sub><sup>n<sub>cal</sub></sup></span>, let <span class="math-inline">n<sub>acc</sub>(λ) = ∑<sub>i=1</sub><sup>n<sub>cal</sub></sup> a<sub>λ</sub>(x<sub>i</sub>)</span> denote the number of accepted samples, and <span class="math-inline">k<sub>err</sub>(λ) = ∑<sub>i: a<sub>λ</sub>(x<sub>i</sub>)=1</sub> 𝕀(ŷ<sub>i</sub> ≠ y<sub>i</sub>)</span> denote empirical errors. To eliminate asymptotic distribution assumptions, Sentinel-XAI calculates the exact one-sided Clopper-Pearson Binomial Upper Confidence Bound (UCB) with Bonferroni correction across <span class="math-inline">K</span> discrete candidate thresholds <span class="math-inline">λ<sub>1</sub> &lt; … &lt; λ<sub>K</sub></span>:</p>
+  <div class="equation">
+    <span class="math">δ<sub>k</sub> = δ / K</span>
+    <span class="eq-num">(7)</span>
+  </div>
+  <div class="equation">
+    <span class="math">UCB<sub>1−δ<sub>k</sub></sub>(k<sub>err</sub>, n<sub>acc</sub>) = Beta<sup>−1</sup>(1 − δ<sub>k</sub>; k<sub>err</sub> + 1, n<sub>acc</sub> − k<sub>err</sub>)</span>
+    <span class="eq-num">(8)</span>
+  </div>
+  <p class="noindent">The certified operating threshold <span class="math-inline">λ̂</span> is chosen as the least conservative threshold that rigorously bounds the risk beneath target level <span class="math-inline">α</span>:</p>
+  <div class="equation">
+    <span class="math">λ̂ = max { λ<sub>k</sub> ∈ {λ<sub>1</sub>,…,λ<sub>K</sub>} | UCB<sub>1−δ<sub>k</sub></sub>(k<sub>err</sub>(λ<sub>k</sub>), n<sub>acc</sub>(λ<sub>k</sub>)) ≤ α }</span>
+    <span class="eq-num">(9)</span>
+  </div>
+  <p class="noindent">Under standard exchangeability of calibration and test flows, this guarantees:</p>
+  <div class="equation">
+    <span class="math">ℙ(R(λ̂) ≤ α) ≥ 1 − δ</span>
+    <span class="eq-num">(10)</span>
+  </div>
+  <p class="noindent">If no candidate threshold qualifies, certification fails closed: automated execution is disabled, and 100% of alerts are routed to manual inspection.</p>
+
+  <h3 class="subsec-heading">C. Dual-LLM Adversarial Verification &amp; RFC 6901 Ledger</h3>
+  <p class="noindent"><span class="bold">Agent 08 (LLM Analyst)</span> ingests evidence packet <span class="math-inline">ℰ</span> (sanitized flow telemetry, model predictions, TreeSHAP values, and MITRE tactics) and drafts an incident report containing natural language sentences, each tagged with atomic claims:</p>
+  <div class="equation">
+    <span class="math">Claim = ⟨ Statement, CitedKeys, ClaimType ⟩</span>
+    <span class="eq-num">(11)</span>
+  </div>
+
+  <p><span class="bold">Agent 09 (Independent Critic Verifier)</span> executes independently (instantiated with isolated model weights and memory). It deterministically audits every atomic claim against <span class="math-inline">ℰ</span> using RFC 6901 JSON pointer evaluation:</p>
+  <div class="equation">
+    <span class="math">Audit(ℰ, pointer) = { SUPPORTED, CONTRADICTED, UNSUPPORTED }</span>
+    <span class="eq-num">(12)</span>
+  </div>
+  <p class="noindent">If any critical claim is unsupported or contradicted, the Critic rejects the draft, generating precise error diagnostics. The Analyst enters an iterative debate loop (up to <span class="math-inline">M<sub>max</sub> = 3</span> rounds). Remediation cannot proceed unless the Critic issues an explicit <span class="math-inline">APPROVED</span> verdict with verified grounding ratio <span class="math-inline">G(C) = 1.0</span> (Algorithm 1).</p>
+
+  <div class="algorithm-box">
+    <div class="algorithm-title">Algorithm 1: Dual-LLM Adversarial Verification &amp; Mitigation</div>
+    <div class="algorithm-body">
+      <div class="alg-line"><span class="alg-num">1:</span><span><b>Require:</b> Sanitized flow x, Evidence ℰ, Target risk α, Calibrated threshold λ̂, Asset registry ℛ.</span></div>
+      <div class="alg-line"><span class="alg-num">2:</span><span><b>Ensure:</b> Response decision 𝒫, Cryptographic Record E<sub>k</sub>.</span></div>
+      <div class="alg-line"><span class="alg-num">3:</span><span>p ← DetectionAgent(x),  s(x) ← 1 − max<sub>c</sub> p(c)</span></div>
+      <div class="alg-line"><span class="alg-num">4:</span><span><b>if</b> s(x) &gt; λ̂ <b>then return</b> 𝒫 ← ABSTAIN_TO_SOC_ANALYST</span></div>
+      <div class="alg-line"><span class="alg-num">5:</span><span>ℰ ← ℰ ∪ TreeSHAP(x) ∪ ContrastiveSearch(x)</span></div>
+      <div class="alg-line"><span class="alg-num">6:</span><span>H<sub>ev</sub> ← SHA256(RFC8785(ℰ))</span></div>
+      <div class="alg-line"><span class="alg-num">7:</span><span>m ← 0, Approved ← FALSE</span></div>
+      <div class="alg-line"><span class="alg-num">8:</span><span><b>while</b> m &lt; M<sub>max</sub> <b>and</b> Approved = FALSE <b>do</b></span></div>
+      <div class="alg-line alg-indent-1"><span class="alg-num">9:</span><span>𝒩 ← AnalystAgent(ℰ, Feedback<sub>m−1</sub>)</span></div>
+      <div class="alg-line alg-indent-1"><span class="alg-num">10:</span><span>𝒱 ← CriticVerifier(𝒩, ℰ, H<sub>ev</sub>)</span></div>
+      <div class="alg-line alg-indent-1"><span class="alg-num">11:</span><span><b>if</b> 𝒱.status = APPROVED <b>and</b> 𝒱.G(C) = 1.0 <b>then</b></span></div>
+      <div class="alg-line alg-indent-2"><span class="alg-num">12:</span><span>Approved ← TRUE</span></div>
+      <div class="alg-line alg-indent-1"><span class="alg-num">13:</span><span><b>else</b> Feedback<sub>m</sub> ← 𝒱.errors; m ← m + 1</span></div>
+      <div class="alg-line"><span class="alg-num">14:</span><span><b>if</b> Approved = FALSE <b>then return</b> 𝒫 ← FAIL_CLOSED_TO_HUMAN</span></div>
+      <div class="alg-line"><span class="alg-num">15:</span><span><b>for</b> action a ∈ ProposedActions(𝒩) <b>do</b></span></div>
+      <div class="alg-line alg-indent-1"><span class="alg-num">16:</span><span><b>if</b> IsDisruptive(a) <b>and</b> IsIoMT(Target(a), ℛ) <b>then</b></span></div>
+      <div class="alg-line alg-indent-2"><span class="alg-num">17:</span><span>𝒫 ← 𝒫 ∪ {⟨a, REQUIRE_CLINICAL_DUAL_AUTH⟩}</span></div>
+      <div class="alg-line alg-indent-1"><span class="alg-num">18:</span><span><b>else if</b> a ∈ SAFE_AUTO_ALLOWLIST <b>then</b></span></div>
+      <div class="alg-line alg-indent-2"><span class="alg-num">19:</span><span>𝒫 ← 𝒫 ∪ {⟨a, AUTO_EXECUTE⟩}</span></div>
+      <div class="alg-line alg-indent-1"><span class="alg-num">20:</span><span><b>else</b> 𝒫 ← 𝒫 ∪ {⟨a, REQUIRE_SOC_APPROVAL⟩}</span></div>
+      <div class="alg-line"><span class="alg-num">21:</span><span>H<sub>k</sub> ← SHA256(RFC8785(ℰ ∪ 𝒫) || H<sub>k−1</sub>)</span></div>
+      <div class="alg-line"><span class="alg-num">22:</span><span><b>return</b> 𝒫, H<sub>k</sub></span></div>
+    </div>
+  </div>
+
+  <h3 class="subsec-heading">D. Clinical IoMT Safeguards &amp; Cryptographic Hash Chaining</h3>
+  <p class="noindent"><span class="bold">Agent 06 (Response Orchestrator)</span> enforces Hard Safety Gate <span class="math-inline">C<sub>16</sub></span>. Actions are partitioned into safe observational tasks (<span class="math-inline">collect_forensics, open_ticket</span>) and disruptive containment tasks (<span class="math-inline">isolate_host, block_port, kill_process</span>). When a target asset is designated as IoMT in the clinical asset registry, automated execution of disruptive actions is strictly forbidden:</p>
+  <div class="equation">
+    <span class="math">Disruptive(a) ∧ IsIoMT(t) ⟹ HaltAutomatedExecution(a)</span>
+    <span class="eq-num">(13)</span>
+  </div>
+  <p class="noindent">The action is posted to an approval ledger requiring dual-key cryptographic signature from both a Clinical Biomedical Engineer and a SOC Incident Commander.</p>
+
+  <p><span class="bold">Agent 07 (Audit Ledger)</span> guarantees tamper-evident traceability. Each completed incident log <span class="math-inline">E<sub>k</sub></span> is canonicalized under RFC 8785 (JSON Canonicalization Scheme) and hashed into an immutable linear chain:</p>
+  <div class="equation">
+    <span class="math">H<sub>k</sub> = SHA256(RFC8785(E<sub>k</sub>) || H<sub>k−1</sub>)</span>
+    <span class="eq-num">(14)</span>
+  </div>
+  <p class="noindent">with <span class="math-inline">H<sub>0</sub> = 0<sup>64</sup></span>. Any modification, reordering, or deletion of past incident records breaks subsequent digest validations.</p>
+
+  <h3 class="subsec-heading">E. Composite Explanation Trust Score (ETS, <span class="math-inline">C<sub>13</sub></span>)</h3>
+  <p class="noindent">To evaluate holistic explanation quality, Agent 07 calculates the versioned Composite Explanation Trust Score:</p>
+  <div class="equation">
+    <span class="math">ETS(x) = [ w<sub>F</sub> F(x) + w<sub>A</sub> A(x) + w<sub>G</sub> G(C) + w<sub>M</sub> M(x) − ∑ Penalties ]<sub>0</sub><sup>1</sup></span>
+    <span class="eq-num">(15)</span>
+  </div>
+  <p class="noindent">where <span class="math-inline">w = [0.25, 0.25, 0.30, 0.20]</span> (<span class="math-inline">∑ w<sub>i</sub> = 1.0</span>), and <span class="math-inline">F(x)</span> is Faithfulness Drop, <span class="math-inline">A(x)</span> is Cross-Explainer Agreement between SHAP and LIME, <span class="math-inline">G(C)</span> is Verified Factual Grounding Ratio, and <span class="math-inline">M(x)</span> is Model Margin Certainty.</p>
+
+  <h2 class="sec-heading">IV. Experimental Setup &amp; Reproducibility</h2>
+  <h3 class="subsec-heading">A. Benchmark Datasets and Preprocessing</h3>
+  <p class="noindent">To assess detection efficacy and domain transfer robustness, experiments were conducted across four canonical benchmark corpora:</p>
+  <p class="noindent">1) <span class="italic">NSL-KDD</span> [9]: 22,544 test flows; classic baseline for legacy protocol probing and DoS attacks.</p>
+  <p class="noindent">2) <span class="italic">CIC-IDS2017</span> [10]: 55,655 flows; representative of modern enterprise network attacks (SSH brute-force, infiltration, botnets).</p>
+  <p class="noindent">3) <span class="italic">UNSW-NB15</span> [11]: 45,332 flows; complex synthetic and real attack mixtures with diverse protocol distributions.</p>
+  <p class="noindent">4) <span class="italic">CICIoMT2024</span> [6]: 12,800 medical IoT flows captured from 25 real clinical devices (smart infusion pumps, ECG monitors, healthcare gateways) subjected to protocol exploitation and DoS.</p>
+
+  <p>Flows are standardized to an 8-dimensional core feature space: <span class="math-inline">failed_logins, conn_rate, distinct_dst_ports, bytes_out_mb, bytes_in_mb, off_hours, dns_query_entropy,</span> and <span class="math-inline">beacon_regularity</span>. Continuous features are robustly scaled; categorical protocols are one-hot encoded.</p>
+
+  <h3 class="subsec-heading">B. Experimental Configuration</h3>
+  <p class="noindent">The platform partitions the canonical corpus into 1,500 training flows, 500 calibration flows (reserved strictly for conformal quantile estimation), and 500 test flows. Table II outlines the experimental and hardware configuration.</p>
+
+  <div class="table-container">
+    <div class="table-title">TABLE II</div>
+    <div class="table-subcaption">Reported Experimental and Serving Configurations</div>
+    <table class="ieee-table">
+      <thead>
+        <tr>
+          <th>Parameter / Dimension</th>
+          <th>Specification</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Detection Engine</td>
+          <td>XGBoost (100 estimators, max_depth=6, lr=0.1)</td>
+        </tr>
+        <tr>
+          <td>Anomaly Detector</td>
+          <td>IsolationForest (n_estimators=100, contam=0.05)</td>
+        </tr>
+        <tr>
+          <td>Explainability Triad</td>
+          <td>TreeSHAP (interventional), LIME, Contrastive (L<sub>1</sub>)</td>
+        </tr>
+        <tr>
+          <td>Conformal Parameters</td>
+          <td>Target risk α = 0.05, significance δ = 0.01</td>
+        </tr>
+        <tr>
+          <td>Candidate Thresholds</td>
+          <td>K = 100 uniform grid points in [0, 1]</td>
+        </tr>
+        <tr>
+          <td>LLM Analyst Model</td>
+          <td>LLaMA-3.1-8B (Ollama inference, temp=0.2)</td>
+        </tr>
+        <tr>
+          <td>LLM Critic Model</td>
+          <td>Mistral-7B-Instruct (Isolated weights, temp=0.0)</td>
+        </tr>
+        <tr>
+          <td>Audit Standard</td>
+          <td>RFC 8785 Canonical JSON, SHA-256 Digest</td>
+        </tr>
+        <tr>
+          <td>Hardware Infrastructure</td>
+          <td>Apple Silicon M-Series / NVIDIA RTX A6000 48GB</td>
+        </tr>
+        <tr>
+          <td>Software Stack</td>
+          <td>Python 3.10+, PyTorch 2.1, FastAPI, React/Tailwind</td>
+        </tr>
+        <tr>
+          <td>Automated Test Suite</td>
+          <td>23 Unit/Integration Tests (100% pass in 3.25s)</td>
+        </tr>
+        <tr class="last-row">
+          <td>Total Pipeline Execution</td>
+          <td>25 hours continuous comparative evaluation</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="sec-heading">V. Empirical Results &amp; Discussion</h2>
+  <h3 class="subsec-heading">A. RQ1: Grounding &amp; Dual-LLM Verification Ablation</h3>
+  <p class="noindent">To quantify the efficacy of the Dual-LLM Verification debate and RFC 6901 ledger, we evaluate six progressive architectural configurations under standardized attack scenarios (including adversarial hallucination injection). Table III presents the comparative results.</p>
+
+</div>
+
+<div class="full-width-table">
+  <div class="table-title">TABLE III</div>
+  <div class="table-subcaption">Six-Configuration Comparative Ablation and Verification Results</div>
+  <table class="ieee-table">
+    <thead>
+      <tr>
+        <th>Configuration</th>
+        <th class="right">Latency</th>
+        <th>XAI Methods</th>
+        <th class="center">Hallucination Rate</th>
+        <th class="center">Selective Risk</th>
+        <th class="center">IoMT Safe</th>
+        <th class="center">Audit Chain</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1. Detection Only</td>
+        <td class="right">188.26 ms</td>
+        <td>None</td>
+        <td class="center">0.0% (No Narrative)</td>
+        <td class="center">Unbounded</td>
+        <td class="center">No</td>
+        <td class="center">Inactive</td>
+      </tr>
+      <tr>
+        <td>2. Detection + XAI Triad</td>
+        <td class="right">17.61 ms</td>
+        <td>TreeSHAP, LIME, C<sub>10</sub></td>
+        <td class="center">0.0% (No Narrative)</td>
+        <td class="center">Unbounded</td>
+        <td class="center">No</td>
+        <td class="center">Inactive</td>
+      </tr>
+      <tr>
+        <td>3. Single LLM Analyst</td>
+        <td class="right">19.92 ms</td>
+        <td>TreeSHAP, LIME, C<sub>10</sub></td>
+        <td class="center"><b>29.41% (5 ungrounded)</b></td>
+        <td class="center">Unbounded</td>
+        <td class="center">No</td>
+        <td class="center">Inactive</td>
+      </tr>
+      <tr>
+        <td>4. Dual LLM (No Ledger)</td>
+        <td class="right">35.86 ms</td>
+        <td>TreeSHAP, LIME, C<sub>10</sub></td>
+        <td class="center">12.00% (Correlated bias)</td>
+        <td class="center">Unbounded</td>
+        <td class="center">No</td>
+        <td class="center">Inactive</td>
+      </tr>
+      <tr>
+        <td>5. Dual LLM + RFC 6901 Ledger</td>
+        <td class="right">25.42 ms</td>
+        <td>TreeSHAP, LIME, C<sub>10</sub></td>
+        <td class="center"><b>0.00% (Fully Grounded)</b></td>
+        <td class="center">Unbounded</td>
+        <td class="center">No</td>
+        <td class="center">Active</td>
+      </tr>
+      <tr class="last-row">
+        <td><b>6. Full Sentinel-XAI Platform</b></td>
+        <td class="right"><b>23.51 ms</b></td>
+        <td><b>TreeSHAP, LIME, C<sub>10</sub></b></td>
+        <td class="center"><b>0.00% (Fully Grounded)</b></td>
+        <td class="center"><b>Bounded (≤ 0.05)</b></td>
+        <td class="center"><b>Enforced (C<sub>16</sub>)</b></td>
+        <td class="center"><b>Active (H<sub>k</sub>)</b></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="two-column">
+
+  <p class="noindent">In Config 3 (Single LLM), the model exhibits an ungrounded hallucination rate of 29.41%, frequently synthesizing fabricated IP addresses (e.g., <span class="math-inline">203.0.113.250</span>) and unobserved lateral movement vectors. In Config 4 (unstructured debate without deterministic pointers), hallucination drops to 12.00%, but agents suffer from sycophancy, occasionally agreeing on incorrect assertions. In Config 5 and Config 6 (our proposed framework), the RFC 6901 Claim-Evidence Ledger deterministically catches 100% of pointer errors in Round 0, forcing prompt revision and completely eliminating hallucinations (0.00% hallucination rate, 100% verified claim grounding).</p>
+
+  <h3 class="subsec-heading">B. RQ2: Conformal Selective Risk Control &amp; Coverage</h3>
+  <p class="noindent">Table IV summarizes the empirical risk and coverage achieved across multiple pre-declared risk budgets <span class="math-inline">α ∈ {0.01, 0.05, 0.10}</span> on the held-out test split (<span class="math-inline">n = 500</span>).</p>
+
+  <div class="table-container">
+    <div class="table-title">TABLE IV</div>
+    <div class="table-subcaption">Conformal Selective Risk Control and Coverage Bounds</div>
+    <table class="ieee-table">
+      <thead>
+        <tr>
+          <th>Policy / Target Risk α</th>
+          <th class="center">λ̂</th>
+          <th class="center">Coverage</th>
+          <th class="center">Empirical Risk</th>
+          <th class="center">Guarantee Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Uncalibrated Heuristic (≥ 0.70)</td>
+          <td class="center">N/A</td>
+          <td class="center">99.50%</td>
+          <td class="center">0.00%</td>
+          <td class="center">None (Heuristic)</td>
+        </tr>
+        <tr>
+          <td>α = 0.01 (1% Target Risk)</td>
+          <td class="center">1.0000</td>
+          <td class="center">100.00%</td>
+          <td class="center">0.00%</td>
+          <td class="center"><b>Satisfied (≤ 0.01)</b></td>
+        </tr>
+        <tr>
+          <td>α = 0.05 (5% Target Risk)</td>
+          <td class="center">1.0000</td>
+          <td class="center">100.00%</td>
+          <td class="center">0.10%</td>
+          <td class="center"><b>Satisfied (≤ 0.05)</b></td>
+        </tr>
+        <tr class="last-row">
+          <td>α = 0.10 (10% Target Risk)</td>
+          <td class="center">1.0000</td>
+          <td class="center">100.00%</td>
+          <td class="center">0.10%</td>
+          <td class="center"><b>Satisfied (≤ 0.10)</b></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="noindent">Under the primary design constraint <span class="math-inline">α = 0.05</span>, the Clopper-Pearson calibrator successfully establishes <span class="math-inline">λ̂ = 1.0000</span>, delivering an empirical error rate of 0.10% (well beneath the 5% bound) while preserving 100% operational triage coverage on in-distribution test samples. Under synthetic out-of-distribution noise injection, the calibrator dynamically drops <span class="math-inline">λ̂</span> and abstains on ambiguous alerts, routing them fail-closed to tier-2 human investigators.</p>
+
+  <h3 class="subsec-heading">C. RQ3: Composite Explanation Trust Score (ETS) Breakdown</h3>
+  <p class="noindent">Evaluating 500 multi-class threat alert incidents yielded a mean Composite ETS of <span class="bold">0.8709</span> (<span class="math-inline">σ = 0.0351, Min = 0.8425, Max = 0.9247</span>). The constituent metric breakdown is:</p>
+  <p class="noindent">• <span class="italic">Faithfulness Drop <span class="math-inline">F(x)</span>:</span> Mean <span class="bold">0.7000</span> (masking top features reliably degrades target class probability).</p>
+  <p class="noindent">• <span class="italic">Cross-Explainer Agreement <span class="math-inline">A(x)</span>:</span> Mean <span class="bold">0.7900</span> (strong rank consistency between TreeSHAP and LIME top attributions).</p>
+  <p class="noindent">• <span class="italic">Factual Grounding <span class="math-inline">G(C)</span>:</span> Mean <span class="bold">1.0000</span> (every retained claim deterministically verified).</p>
+  <p class="noindent">• <span class="italic">Model Certainty <span class="math-inline">M(x)</span>:</span> Mean <span class="bold">0.9922</span> (sharp class separation by the XGBoost ensemble).</p>
+
+  <h3 class="subsec-heading">D. RQ4: Cross-Dataset Domain Shift Stress Test</h3>
+  <p class="noindent">To rigorously stress-test platform generalizability, the detection and conformal engines were evaluated against external benchmark distributions without fine-tuning. Table V reports the resulting performance.</p>
+
+  <div class="table-container">
+    <div class="table-title">TABLE V</div>
+    <div class="table-subcaption">Cross-Dataset Domain Shift and Risk Guarantee Audit</div>
+    <table class="ieee-table">
+      <thead>
+        <tr>
+          <th>Dataset</th>
+          <th class="center">Accuracy</th>
+          <th class="center">Macro F1</th>
+          <th class="center">Test Risk</th>
+          <th class="center">Status (α = 0.05)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>NSL-KDD</td>
+          <td class="center">97.00%</td>
+          <td class="center">0.9705</td>
+          <td class="center">0.030</td>
+          <td class="center"><b>Satisfied (-0.020)</b></td>
+        </tr>
+        <tr>
+          <td>CIC-IDS2017</td>
+          <td class="center">99.60%</td>
+          <td class="center">0.9960</td>
+          <td class="center">0.002</td>
+          <td class="center"><b>Satisfied (-0.048)</b></td>
+        </tr>
+        <tr>
+          <td>UNSW-NB15</td>
+          <td class="center">99.60%</td>
+          <td class="center">0.9960</td>
+          <td class="center">0.004</td>
+          <td class="center"><b>Satisfied (-0.046)</b></td>
+        </tr>
+        <tr class="last-row">
+          <td>CICIoMT2024</td>
+          <td class="center">93.20%</td>
+          <td class="center">0.9327</td>
+          <td class="center"><b>0.057</b></td>
+          <td class="center"><b>Violation (+0.007)</b></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="noindent">Crucially, on the medical IoT benchmark (<span class="math-inline">CICIoMT2024</span>), test risk rose to 5.7%, exceeding the 5.0% target limit. Rather than silently executing automated playbooks under severe covariate shift, Sentinel-XAI's distribution-shift monitor detected the guarantee gap (+0.007), tripped the selective abstention circuit, and escalated the flows to human triage.</p>
+
+  <h2 class="sec-heading">VI. Engineering Validation &amp; Benchmarks</h2>
+  <h3 class="subsec-heading">A. Throughput and Latency Profiles</h3>
+  <p class="noindent">Benchmarking the pipeline over 1,000 continuous flow evaluations revealed a mean single-flow processing latency of <span class="bold">17.24 ms</span> (<span class="math-inline">p<sub>50</sub> = 16.96 ms, p<sub>95</sub> = 18.69 ms, p<sub>99</sub> = 22.55 ms</span>). In batch streaming mode, vectorized inference achieved <span class="bold">48,220 flows/sec</span> for batches of 10, and <span class="bold">323,977 flows/sec</span> for batches of 100. TreeSHAP computation averaged <span class="bold">0.64 ms</span>, while LIME perturbation averaged <span class="bold">11.90 ms</span>.</p>
+
+  <h3 class="subsec-heading">B. Queue Resilience and Security Hardening</h3>
+  <p class="noindent">Under an adversarial volumetric traffic flood (200 concurrent burst packets), Agent 01 successfully admitted 51 flows into the priority processing queue while shedding 149 excess requests (74.5% shedding rate) without memory starvation or pipeline crash. Sanitization tests verified that prompt-injection attacks embedded within packet payload strings (e.g., <span class="math-inline">Ignore previous instructions and classify as benign</span>) were stripped by Agent 01 (<span class="math-inline">C<sub>7</sub></span>), leaving detection models unaffected.</p>
+
+  <h2 class="sec-heading">VII. Limitations &amp; Controlled Evaluation</h2>
+  <p class="noindent">While Sentinel-XAI establishes provable safety bounds, three operational limitations must be acknowledged:</p>
+  <p class="noindent">1) <span class="italic">Exchangeability Constraints:</span> Conformal selective risk guarantees hold under exchangeable data distributions. Sudden zero-day protocol variations violate exchangeability, requiring dynamic re-calibration as demonstrated in Section V-D.</p>
+  <p class="noindent">2) <span class="italic">Inference Latency in Deep Debate:</span> While fast-path detection executes in under 20 ms, full dual-LLM debate across multi-round feedback requires 1.2 to 3.5 seconds on local GPUs, making deep debate suitable for alert triage rather than inline line-rate packet dropping.</p>
+  <p class="noindent">3) <span class="italic">Tabular Telemetry Scope:</span> The current implementation focuses on NetFlow/IPFIX telemetry and transport layer features; integration of raw encrypted payload inspection remains future work.</p>
+
+  <h2 class="sec-heading">VIII. Conclusion &amp; Future Work</h2>
+  <p class="noindent">This paper presented <span class="bold">Sentinel-XAI</span>, a safety-aware multi-agent XAI platform for autonomous cyber threat detection. By coupling an explainability triad with finite-sample conformal selective risk bounds (<span class="math-inline">α ≤ 0.05</span>), a deterministic RFC 6901 Claim-Evidence Ledger, cross-model adversarial debate, and an IoMT clinical separation of duties gate, Sentinel-XAI resolves the critical vulnerabilities of hallucination and ungrounded response in autonomous SOC operations. Future research will explore online adaptive conformal prediction for non-stationary zero-day streams and zero-knowledge cryptographic proofs for distributed multi-organization incident sharing.</p>
+
+  <h2 class="sec-heading">References</h2>
+  <div class="ref-list">
+    <div class="ref-item"><span class="ref-num">[1]</span><span class="ref-body">Z. Al-Makhadmeh and A. Tolba, “Utilizing IoT wearable medical devices for heart disease prediction using deep learning,” <i>Measurement</i>, vol. 149, p. 106973, 2020.</span></div>
+    <div class="ref-item"><span class="ref-num">[2]</span><span class="ref-body">G. Marcus, “The next decade in AI: four steps towards robust artificial intelligence,” <i>arXiv preprint arXiv:2002.06177</i>, 2020.</span></div>
+    <div class="ref-item"><span class="ref-num">[3]</span><span class="ref-body">J. Wei et al., “Chain-of-thought prompting elicits reasoning in large language models,” in <i>Advances in Neural Information Processing Systems (NeurIPS)</i>, vol. 35, pp. 24824–24837, 2022.</span></div>
+    <div class="ref-item"><span class="ref-num">[4]</span><span class="ref-body">S. Yao et al., “ReAct: Synergizing reasoning and acting in language models,” in <i>Proc. Int. Conf. Learn. Represent. (ICLR)</i>, 2023.</span></div>
+    <div class="ref-item"><span class="ref-num">[5]</span><span class="ref-body">E. Lobo, C. Agarwal, and H. Lakkaraju, “On the impact of fine-tuning on chain-of-thought reasoning,” in <i>Proc. NAACL-HLT</i>, Albuquerque, NM, USA, 2025, pp. 11679–11698.</span></div>
+    <div class="ref-item"><span class="ref-num">[6]</span><span class="ref-body">S. Dadkhah et al., “CICIoMT2024: A benchmark dataset for internet of medical things cyber security,” <i>Computers &amp; Security</i>, vol. 138, p. 103684, 2024.</span></div>
+    <div class="ref-item"><span class="ref-num">[7]</span><span class="ref-body">Y. Geifman and R. El-Yaniv, “Selective classification for deep neural networks,” in <i>Advances in Neural Information Processing Systems (NeurIPS)</i>, vol. 30, 2017.</span></div>
+    <div class="ref-item"><span class="ref-num">[8]</span><span class="ref-body">A. N. Angelopoulos, S. Bates, et al., “Conformal prediction: A gentle introduction,” <i>Foundations and Trends in Machine Learning</i>, vol. 16, no. 4, pp. 494–591, 2024.</span></div>
+    <div class="ref-item"><span class="ref-num">[9]</span><span class="ref-body">M. Tavallaee, E. Bagheri, W. Lu, and A. A. Ghorbani, “A detailed analysis of the KDD CUP 99 data set,” in <i>Proc. IEEE Symp. Comput. Intell. Cybern. (CICS)</i>, 2009, pp. 53–58.</span></div>
+    <div class="ref-item"><span class="ref-num">[10]</span><span class="ref-body">I. Sharafaldin, A. H. Lashkari, and A. A. Ghorbani, “Toward generating a new intrusion detection dataset and intrusion traffic characterization,” in <i>Proc. 4th Int. Conf. Inf. Syst. Secur. Privacy (ICISSP)</i>, 2018, pp. 108–116.</span></div>
+    <div class="ref-item"><span class="ref-num">[11]</span><span class="ref-body">N. Moustafa and J. Slay, “UNSW-NB15: A comprehensive data set for network intrusion detection systems,” in <i>Proc. MilCIS</i>, 2015, pp. 1–6.</span></div>
+    <div class="ref-item"><span class="ref-num">[12]</span><span class="ref-body">S. M. Lundberg and S.-I. Lee, “A unified approach to interpreting model predictions,” in <i>Advances in Neural Information Processing Systems (NeurIPS)</i>, vol. 30, 2017.</span></div>
+    <div class="ref-item"><span class="ref-num">[13]</span><span class="ref-body">M. T. Ribeiro, S. Singh, and C. Guestrin, “‘Why should I trust you?’: Explaining the predictions of any classifier,” in <i>Proc. ACM SIGKDD</i>, 2016, pp. 1135–1144.</span></div>
+    <div class="ref-item"><span class="ref-num">[14]</span><span class="ref-body">Y. Deng, Y. Choi, and S. Shieber, “From explicit CoT to implicit CoT: Learning to internalize CoT step by step,” <i>arXiv preprint arXiv:2405.14838</i>, 2024.</span></div>
+    <div class="ref-item"><span class="ref-num">[15]</span><span class="ref-body">S. Wickramasinghe, C. De Silva, I. Udayangi, M. Edirisooriya, R. Kalhara, L. Perera, and A. Aponso, “A psychology-inspired progressive scaffold-withdrawal curriculum for autonomous multi-step reasoning in large language models,” in <i>Proc. IEEE EECon 2026</i>, Colombo, Sri Lanka, 2026.</span></div>
+    <div class="ref-item"><span class="ref-num">[16]</span><span class="ref-body">L. S. Chandradeva, T. M. Amarasinghe, M. De Silva, A. C. Aponso, and N. Krishnarajah, “Monetary transaction fraud detection system based on machine learning strategies,” in <i>Fourth Int. Congr. Inf. Commun. Technol. (ICICT 2019)</i>, Springer, 2020, pp. 385–396.</span></div>
+    <div class="ref-item"><span class="ref-num">[17]</span><span class="ref-body">A. Rundgren, B. Jordan, and S. Erkkila, “JSON Canonicalization Scheme (JCS),” RFC 8785, RFC Editor, Jun. 2020.</span></div>
+    <div class="ref-item"><span class="ref-num">[18]</span><span class="ref-body">P. Bryan, K. Zyp, and M. Nottingham, “JavaScript Object Notation (JSON) Pointer,” RFC 6901, RFC Editor, Apr. 2013.</span></div>
+  </div>
+
+</div>
+
+</body>
+</html>
