@@ -614,6 +614,28 @@ export default function GlassWorkspace({
               </div>
             </div>
 
+            {/* Prominent Seven (7) Module Navigation Tabs */}
+            <nav className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-[var(--gw-segment)] border border-[var(--gw-line)] mb-6 text-xs font-mono">
+              {tabs.map((tab) => {
+                const active = view === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setView(tab.id)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                      active
+                        ? "bg-[var(--gw-segment-active)] text-[var(--gw-accent)] font-semibold shadow-sm border border-[var(--gw-line)]"
+                        : "text-[var(--gw-muted)] hover:text-[var(--gw-ink)]"
+                    }`}
+                  >
+                    <tab.icon size={14} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+
             {/* Main Dynamic Viewport */}
             <div ref={content} key={view} className="gw-view">
               {/* ========================================================= */}
